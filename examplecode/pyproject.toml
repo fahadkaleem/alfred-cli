@@ -1,0 +1,19 @@
+[project]
+name = "claude-code"
+version = "0.1.0"
+description = "A claude code implementation"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "anthropic>=0.39.0",
+    "rich>=13.7.0",
+    "pydantic>=2.5.0",
+    "python-dotenv>=1.0.0",
+    "prompt-toolkit>=3.0.0",
+    "textual>=6.0.0",
+]
+
+[tool.uv.workspace]
+members = [
+    "snake_game",
+]
