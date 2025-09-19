@@ -1,13 +1,13 @@
-from pathlib import Path
 import os
-from src.tools.filesystem_tool import FileSystemTool
+from pathlib import Path
+
+from src.core.messages import ErrorMessages
 from src.core.tool_definition import ToolDefinition
-from src.core.tool_response import ToolResponse
 from src.core.tool_registry import ToolRegistry
-from src.core.messages import ErrorMessages, SuccessMessages
+from src.core.tool_response import ToolResponse
 from src.schemas.write_file import WriteFileInput
+from src.tools.filesystem_tool import FileSystemTool
 from src.utils.path_utils import get_relative_path
-from src.utils.path_validator import PathValidator
 
 
 @ToolRegistry.register
@@ -25,7 +25,7 @@ class WriteTool(FileSystemTool):
 
     def _write_file(self, file_path: str, content: str) -> ToolResponse:
         """Write content to a file"""
-        
+
         try:
             file_path_obj = Path(file_path)
             relative_path = get_relative_path(file_path)
@@ -48,18 +48,18 @@ class WriteTool(FileSystemTool):
 
             # Check if file exists before writing
             file_existed = file_path_obj.exists()
-            
+
             # Write the content using base class method
             self._write_file_content(file_path_obj, content)
 
             # Count lines in content
             lines = content.split('\n')
             line_count = len(lines)
-            
+
             # Create display content with preview
             action = "Overwrote" if file_existed else "Wrote"
             display_parts = [f"{action} {line_count} lines to {relative_path}"]
-            
+
             # Add preview of first 6 lines
             preview_lines = lines[:6]
             for line in preview_lines:
@@ -67,14 +67,14 @@ class WriteTool(FileSystemTool):
                 if len(line) > 80:
                     line = line[:80] + "..."
                 display_parts.append(f"     {line}")
-            
+
             # Add remaining lines indicator if there are more
             if line_count > 6:
                 remaining = line_count - 6
                 display_parts.append(f"     … +{remaining} lines")
-            
+
             display_content = '\n'.join(display_parts)
-            
+
             action_word = "Overwrote" if file_existed else "Created"
             return self._create_success_response(
                 display_content=display_content,

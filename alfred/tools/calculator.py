@@ -2,8 +2,8 @@
 
 import ast
 import operator
-from alfred.tools.base import Tool
 
+from alfred.tools.base import Tool
 
 # Safe operators for calculator
 SAFE_OPERATORS = {
@@ -46,10 +46,10 @@ class CalculatorTool(Tool):
     def _safe_eval(self, expression: str) -> float:
         """Safely evaluate mathematical expressions using AST."""
         try:
-            node = ast.parse(expression, mode='eval')
+            node = ast.parse(expression, mode="eval")
             return self._eval_node(node.body)
-        except Exception:
-            raise ValueError(f"Invalid expression: {expression}")
+        except Exception as e:
+            raise ValueError(f"Invalid expression: {expression}") from e
 
     def _eval_node(self, node):
         """Recursively evaluate AST nodes safely."""

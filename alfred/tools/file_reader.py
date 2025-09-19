@@ -1,6 +1,7 @@
 """File reading tool."""
 
 from pathlib import Path
+
 from alfred.tools.base import Tool
 
 
@@ -36,14 +37,16 @@ class FileReaderTool(Tool):
                 return f"Not a file: {filepath}"
 
             # Read the file
-            with open(path, 'r', encoding='utf-8') as f:
+            with open(path, encoding="utf-8") as f:
                 content_lines = f.readlines()[:lines]
 
             if len(content_lines) == 0:
                 return f"File is empty: {filepath}"
 
-            content = ''.join(content_lines)
-            truncated_msg = f"\n... (showing first {lines} lines)" if len(content_lines) == lines else ""
+            content = "".join(content_lines)
+            truncated_msg = (
+                f"\n... (showing first {lines} lines)" if len(content_lines) == lines else ""
+            )
 
             return f"Contents of {filepath}:\n{content}{truncated_msg}"
 

@@ -2,6 +2,7 @@
 """Test the UI components rendering."""
 
 from rich.console import Console
+
 from alfred.cli.components import MessageComponent, StatusBar, ToolExecutionView
 from alfred.context import MessageRole
 
@@ -21,10 +22,7 @@ console.print(assistant_msg.render())
 print("\n2. Status Bar:")
 status = StatusBar()
 status.update_state(
-    model="claude-3-5-sonnet",
-    tokens_used=150,
-    connection_status="connected",
-    tools_available=3
+    model="claude-3-5-sonnet", tokens_used=150, connection_status="connected", tools_available=3
 )
 console.print(status.render())
 

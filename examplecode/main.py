@@ -4,9 +4,8 @@ Claude Code - A Python implementation of an AI code editing agent
 Based on the tutorial from ampcode.com/how-to-build-an-agent
 """
 
-from rich.console import Console
 from dotenv import load_dotenv
-
+from rich.console import Console
 from src.core.agent import Agent
 
 # Load environment variables from .env file

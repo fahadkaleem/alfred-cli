@@ -1,12 +1,12 @@
 import subprocess
 from pathlib import Path
-from typing import Optional
-from .base_tool import BaseTool
-from ..core.tool_definition import ToolDefinition
+
 from ..core.configuration import ConfigurationManager
-from ..core.tool_registry import ToolRegistry
 from ..core.messages import ErrorMessages, SuccessMessages
+from ..core.tool_definition import ToolDefinition
+from ..core.tool_registry import ToolRegistry
 from ..schemas.bash import BashInput
+from .base_tool import BaseTool
 
 
 @ToolRegistry.register
@@ -30,8 +30,8 @@ class BashTool(BaseTool):
     def _bash(
         self,
         command: str,
-        timeout: Optional[int] = None,
-        description: Optional[str] = None,
+        timeout: int | None = None,
+        description: str | None = None,
     ) -> str:
         """Execute bash command with Claude Code's exact behavior"""
         try:

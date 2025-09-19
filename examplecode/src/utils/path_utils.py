@@ -8,7 +8,7 @@ def get_relative_path(absolute_path: str) -> str:
     try:
         path = Path(absolute_path)
         cwd = Path(os.getcwd())
-        
+
         # Try to get relative path
         try:
             rel_path = path.relative_to(cwd)

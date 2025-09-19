@@ -2,11 +2,12 @@
 """Test the app components without interactive input."""
 
 import logging
+
+from alfred.agent import AnthropicAgent
 from alfred.config import get_settings
 from alfred.context import ConversationContext, MessageRole
-from alfred.agent import AnthropicAgent
-from alfred.tools.registry import ToolRegistry
 from alfred.tools.calculator import CalculatorTool
+from alfred.tools.registry import ToolRegistry
 
 logging.basicConfig(level=logging.INFO)
 

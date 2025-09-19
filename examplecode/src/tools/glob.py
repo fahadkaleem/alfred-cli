@@ -1,11 +1,10 @@
 import glob
 import os
-from pathlib import Path
-from typing import Optional
-from .base_tool import BaseTool
+
 from ..core.tool_definition import ToolDefinition
 from ..core.tool_registry import ToolRegistry
 from ..schemas.glob import GlobInput
+from .base_tool import BaseTool
 
 
 @ToolRegistry.register
@@ -21,7 +20,7 @@ class GlobTool(BaseTool):
             function=self._glob,
         )
 
-    def _glob(self, pattern: str, path: Optional[str] = None) -> str:
+    def _glob(self, pattern: str, path: str | None = None) -> str:
         """Find files matching glob patterns, sorted by modification time"""
         try:
             # Determine search directory
@@ -54,7 +53,7 @@ class GlobTool(BaseTool):
                     try:
                         mtime = os.path.getmtime(full_path)
                         file_info.append((full_path, mtime))
-                    except (OSError, IOError):
+                    except OSError:
                         # File might have been deleted or inaccessible
                         continue
 

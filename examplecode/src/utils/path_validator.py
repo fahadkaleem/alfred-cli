@@ -1,12 +1,11 @@
 from pathlib import Path
-from typing import Tuple
 
 
 class PathValidator:
     """Centralized path validation utilities"""
-    
+
     @staticmethod
-    def validate_file_exists(file_path: str) -> Tuple[bool, Path, str]:
+    def validate_file_exists(file_path: str) -> tuple[bool, Path, str]:
         """
         Validate if a file exists.
         Returns: (is_valid, path_object, error_message)
@@ -18,9 +17,9 @@ class PathValidator:
             return True, path_obj, ""
         except Exception as e:
             return False, None, f"Invalid path: {str(e)}"
-    
+
     @staticmethod
-    def validate_parent_exists(file_path: str) -> Tuple[bool, Path, str]:
+    def validate_parent_exists(file_path: str) -> tuple[bool, Path, str]:
         """
         Validate if parent directory exists for creating new files.
         Returns: (is_valid, path_object, error_message)
@@ -33,7 +32,7 @@ class PathValidator:
             return True, path_obj, ""
         except Exception as e:
             return False, None, f"Invalid path: {str(e)}"
-    
+
     @staticmethod
     def is_file_empty(path_obj: Path) -> bool:
         """Check if a file is empty"""

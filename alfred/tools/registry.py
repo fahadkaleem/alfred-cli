@@ -1,6 +1,5 @@
 """Simple tool registry for managing available tools."""
 
-from typing import Dict, List, Optional, Type
 import logging
 
 from alfred.tools.base import Tool
@@ -11,7 +10,7 @@ class ToolRegistry:
 
     def __init__(self):
         """Initialize empty registry."""
-        self.tools: Dict[str, Tool] = {}
+        self.tools: dict[str, Tool] = {}
         self.logger = logging.getLogger(__name__)
 
     def register(self, tool: Tool) -> None:
@@ -21,20 +20,20 @@ class ToolRegistry:
         self.tools[tool.name] = tool
         self.logger.info(f"Registered tool: {tool.name}")
 
-    def register_class(self, tool_class: Type[Tool]) -> None:
+    def register_class(self, tool_class: type[Tool]) -> None:
         """Register a tool class by instantiating it."""
         tool = tool_class()
         self.register(tool)
 
-    def get(self, name: str) -> Optional[Tool]:
+    def get(self, name: str) -> Tool | None:
         """Get tool by name."""
         return self.tools.get(name)
 
-    def list_tools(self) -> List[str]:
+    def list_tools(self) -> list[str]:
         """List all registered tool names."""
         return list(self.tools.keys())
 
-    def get_anthropic_tools(self) -> List[Dict]:
+    def get_anthropic_tools(self) -> list[dict]:
         """Get all tools in Anthropic format."""
         return [tool.to_anthropic_format() for tool in self.tools.values()]
 

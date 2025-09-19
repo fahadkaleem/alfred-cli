@@ -2,4 +2,4 @@
 
 from alfred.cli.chat import ChatInterface
 
-__all__ = ['ChatInterface']
+__all__ = ["ChatInterface"]

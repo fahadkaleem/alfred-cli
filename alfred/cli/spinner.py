@@ -1,7 +1,7 @@
 """Simple loading spinner using ANSI escape codes."""
 
-import time
 import threading
+import time
 
 
 class LoadingSpinner:
@@ -20,7 +20,10 @@ class LoadingSpinner:
         print("\n", end="", flush=True)
         while self.spinning:
             # Move up, clear line, print spinner with message
-            print(f"\033[1A\033[2K\033[33m{self.spinner_chars[self.current]} {self.message}\033[0m", flush=True)
+            print(
+                f"\033[1A\033[2K\033[33m{self.spinner_chars[self.current]} {self.message}\033[0m",
+                flush=True,
+            )
             self.current = (self.current + 1) % len(self.spinner_chars)
             time.sleep(0.1)
         # Move up and clear the spinner line

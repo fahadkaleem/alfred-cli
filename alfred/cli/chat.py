@@ -2,23 +2,19 @@
 
 import pyperclip
 from rich.console import Console
+from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.text import Text
-from rich.markdown import Markdown
 
 from alfred.agent import AnthropicAgent
-from alfred.context import ConversationContext, MessageRole
 from alfred.cli.spinner import LoadingSpinner
+from alfred.context import ConversationContext, MessageRole
 
 
 class ChatInterface:
     """Chat interface for Alfred CLI."""
 
-    def __init__(
-        self,
-        agent: AnthropicAgent,
-        context: ConversationContext
-    ):
+    def __init__(self, agent: AnthropicAgent, context: ConversationContext):
         """Initialize chat interface."""
         self.agent = agent
         self.context = context
@@ -31,9 +27,12 @@ class ChatInterface:
         self.console.clear()
         self.console.print(
             Panel(
-                Text("Welcome to Alfred CLI! Type '/help' for commands, '/exit' to quit.", style="green"),
+                Text(
+                    "Welcome to Alfred CLI! Type '/help' for commands, '/exit' to quit.",
+                    style="green",
+                ),
                 title="🤖 Alfred CLI",
-                border_style="cyan"
+                border_style="cyan",
             )
         )
 
@@ -41,8 +40,7 @@ class ChatInterface:
         if not self.agent.validate_connection():
             self.console.print(
                 Panel(
-                    "❌ Failed to connect to Anthropic API. Check your API key.",
-                    border_style="red"
+                    "❌ Failed to connect to Anthropic API. Check your API key.", border_style="red"
                 )
             )
             return
@@ -63,11 +61,11 @@ class ChatInterface:
                     continue
 
                 # Handle special keywords
-                if user_input.lower() in ['exit', 'quit', 'bye']:
+                if user_input.lower() in ["exit", "quit", "bye"]:
                     break
 
                 # Handle commands
-                if user_input.startswith('/'):
+                if user_input.startswith("/"):
                     if self._handle_command(user_input):
                         continue
 
@@ -99,7 +97,7 @@ class ChatInterface:
                         max_tokens=self.agent.settings.max_tokens,
                         temperature=self.agent.settings.temperature,
                         messages=self.context.get_messages(),
-                        tools=enabled_tools
+                        tools=enabled_tools,
                     )
                 finally:
                     spinner.stop()
@@ -115,12 +113,14 @@ class ChatInterface:
                         content_list.append({"type": "text", "text": content_block.text})
                     elif content_block.type == "tool_use":
                         tool_calls.append(content_block)
-                        content_list.append({
-                            "type": "tool_use",
-                            "id": content_block.id,
-                            "name": content_block.name,
-                            "input": content_block.input
-                        })
+                        content_list.append(
+                            {
+                                "type": "tool_use",
+                                "id": content_block.id,
+                                "name": content_block.name,
+                                "input": content_block.input,
+                            }
+                        )
 
                 # Add assistant response to context
                 self.context.add_message(MessageRole.ASSISTANT, content_list)
@@ -141,7 +141,7 @@ class ChatInterface:
                         Panel(
                             f"[Tool: {tool_call.name}]\nInput: {tool_call.input}",
                             title="🔧 Tool Execution",
-                            border_style="yellow"
+                            border_style="yellow",
                         )
                     )
 
@@ -149,32 +149,19 @@ class ChatInterface:
                     result = self.agent.tool_registry.execute(tool_call.name, **tool_call.input)
 
                     # Show result
-                    self.console.print(
-                        Panel(
-                            result,
-                            title="Tool Result",
-                            border_style="blue"
-                        )
-                    )
+                    self.console.print(Panel(result, title="Tool Result", border_style="blue"))
 
                     # Format for API
-                    tool_results.append({
-                        "type": "tool_result",
-                        "tool_use_id": tool_call.id,
-                        "content": result
-                    })
+                    tool_results.append(
+                        {"type": "tool_result", "tool_use_id": tool_call.id, "content": result}
+                    )
 
                 # Add tool results to context
                 self.context.add_message(MessageRole.USER, tool_results)
                 # Continue loop
 
         except Exception as e:
-            self.console.print(
-                Panel(
-                    f"Error: {str(e)}",
-                    border_style="red"
-                )
-            )
+            self.console.print(Panel(f"Error: {str(e)}", border_style="red"))
 
     def _get_enabled_tools(self):
         """Get list of enabled tools in Anthropic format."""
@@ -187,7 +174,6 @@ class ChatInterface:
             if name in self.enabled_tools
         ]
 
-
     def _display_assistant_message(self, content: str):
         """Display assistant message with proper formatting."""
         if not content:
@@ -195,29 +181,16 @@ class ChatInterface:
 
         if "```" in content:
             # Has code blocks - use markdown
-            self.console.print(
-                Panel(
-                    Markdown(content),
-                    title="Assistant",
-                    border_style="green"
-                )
-            )
+            self.console.print(Panel(Markdown(content), title="Assistant", border_style="green"))
         else:
             # Plain text
-            self.console.print(
-                Panel(
-                    content.strip(),
-                    title="Assistant",
-                    border_style="green"
-                )
-            )
-
+            self.console.print(Panel(content.strip(), title="Assistant", border_style="green"))
 
     def _handle_command(self, command: str) -> bool:
         """Handle slash commands."""
         cmd = command.lower().strip()
 
-        if cmd == '/help':
+        if cmd == "/help":
             help_text = """
 [bold]Available Commands:[/bold]
   /help    - Show this help message
@@ -237,22 +210,22 @@ class ChatInterface:
             self.console.print(Panel(help_text, title="Help", border_style="cyan"))
             return True
 
-        elif cmd == '/clear':
+        elif cmd == "/clear":
             self.context.clear()
             self.console.clear()
             self.console.print("🔄 Conversation cleared.\n")
             return True
 
-        elif cmd == '/reset':
+        elif cmd == "/reset":
             # Keep last few system messages if any, clear the rest
             self.context.clear()
             self.console.print("🔄 Conversation reset.\n")
             return True
 
-        elif cmd in ['/exit', '/quit']:
+        elif cmd in ["/exit", "/quit"]:
             raise KeyboardInterrupt
 
-        elif cmd == '/tools':
+        elif cmd == "/tools":
             if not self.agent.tool_registry:
                 self.console.print("No tools available.")
             else:
@@ -266,7 +239,7 @@ class ChatInterface:
                 )
             return True
 
-        elif cmd.startswith('/tool'):
+        elif cmd.startswith("/tool"):
             parts = command.split()
             if len(parts) < 3:
                 self.console.print("Usage: /tool [enable|disable] [tool_name]")
@@ -275,14 +248,17 @@ class ChatInterface:
             action = parts[1].lower()
             tool_name = parts[2].lower()
 
-            if not self.agent.tool_registry or tool_name not in self.agent.tool_registry.list_tools():
+            if (
+                not self.agent.tool_registry
+                or tool_name not in self.agent.tool_registry.list_tools()
+            ):
                 self.console.print(f"Tool '{tool_name}' not found.")
                 return True
 
-            if action == 'enable':
+            if action == "enable":
                 self.enabled_tools.add(tool_name)
                 self.console.print(f"✅ Tool '{tool_name}' enabled.")
-            elif action == 'disable':
+            elif action == "disable":
                 self.enabled_tools.discard(tool_name)
                 self.console.print(f"❌ Tool '{tool_name}' disabled.")
             else:
@@ -290,7 +266,7 @@ class ChatInterface:
 
             return True
 
-        elif cmd == '/retry':
+        elif cmd == "/retry":
             if self.context.messages:
                 # Remove last assistant message
                 if self.context.messages[-1].role == MessageRole.ASSISTANT:
@@ -304,7 +280,7 @@ class ChatInterface:
             self.console.print("Nothing to retry.")
             return True
 
-        elif cmd == '/undo':
+        elif cmd == "/undo":
             if len(self.context.messages) >= 2:
                 # Remove last exchange (user + assistant)
                 self.context.messages.pop()  # Remove assistant
@@ -314,7 +290,7 @@ class ChatInterface:
                 self.console.print("Nothing to undo.")
             return True
 
-        elif cmd == '/copy':
+        elif cmd == "/copy":
             if self.context.messages:
                 # Get last assistant message
                 for msg in reversed(self.context.messages):

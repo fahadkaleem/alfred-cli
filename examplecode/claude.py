@@ -6,23 +6,20 @@ Uses Textual for the UI with a growing input box at the bottom
 
 from __future__ import annotations
 
-from textual import events
-from textual.app import App, ComposeResult
-from textual.message import Message
-from textual.widgets import TextArea, RichLog, Static
-from textual.containers import Vertical, Horizontal
-from dotenv import load_dotenv
-from rich.console import Console
-from rich.text import Text
-from rich.panel import Panel
-from rich.align import Align
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
-from src.core.agent import Agent
+from dotenv import load_dotenv
+from rich.console import Console
+from rich.panel import Panel
+from rich.text import Text
 from src.core import agent as agent_module
-from src.core import console_renderer
-from src.core import configuration
+from src.core import configuration, console_renderer
+from src.core.agent import Agent
+from textual import events
+from textual.app import App, ComposeResult
+from textual.message import Message
+from textual.widgets import RichLog, Static, TextArea
 
 # Load environment variables from .env file
 load_dotenv()
@@ -46,7 +43,7 @@ class GrowingInput(TextArea):
         if event.key == "ctrl+c":
             self.app.exit()
             return
-            
+
         # Plain Enter with backslash at end adds newline
         if event.key == "enter":
             if self.text.endswith("\\"):
@@ -145,11 +142,11 @@ class ClaudeCodeApp(App):
         self.output_log = RichLog(highlight=True, markup=True, wrap=True)
         self.output_log.can_focus = False  # Make it non-selectable
         yield self.output_log
-        
+
         # Spinner above input box
         self.spinner_label = Static("", id="spinner")
         yield self.spinner_label
-        
+
         # Input box at bottom
         self.input_box = GrowingInput(
             soft_wrap=True,
@@ -172,7 +169,7 @@ class ClaudeCodeApp(App):
         content.append("/status", style="dim")
         content.append(" for your current setup\n\n", style="white")
         content.append(f"  cwd: {cwd}", style="white")
-        
+
         # Create panel with orange border
         panel = Panel(
             content,
@@ -180,10 +177,10 @@ class ClaudeCodeApp(App):
             width=80,
             padding=(0, 1)
         )
-        
+
         self.output_log.write(panel)
         self.output_log.write("")  # Add blank line after
-        
+
         # Focus the input
         self.input_box.focus()
 
@@ -193,12 +190,12 @@ class ClaudeCodeApp(App):
             self.spinner_label.update(f"{self.spinner_chars[self.spinner_index]} Thinking...")
             self.spinner_index = (self.spinner_index + 1) % len(self.spinner_chars)
             await asyncio.sleep(0.1)
-    
+
     async def start_spinner(self):
         """Start spinner animation"""
         if not self.spinner_task:
             self.spinner_task = asyncio.create_task(self.update_spinner())
-    
+
     async def stop_spinner(self):
         """Stop spinner animation"""
         if self.spinner_task:
@@ -213,18 +210,18 @@ class ClaudeCodeApp(App):
     async def on_growing_input_submitted(self, message: GrowingInput.Submitted) -> None:
         """Handle input submission."""
         user_text = message.text
-        
+
         # Check for exit commands
         if user_text.lower() in ["exit", "quit", "bye"]:
             self.exit()
             return
-        
+
         # Display user message
         self.output_log.write(Text(f"> {user_text}", style="white"))
-        
+
         # Start spinner
         await self.start_spinner()
-        
+
         # Process message in background thread to avoid blocking UI
         try:
             # Create a custom console that writes to our log
@@ -232,34 +229,34 @@ class ClaudeCodeApp(App):
                 def __init__(self, log_widget):
                     super().__init__(force_terminal=True, force_interactive=False)
                     self.log_widget = log_widget
-                
+
                 def print(self, *args, **kwargs):
                     # Convert to Text and write to log
                     text = self.render_str(*args, **kwargs)
                     self.log_widget.write(text)
-            
+
             # Replace the global console objects in the agent module and its dependencies
             log_console = LogConsole(self.output_log)
-            
+
             # Store original consoles
             original_agent_console = agent_module.console
             original_renderer_console = console_renderer.console
             original_config_console = configuration.console
-            
+
             # Replace all console instances
             agent_module.console = log_console
             console_renderer.console = log_console
             configuration.console = log_console
-            
+
             # Run agent.chat in executor (blocking operation)
             loop = asyncio.get_event_loop()
             await loop.run_in_executor(self.executor, self.agent.chat, user_text)
-            
+
             # Restore original consoles
             agent_module.console = original_agent_console
             console_renderer.console = original_renderer_console
             configuration.console = original_config_console
-                
+
         except Exception as e:
             self.output_log.write(Text(f"Error: {str(e)}", style="red"))
         finally:

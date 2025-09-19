@@ -3,7 +3,7 @@
 
 class ErrorMessages:
     """Standard error messages used across the application"""
-    
+
     FILE_NOT_FOUND = "File does not exist"
     FILE_EMPTY = "File exists but has empty contents"
     PARENT_DIR_NOT_FOUND = "Parent directory does not exist"
@@ -22,7 +22,7 @@ class ErrorMessages:
 
 class SuccessMessages:
     """Standard success messages used across the application"""
-    
+
     FILE_CREATED = "File created successfully"
     FILE_EDITED = "File edited successfully"
     COMMAND_SUCCESS = "Command executed successfully"

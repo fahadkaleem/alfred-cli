@@ -1,8 +1,8 @@
 """Base tool class providing consistent interface for all tools."""
 
-from abc import ABC, abstractmethod
-from typing import Dict, Any
 import inspect
+from abc import ABC, abstractmethod
+from typing import Any
 
 
 class Tool(ABC):
@@ -28,7 +28,7 @@ class Tool(ABC):
         """
         pass
 
-    def to_anthropic_format(self) -> Dict[str, Any]:
+    def to_anthropic_format(self) -> dict[str, Any]:
         """Convert tool to Anthropic's expected format.
 
         Uses the execute method's signature to build the schema.
@@ -39,26 +39,23 @@ class Tool(ABC):
         required = []
 
         for param_name, param in sig.parameters.items():
-            if param_name in ['self', 'kwargs']:
+            if param_name in ["self", "kwargs"]:
                 continue
 
             # Determine type from annotation
             param_type = "string"  # default
             if param.annotation != param.empty:
-                if param.annotation == int:
+                if param.annotation is int:
                     param_type = "integer"
-                elif param.annotation == float:
+                elif param.annotation is float:
                     param_type = "number"
-                elif param.annotation == bool:
+                elif param.annotation is bool:
                     param_type = "boolean"
 
             # Get description from docstring if available
             param_desc = f"{param_name} parameter"
 
-            properties[param_name] = {
-                "type": param_type,
-                "description": param_desc
-            }
+            properties[param_name] = {"type": param_type, "description": param_desc}
 
             # Check if required (no default value)
             if param.default == param.empty:
@@ -67,9 +64,5 @@ class Tool(ABC):
         return {
             "name": self.name,
             "description": self.description,
-            "input_schema": {
-                "type": "object",
-                "properties": properties,
-                "required": required
-            }
+            "input_schema": {"type": "object", "properties": properties, "required": required},
         }

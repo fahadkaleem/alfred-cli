@@ -4,14 +4,14 @@
 import logging
 import sys
 
-from alfred.config import get_settings
-from alfred.context import ConversationContext
 from alfred.agent import AnthropicAgent
 from alfred.cli.chat import ChatInterface
-from alfred.tools.registry import ToolRegistry
+from alfred.config import get_settings
+from alfred.context import ConversationContext
 from alfred.tools.calculator import CalculatorTool
 from alfred.tools.file_reader import FileReaderTool
 from alfred.tools.get_time import TimeTool
+from alfred.tools.registry import ToolRegistry
 
 
 def setup_logging() -> None:
@@ -19,7 +19,7 @@ def setup_logging() -> None:
     # Disable most logging to keep the interface clean
     logging.basicConfig(
         level=logging.ERROR,  # Only show errors
-        format='%(message)s'  # Simple format
+        format="%(message)s",  # Simple format
     )
 
 
@@ -68,5 +68,5 @@ def main():
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

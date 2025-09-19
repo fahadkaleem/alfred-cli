@@ -1,7 +1,7 @@
 """Conversation management for the Claude Code agent"""
-from typing import Dict, Any, List, Optional, Literal
-from enum import Enum
 from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any, Literal
 
 
 class ConversationState(Enum):
@@ -28,32 +28,32 @@ class ConversationTurn:
     """Represents a single turn in the conversation"""
     role: Literal["user", "assistant"]
     content: Any
-    timestamp: Optional[float] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    timestamp: float | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class ConversationManager:
     """Manages conversation state, message flow, and response processing"""
-    
+
     def __init__(self):
         """Initialize conversation manager"""
-        self.messages: List[Dict[str, Any]] = []
+        self.messages: list[dict[str, Any]] = []
         self.state = ConversationState.IDLE
-        self.current_turn: Optional[ConversationTurn] = None
+        self.current_turn: ConversationTurn | None = None
         self.turn_count = 0
-        
+
     def start_user_turn(self, message: str) -> None:
         """Start a new user turn in the conversation"""
         # Validate and clean message
         if not message or not message.strip():
             message = "No input provided"
-        
+
         # Add to messages
         self.messages.append({
             "role": "user",
             "content": message.strip()
         })
-        
+
         # Update state
         self.state = ConversationState.WAITING_FOR_RESPONSE
         self.turn_count += 1
@@ -61,37 +61,37 @@ class ConversationManager:
             role="user",
             content=message.strip()
         )
-    
-    def add_assistant_response(self, content: List[Dict[str, Any]]) -> None:
+
+    def add_assistant_response(self, content: list[dict[str, Any]]) -> None:
         """Add assistant's response to the conversation"""
         # Validate content
         if not content:
             content = [{"type": "text", "text": "No response"}]
-        
+
         # Add to messages
         self.messages.append({
             "role": "assistant",
             "content": content
         })
-        
+
         # Update current turn
         self.current_turn = ConversationTurn(
             role="assistant",
             content=content
         )
-    
-    def add_tool_results(self, results: List[Dict[str, Any]]) -> None:
+
+    def add_tool_results(self, results: list[dict[str, Any]]) -> None:
         """Add tool execution results to the conversation"""
         # Tool results go as user messages in Claude's format
         self.messages.append({
             "role": "user",
             "content": results
         })
-        
+
         # Update state to indicate we're continuing
         self.state = ConversationState.WAITING_FOR_RESPONSE
-    
-    def process_response(self, response) -> Dict[str, Any]:
+
+    def process_response(self, response) -> dict[str, Any]:
         """Process Claude's response and extract relevant information"""
         result = {
             "stop_reason": response.stop_reason,
@@ -99,7 +99,7 @@ class ConversationManager:
             "tool_calls": [],
             "assistant_content": []
         }
-        
+
         # Process content blocks
         for content in response.content:
             if content.type == "text":
@@ -120,19 +120,19 @@ class ConversationManager:
                     "name": content.name,
                     "input": content.input
                 })
-        
+
         return result
-    
+
     def should_continue(self, stop_reason: str) -> bool:
         """Determine if conversation should continue based on stop reason"""
         # Tool use and pause require continuation
         return stop_reason in ["tool_use", "pause_turn"]
-    
+
     def is_complete(self, stop_reason: str) -> bool:
         """Check if conversation turn is complete"""
         # These stop reasons indicate completion
         return stop_reason in ["end_turn", "max_tokens", "stop_sequence", "refusal"]
-    
+
     def update_state_for_stop_reason(self, stop_reason: str) -> None:
         """Update conversation state based on stop reason"""
         if stop_reason == "tool_use":
@@ -144,12 +144,12 @@ class ConversationManager:
         else:
             # Unknown stop reason
             self.state = ConversationState.IDLE
-    
-    def get_messages_for_api(self) -> List[Dict[str, Any]]:
+
+    def get_messages_for_api(self) -> list[dict[str, Any]]:
         """Get messages formatted for Claude API"""
         return self.messages
-    
-    def get_conversation_info(self) -> Dict[str, Any]:
+
+    def get_conversation_info(self) -> dict[str, Any]:
         """Get information about the current conversation"""
         return {
             "state": self.state.value,
@@ -157,27 +157,27 @@ class ConversationManager:
             "message_count": len(self.messages),
             "current_turn": self.current_turn
         }
-    
+
     def reset(self) -> None:
         """Reset the conversation to start fresh"""
         self.messages = []
         self.state = ConversationState.IDLE
         self.current_turn = None
         self.turn_count = 0
-    
-    def format_tool_results(self, tool_results: List[tuple]) -> List[Dict[str, Any]]:
+
+    def format_tool_results(self, tool_results: list[tuple]) -> list[dict[str, Any]]:
         """Format tool results for adding to conversation"""
         formatted_results = []
-        
+
         for tool_id, result_content in tool_results:
             # Ensure content is not empty
             if not result_content or not str(result_content).strip():
                 result_content = "No output"
-            
+
             formatted_results.append({
                 "type": "tool_result",
                 "tool_use_id": tool_id,
                 "content": str(result_content)
             })
-        
+
         return formatted_results

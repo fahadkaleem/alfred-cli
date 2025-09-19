@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from zoneinfo import ZoneInfo
+
 from alfred.tools.base import Tool
 
 
@@ -32,8 +33,10 @@ class TimeTool(Tool):
         except KeyError:
             # Invalid timezone, show available zones hint and fallback to UTC
             now = datetime.now(ZoneInfo("UTC"))
-            return (f"Invalid timezone '{timezone}'. "
-                   f"UTC time: {now.strftime('%Y-%m-%d %H:%M:%S %Z')}. "
-                   f"Use IANA timezone names like 'America/New_York' or 'Asia/Tokyo'.")
+            return (
+                f"Invalid timezone '{timezone}'. "
+                f"UTC time: {now.strftime('%Y-%m-%d %H:%M:%S %Z')}. "
+                f"Use IANA timezone names like 'America/New_York' or 'Asia/Tokyo'."
+            )
         except Exception as e:
             return f"Error getting time: {str(e)}"

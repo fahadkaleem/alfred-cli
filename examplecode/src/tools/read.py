@@ -1,17 +1,17 @@
-from typing import Optional
-from src.tools.filesystem_tool import FileSystemTool
-from src.core.tool_definition import ToolDefinition
-from src.core.tool_response import ToolResponse
+
 from src.core.configuration import ConfigurationManager
-from src.core.tool_registry import ToolRegistry
 from src.core.messages import ErrorMessages
+from src.core.tool_definition import ToolDefinition
+from src.core.tool_registry import ToolRegistry
+from src.core.tool_response import ToolResponse
 from src.schemas.read_file import ReadFileInput
+from src.tools.filesystem_tool import FileSystemTool
 
 
 @ToolRegistry.register
 class ReadTool(FileSystemTool):
     """Tool for reading file contents"""
-    
+
     def __init__(self):
         self.config = ConfigurationManager()
 
@@ -25,10 +25,10 @@ class ReadTool(FileSystemTool):
         )
 
     def _read_file(
-        self, file_path: str, offset: Optional[int] = None, limit: Optional[int] = None
+        self, file_path: str, offset: int | None = None, limit: int | None = None
     ) -> ToolResponse:
         """Read contents of a file with cat -n format"""
-        
+
         try:
             # Use base class method for validation
             exists, file_path_obj, relative_path = self._validate_file_exists(file_path)
@@ -66,11 +66,11 @@ class ReadTool(FileSystemTool):
                 formatted_lines.append(f"     {i}→{line}")
 
             raw_result = "\n".join(formatted_lines)
-            
+
             # Create display content
             line_count = len(selected_lines)
             display_content = f"Read {line_count} lines"
-            
+
             return self._create_success_response(
                 display_content=display_content,
                 raw_result=raw_result

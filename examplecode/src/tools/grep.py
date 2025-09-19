@@ -1,12 +1,12 @@
-import subprocess
 import shutil
-from pathlib import Path
-from typing import Optional, Literal
-from .base_tool import BaseTool
+import subprocess
+from typing import Literal
+
 from ..core.tool_definition import ToolDefinition
-from ..core.tool_response import ToolResponse
 from ..core.tool_registry import ToolRegistry
+from ..core.tool_response import ToolResponse
 from ..schemas.grep import GrepInput
+from .base_tool import BaseTool
 
 
 @ToolRegistry.register
@@ -25,19 +25,17 @@ class GrepTool(BaseTool):
     def _grep(
         self,
         pattern: str,
-        path: Optional[str] = None,
-        glob: Optional[str] = None,
-        output_mode: Optional[
-            Literal["content", "files_with_matches", "count"]
-        ] = "files_with_matches",
-        B: Optional[int] = None,
-        A: Optional[int] = None,
-        C: Optional[int] = None,
-        n: Optional[bool] = None,
-        i: Optional[bool] = None,
-        type: Optional[str] = None,
-        head_limit: Optional[int] = None,
-        multiline: Optional[bool] = False,
+        path: str | None = None,
+        glob: str | None = None,
+        output_mode: Literal["content", "files_with_matches", "count"] | None = "files_with_matches",
+        B: int | None = None,
+        A: int | None = None,
+        C: int | None = None,
+        n: bool | None = None,
+        i: bool | None = None,
+        type: str | None = None,
+        head_limit: int | None = None,
+        multiline: bool | None = False,
         **kwargs,
     ) -> ToolResponse:
         """Search for patterns in files using ripgrep"""
@@ -127,7 +125,7 @@ class GrepTool(BaseTool):
                     )
                     return ToolResponse(
                         success=False,
-                        display_content=f"Search failed",
+                        display_content="Search failed",
                         raw_result=f"Error: {error_msg}"
                     )
 
@@ -150,11 +148,11 @@ class GrepTool(BaseTool):
                     display_content="No matches found",
                     raw_result="No matches found"
                 )
-            
+
             # Count results for display
             result_lines = output.strip().split("\n")
             num_results = len(result_lines)
-            
+
             if output_mode == "files_with_matches":
                 display = f"Found matches in {num_results} file{'s' if num_results != 1 else ''}"
             elif output_mode == "count":
@@ -183,6 +181,6 @@ class GrepTool(BaseTool):
         except Exception as e:
             return ToolResponse(
                 success=False,
-                display_content=f"Search error",
+                display_content="Search error",
                 raw_result=f"Error executing grep: {str(e)}"
             )
