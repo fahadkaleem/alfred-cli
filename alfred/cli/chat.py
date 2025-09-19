@@ -36,16 +36,7 @@ class ChatInterface:
             )
         )
 
-        # Check connection
-        if not self.agent.validate_connection():
-            self.console.print(
-                Panel(
-                    "❌ Failed to connect to Anthropic API. Check your API key.", border_style="red"
-                )
-            )
-            return
-
-        self.console.print(Text("✅ Connected to Anthropic API\n", style="green"))
+        # Skip connection validation - it will fail with a clear error on first message anyway
 
         # Main loop
         try:
@@ -122,8 +113,9 @@ class ChatInterface:
                             }
                         )
 
-                # Add assistant response to context
-                self.context.add_message(MessageRole.ASSISTANT, content_list)
+                # Add assistant response to context (only if there's content)
+                if content_list:
+                    self.context.add_message(MessageRole.ASSISTANT, content_list)
 
                 # Display text if any
                 if text_content:

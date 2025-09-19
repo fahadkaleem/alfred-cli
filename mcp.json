@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "demo": {
+      "command": "python",
+      "args": ["alfred/mcps/demo_server.py"],
+      "env": {},
+      "disabled": false
+    },
+    "zen": {
+      "command": "/Users/mohammedfahadkaleem/Documents/Workspace/github_repos/zen-mcp-server/.zen_venv/bin/python",
+      "args": [
+        "/Users/mohammedfahadkaleem/Documents/Workspace/github_repos/zen-mcp-server/server.py"
+      ]
+    }
+  }
+}

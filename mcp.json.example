@@ -1,0 +1,57 @@
+{
+  "mcpServers": {
+    "demo": {
+      "command": "python",
+      "args": ["alfred/mcps/demo_server.py"],
+      "env": {},
+      "disabled": false
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"],
+      "env": {},
+      "disabled": true
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "your-github-token-here"
+      },
+      "disabled": true
+    },
+    "google-maps": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-google-maps"],
+      "env": {
+        "GOOGLE_MAPS_API_KEY": "your-google-maps-api-key"
+      },
+      "disabled": true
+    },
+    "slack": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-slack"],
+      "env": {
+        "SLACK_BOT_TOKEN": "xoxb-your-bot-token",
+        "SLACK_TEAM_ID": "T00000000"
+      },
+      "disabled": true
+    },
+    "postgres": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres"],
+      "env": {
+        "POSTGRES_CONNECTION_STRING": "postgresql://user:password@localhost/mydb"
+      },
+      "disabled": true
+    },
+    "custom_python_server": {
+      "command": "python",
+      "args": ["/path/to/your/custom_server.py"],
+      "env": {
+        "CUSTOM_ENV_VAR": "value"
+      },
+      "disabled": true
+    }
+  }
+}
