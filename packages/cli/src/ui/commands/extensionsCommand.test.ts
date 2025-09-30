@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { GeminiCLIExtension } from '@google/gemini-cli-core';
+import type { AlfredCLIExtension } from '@alfred/alfred-cli-core';
 import {
   updateAllUpdatableExtensions,
   updateExtension,
@@ -151,7 +151,7 @@ describe('extensionsCommand', () => {
     });
 
     it('should update a single extension by name', async () => {
-      const extension: GeminiCLIExtension = {
+      const extension: AlfredCLIExtension = {
         name: 'ext-one',
         version: '1.0.0',
         isActive: true,
@@ -196,7 +196,7 @@ describe('extensionsCommand', () => {
     });
 
     it('should update multiple extensions by name', async () => {
-      const extensionOne: GeminiCLIExtension = {
+      const extensionOne: AlfredCLIExtension = {
         name: 'ext-one',
         version: '1.0.0',
         isActive: true,
@@ -207,7 +207,7 @@ describe('extensionsCommand', () => {
           source: 'https://github.com/some/extension.git',
         },
       };
-      const extensionTwo: GeminiCLIExtension = {
+      const extensionTwo: AlfredCLIExtension = {
         name: 'ext-two',
         version: '1.0.0',
         isActive: true,
@@ -261,7 +261,7 @@ describe('extensionsCommand', () => {
         throw new Error('Update completion not found');
       }
 
-      const extensionOne: GeminiCLIExtension = {
+      const extensionOne: AlfredCLIExtension = {
         name: 'ext-one',
         version: '1.0.0',
         isActive: true,
@@ -272,7 +272,7 @@ describe('extensionsCommand', () => {
           source: 'https://github.com/some/extension.git',
         },
       };
-      const extensionTwo: GeminiCLIExtension = {
+      const extensionTwo: AlfredCLIExtension = {
         name: 'another-ext',
         version: '1.0.0',
         isActive: true,
@@ -283,7 +283,7 @@ describe('extensionsCommand', () => {
           source: 'https://github.com/some/extension.git',
         },
       };
-      const allExt: GeminiCLIExtension = {
+      const allExt: AlfredCLIExtension = {
         name: 'all-ext',
         version: '1.0.0',
         isActive: true,

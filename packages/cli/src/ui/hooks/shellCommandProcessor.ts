@@ -15,8 +15,8 @@ import type {
   Config,
   GeminiClient,
   ShellExecutionResult,
-} from '@google/gemini-cli-core';
-import { isBinary, ShellExecutionService } from '@google/gemini-cli-core';
+} from '@alfred/alfred-cli-core';
+import { isBinary, ShellExecutionService } from '@alfred/alfred-cli-core';
 import { type PartListUnion } from '@google/genai';
 import type { UseHistoryManagerReturn } from './useHistoryManager.js';
 import { SHELL_COMMAND_NAME } from '../constants.js';
@@ -31,7 +31,7 @@ export const OUTPUT_UPDATE_INTERVAL_MS = 1000;
 const MAX_OUTPUT_LENGTH = 10000;
 
 function addShellCommandToGeminiHistory(
-  geminiClient: GeminiClient,
+  alfredClient: GeminiClient,
   rawQuery: string,
   resultText: string,
 ) {
@@ -40,7 +40,7 @@ function addShellCommandToGeminiHistory(
       ? resultText.substring(0, MAX_OUTPUT_LENGTH) + '\n... (truncated)'
       : resultText;
 
-  geminiClient.addHistory({
+  alfredClient.addHistory({
     role: 'user',
     parts: [
       {
@@ -70,7 +70,7 @@ export const useShellCommandProcessor = (
   onExec: (command: Promise<void>) => void,
   onDebugMessage: (message: string) => void,
   config: Config,
-  geminiClient: GeminiClient,
+  alfredClient: GeminiClient,
   setShellInputFocused: (value: boolean) => void,
   terminalWidth?: number,
   terminalHeight?: number,
@@ -299,7 +299,7 @@ export const useShellCommandProcessor = (
 
               // Add the same complete, contextual result to the LLM's history.
               addShellCommandToGeminiHistory(
-                geminiClient,
+                alfredClient,
                 rawQuery,
                 finalOutput,
               );
@@ -360,7 +360,7 @@ export const useShellCommandProcessor = (
       addItemToHistory,
       setPendingHistoryItem,
       onExec,
-      geminiClient,
+      alfredClient,
       setShellInputFocused,
       terminalHeight,
       terminalWidth,

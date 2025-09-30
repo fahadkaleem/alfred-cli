@@ -23,7 +23,7 @@ import { useUIActions } from '../contexts/UIActionsContext.js';
 import { useVimMode } from '../contexts/VimModeContext.js';
 import { useConfig } from '../contexts/ConfigContext.js';
 import { useSettings } from '../contexts/SettingsContext.js';
-import { ApprovalMode } from '@google/gemini-cli-core';
+import { ApprovalMode } from '@alfred/alfred-cli-core';
 import { StreamingState } from '../types.js';
 import { ConfigInitDisplay } from '../components/ConfigInitDisplay.js';
 
@@ -81,7 +81,7 @@ export const Composer = () => {
         alignItems={isNarrow ? 'flex-start' : 'center'}
       >
         <Box marginRight={1}>
-          {process.env['GEMINI_SYSTEM_MD'] && (
+          {process.env['ALFRED_SYSTEM_MD'] && (
             <Text color={theme.status.error}>|⌐■_■| </Text>
           )}
           {uiState.ctrlCPressedOnce ? (
@@ -98,7 +98,7 @@ export const Composer = () => {
             !settings.merged.ui?.hideContextSummary && (
               <ContextSummaryDisplay
                 ideContext={uiState.ideContextState}
-                geminiMdFileCount={uiState.geminiMdFileCount}
+                alfredMdFileCount={uiState.alfredMdFileCount}
                 contextFileNames={contextFileNames}
                 mcpServers={config.getMcpServers()}
                 blockedMcpServers={config.getBlockedMcpServers()}

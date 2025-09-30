@@ -28,7 +28,7 @@ import { ShellTool } from '../tools/shell.js';
 import { WriteFileTool } from '../tools/write-file.js';
 import { WebFetchTool } from '../tools/web-fetch.js';
 import { ReadManyFilesTool } from '../tools/read-many-files.js';
-import { MemoryTool, setGeminiMdFilename } from '../tools/memoryTool.js';
+import { MemoryTool, setAlfredMdFilename } from '../tools/memoryTool.js';
 import { WebSearchTool } from '../tools/web-search.js';
 import { GeminiClient } from '../core/client.js';
 import { BaseLlmClient } from '../core/baseLlmClient.js';
@@ -113,7 +113,7 @@ export interface OutputSettings {
   format?: OutputFormat;
 }
 
-export interface GeminiCLIExtension {
+export interface AlfredCLIExtension {
   name: string;
   version: string;
   isActive: boolean;
@@ -204,7 +204,7 @@ export interface ConfigParameters {
   mcpServerCommand?: string;
   mcpServers?: Record<string, MCPServerConfig>;
   userMemory?: string;
-  geminiMdFileCount?: number;
+  alfredMdFileCount?: number;
   approvalMode?: ApprovalMode;
   showMemoryUsage?: boolean;
   contextFileName?: string | string[];
@@ -213,7 +213,7 @@ export interface ConfigParameters {
   usageStatisticsEnabled?: boolean;
   fileFiltering?: {
     respectGitIgnore?: boolean;
-    respectGeminiIgnore?: boolean;
+    respectAlfredIgnore?: boolean;
     enableRecursiveFileSearch?: boolean;
     disableFuzzySearch?: boolean;
   };
@@ -228,7 +228,7 @@ export interface ConfigParameters {
   maxSessionTurns?: number;
   experimentalZedIntegration?: boolean;
   listExtensions?: boolean;
-  extensions?: GeminiCLIExtension[];
+  extensions?: AlfredCLIExtension[];
   blockedMcpServers?: Array<{ name: string; extensionName: string }>;
   noBrowser?: boolean;
   summarizeToolOutput?: Record<string, SummarizeToolOutputSettings>;
@@ -279,18 +279,18 @@ export class Config {
   private readonly mcpServerCommand: string | undefined;
   private readonly mcpServers: Record<string, MCPServerConfig> | undefined;
   private userMemory: string;
-  private geminiMdFileCount: number;
+  private alfredMdFileCount: number;
   private approvalMode: ApprovalMode;
   private readonly showMemoryUsage: boolean;
   private readonly accessibility: AccessibilitySettings;
   private readonly telemetrySettings: TelemetrySettings;
   private readonly usageStatisticsEnabled: boolean;
-  private geminiClient!: GeminiClient;
+  private alfredClient!: GeminiClient;
   private baseLlmClient!: BaseLlmClient;
   private modelRouterService: ModelRouterService;
   private readonly fileFiltering: {
     respectGitIgnore: boolean;
-    respectGeminiIgnore: boolean;
+    respectAlfredIgnore: boolean;
     enableRecursiveFileSearch: boolean;
     disableFuzzySearch: boolean;
   };
@@ -310,7 +310,7 @@ export class Config {
   private inFallbackMode = false;
   private readonly maxSessionTurns: number;
   private readonly listExtensions: boolean;
-  private readonly _extensions: GeminiCLIExtension[];
+  private readonly _extensions: AlfredCLIExtension[];
   private readonly _blockedMcpServers: Array<{
     name: string;
     extensionName: string;
@@ -368,7 +368,7 @@ export class Config {
     this.mcpServerCommand = params.mcpServerCommand;
     this.mcpServers = params.mcpServers;
     this.userMemory = params.userMemory ?? '';
-    this.geminiMdFileCount = params.geminiMdFileCount ?? 0;
+    this.alfredMdFileCount = params.alfredMdFileCount ?? 0;
     this.approvalMode = params.approvalMode ?? ApprovalMode.DEFAULT;
     this.showMemoryUsage = params.showMemoryUsage ?? false;
     this.accessibility = params.accessibility ?? {};
@@ -385,7 +385,7 @@ export class Config {
 
     this.fileFiltering = {
       respectGitIgnore: params.fileFiltering?.respectGitIgnore ?? true,
-      respectGeminiIgnore: params.fileFiltering?.respectGeminiIgnore ?? true,
+      respectAlfredIgnore: params.fileFiltering?.respectAlfredIgnore ?? true,
       enableRecursiveFileSearch:
         params.fileFiltering?.enableRecursiveFileSearch ?? true,
       disableFuzzySearch: params.fileFiltering?.disableFuzzySearch ?? false,
@@ -445,7 +445,7 @@ export class Config {
     };
 
     if (params.contextFileName) {
-      setGeminiMdFilename(params.contextFileName);
+      setAlfredMdFilename(params.contextFileName);
     }
 
     if (this.telemetrySettings.enabled) {
@@ -455,7 +455,7 @@ export class Config {
     if (this.getProxy()) {
       setGlobalDispatcher(new ProxyAgent(this.getProxy() as string));
     }
-    this.geminiClient = new GeminiClient(this);
+    this.alfredClient = new GeminiClient(this);
     this.modelRouterService = new ModelRouterService(this);
   }
 
@@ -476,7 +476,7 @@ export class Config {
     this.promptRegistry = new PromptRegistry();
     this.toolRegistry = await this.createToolRegistry();
 
-    await this.geminiClient.initialize();
+    await this.alfredClient.initialize();
   }
 
   getContentGenerator(): ContentGenerator {
@@ -491,7 +491,7 @@ export class Config {
       authMethod === AuthType.LOGIN_WITH_GOOGLE
     ) {
       // Restore the conversation history to the new client
-      this.geminiClient.stripThoughtsFromHistory();
+      this.alfredClient.stripThoughtsFromHistory();
     }
 
     const newContentGeneratorConfig = createContentGeneratorConfig(
@@ -675,12 +675,12 @@ export class Config {
     this.userMemory = newUserMemory;
   }
 
-  getGeminiMdFileCount(): number {
-    return this.geminiMdFileCount;
+  getAlfredMdFileCount(): number {
+    return this.alfredMdFileCount;
   }
 
-  setGeminiMdFileCount(count: number): void {
-    this.geminiMdFileCount = count;
+  setAlfredMdFileCount(count: number): void {
+    this.alfredMdFileCount = count;
   }
 
   getApprovalMode(): ApprovalMode {
@@ -733,7 +733,7 @@ export class Config {
   }
 
   getGeminiClient(): GeminiClient {
-    return this.geminiClient;
+    return this.alfredClient;
   }
 
   getModelRouterService(): ModelRouterService {
@@ -751,14 +751,14 @@ export class Config {
   getFileFilteringRespectGitIgnore(): boolean {
     return this.fileFiltering.respectGitIgnore;
   }
-  getFileFilteringRespectGeminiIgnore(): boolean {
-    return this.fileFiltering.respectGeminiIgnore;
+  getFileFilteringRespectAlfredIgnore(): boolean {
+    return this.fileFiltering.respectAlfredIgnore;
   }
 
   getFileFilteringOptions(): FileFilteringOptions {
     return {
       respectGitIgnore: this.fileFiltering.respectGitIgnore,
-      respectGeminiIgnore: this.fileFiltering.respectGeminiIgnore,
+      respectAlfredIgnore: this.fileFiltering.respectAlfredIgnore,
     };
   }
 
@@ -820,7 +820,7 @@ export class Config {
     return this.extensionManagement;
   }
 
-  getExtensions(): GeminiCLIExtension[] {
+  getExtensions(): AlfredCLIExtension[] {
     return this._extensions;
   }
 

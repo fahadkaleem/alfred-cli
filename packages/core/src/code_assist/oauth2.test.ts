@@ -67,7 +67,7 @@ describe('oauth2', () => {
     beforeEach(() => {
       process.env[FORCE_ENCRYPTED_FILE_ENV_VAR] = 'false';
       tempHomeDir = fs.mkdtempSync(
-        path.join(os.tmpdir(), 'gemini-cli-test-home-'),
+        path.join(os.tmpdir(), 'alfred-cli-test-home-'),
       );
       (os.homedir as Mock).mockReturnValue(tempHomeDir);
     });
@@ -182,7 +182,7 @@ describe('oauth2', () => {
       // Verify Google Account was cached
       const googleAccountPath = path.join(
         tempHomeDir,
-        '.gemini',
+        '.alfred',
         'google_accounts.json',
       );
       expect(fs.existsSync(googleAccountPath)).toBe(true);
@@ -290,7 +290,7 @@ describe('oauth2', () => {
 
       it('should attempt to load cached credentials first', async () => {
         const cachedCreds = { refresh_token: 'cached-token' };
-        const credsPath = path.join(tempHomeDir, '.gemini', 'oauth_creds.json');
+        const credsPath = path.join(tempHomeDir, '.alfred', 'oauth_creds.json');
         await fs.promises.mkdir(path.dirname(credsPath), { recursive: true });
         await fs.promises.writeFile(credsPath, JSON.stringify(cachedCreds));
 
@@ -328,7 +328,7 @@ describe('oauth2', () => {
 
         await getOauthClient(AuthType.CLOUD_SHELL, mockConfig);
 
-        const credsPath = path.join(tempHomeDir, '.gemini', 'oauth_creds.json');
+        const credsPath = path.join(tempHomeDir, '.alfred', 'oauth_creds.json');
         expect(fs.existsSync(credsPath)).toBe(false);
       });
 
@@ -355,7 +355,7 @@ describe('oauth2', () => {
         const defaultCreds = { refresh_token: 'default-cached-token' };
         const defaultCredsPath = path.join(
           tempHomeDir,
-          '.gemini',
+          '.alfred',
           'oauth_creds.json',
         );
         await fs.promises.mkdir(path.dirname(defaultCredsPath), {
@@ -463,7 +463,7 @@ describe('oauth2', () => {
         // Verify Google Account was cached
         const googleAccountPath = path.join(
           tempHomeDir,
-          '.gemini',
+          '.alfred',
           'google_accounts.json',
         );
         const cachedContent = fs.readFileSync(googleAccountPath, 'utf-8');
@@ -493,7 +493,7 @@ describe('oauth2', () => {
 
         // Make it fall through to cached credentials path
         const cachedCreds = { refresh_token: 'cached-token' };
-        const credsPath = path.join(tempHomeDir, '.gemini', 'oauth_creds.json');
+        const credsPath = path.join(tempHomeDir, '.alfred', 'oauth_creds.json');
         await fs.promises.mkdir(path.dirname(credsPath), { recursive: true });
         await fs.promises.writeFile(credsPath, JSON.stringify(cachedCreds));
 
@@ -524,7 +524,7 @@ describe('oauth2', () => {
 
         // Make it fall through to cached credentials path
         const cachedCreds = { refresh_token: 'cached-token' };
-        const credsPath = path.join(tempHomeDir, '.gemini', 'oauth_creds.json');
+        const credsPath = path.join(tempHomeDir, '.alfred', 'oauth_creds.json');
         await fs.promises.mkdir(path.dirname(credsPath), { recursive: true });
         await fs.promises.writeFile(credsPath, JSON.stringify(cachedCreds));
 
@@ -916,13 +916,13 @@ describe('oauth2', () => {
     describe('clearCachedCredentialFile', () => {
       it('should clear cached credentials and Google account', async () => {
         const cachedCreds = { refresh_token: 'test-token' };
-        const credsPath = path.join(tempHomeDir, '.gemini', 'oauth_creds.json');
+        const credsPath = path.join(tempHomeDir, '.alfred', 'oauth_creds.json');
         await fs.promises.mkdir(path.dirname(credsPath), { recursive: true });
         await fs.promises.writeFile(credsPath, JSON.stringify(cachedCreds));
 
         const googleAccountPath = path.join(
           tempHomeDir,
-          '.gemini',
+          '.alfred',
           'google_accounts.json',
         );
         const accountData = { active: 'test@example.com', old: [] };
@@ -965,7 +965,7 @@ describe('oauth2', () => {
         );
 
         // Pre-populate credentials to make getOauthClient resolve quickly
-        const credsPath = path.join(tempHomeDir, '.gemini', 'oauth_creds.json');
+        const credsPath = path.join(tempHomeDir, '.alfred', 'oauth_creds.json');
         await fs.promises.mkdir(path.dirname(credsPath), { recursive: true });
         await fs.promises.writeFile(
           credsPath,
@@ -994,7 +994,7 @@ describe('oauth2', () => {
     beforeEach(() => {
       process.env[FORCE_ENCRYPTED_FILE_ENV_VAR] = 'true';
       tempHomeDir = fs.mkdtempSync(
-        path.join(os.tmpdir(), 'gemini-cli-test-home-'),
+        path.join(os.tmpdir(), 'alfred-cli-test-home-'),
       );
       (os.homedir as Mock).mockReturnValue(tempHomeDir);
     });
@@ -1104,7 +1104,7 @@ describe('oauth2', () => {
       expect(
         OAuthCredentialStorage.saveCredentials as Mock,
       ).toHaveBeenCalledWith(mockTokens);
-      const credsPath = path.join(tempHomeDir, '.gemini', 'oauth_creds.json');
+      const credsPath = path.join(tempHomeDir, '.alfred', 'oauth_creds.json');
       expect(fs.existsSync(credsPath)).toBe(false);
     });
 
@@ -1120,7 +1120,7 @@ describe('oauth2', () => {
       // Create a dummy unencrypted credential file.
       // If the logic is correct, this file should be ignored.
       const unencryptedCreds = { refresh_token: 'unencrypted-token' };
-      const credsPath = path.join(tempHomeDir, '.gemini', 'oauth_creds.json');
+      const credsPath = path.join(tempHomeDir, '.alfred', 'oauth_creds.json');
       await fs.promises.mkdir(path.dirname(credsPath), { recursive: true });
       await fs.promises.writeFile(credsPath, JSON.stringify(unencryptedCreds));
 
@@ -1150,7 +1150,7 @@ describe('oauth2', () => {
       );
 
       // Create a dummy unencrypted credential file. It should not be deleted.
-      const credsPath = path.join(tempHomeDir, '.gemini', 'oauth_creds.json');
+      const credsPath = path.join(tempHomeDir, '.alfred', 'oauth_creds.json');
       await fs.promises.mkdir(path.dirname(credsPath), { recursive: true });
       await fs.promises.writeFile(credsPath, '{}');
 

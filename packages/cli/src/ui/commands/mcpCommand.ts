@@ -11,7 +11,7 @@ import type {
   MessageActionReturn,
 } from './types.js';
 import { CommandKind } from './types.js';
-import type { DiscoveredMCPPrompt } from '@google/gemini-cli-core';
+import type { DiscoveredMCPPrompt } from '@alfred/alfred-cli-core';
 import {
   DiscoveredMCPTool,
   getMCPDiscoveryState,
@@ -20,7 +20,7 @@ import {
   MCPServerStatus,
   getErrorMessage,
   MCPOAuthTokenStorage,
-} from '@google/gemini-cli-core';
+} from '@alfred/alfred-cli-core';
 import { appEvents, AppEvent } from '../../utils/events.js';
 import { MessageType, type HistoryItemMcpStatus } from '../types.js';
 
@@ -94,7 +94,7 @@ const authCommand: SlashCommand = {
       );
 
       // Import dynamically to avoid circular dependencies
-      const { MCPOAuthProvider } = await import('@google/gemini-cli-core');
+      const { MCPOAuthProvider } = await import('@alfred/alfred-cli-core');
 
       let oauthConfig = server.oauth;
       if (!oauthConfig) {
@@ -131,9 +131,9 @@ const authCommand: SlashCommand = {
         await toolRegistry.discoverToolsForServer(serverName);
       }
       // Update the client with the new tools
-      const geminiClient = config.getGeminiClient();
-      if (geminiClient) {
-        await geminiClient.setTools();
+      const alfredClient = config.getGeminiClient();
+      if (alfredClient) {
+        await alfredClient.setTools();
       }
 
       // Reload the slash commands to reflect the changes.
@@ -312,9 +312,9 @@ const refreshCommand: SlashCommand = {
     await toolRegistry.restartMcpServers();
 
     // Update the client with the new tools
-    const geminiClient = config.getGeminiClient();
-    if (geminiClient) {
-      await geminiClient.setTools();
+    const alfredClient = config.getGeminiClient();
+    if (alfredClient) {
+      await alfredClient.setTools();
     }
 
     // Reload the slash commands to reflect the changes.

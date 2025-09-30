@@ -7,7 +7,7 @@
 import {
   getErrorMessage,
   loadServerHierarchicalMemory,
-} from '@google/gemini-cli-core';
+} from '@alfred/alfred-cli-core';
 import { MessageType } from '../types.js';
 import type { SlashCommand, SlashCommandActionReturn } from './types.js';
 import { CommandKind } from './types.js';
@@ -23,7 +23,7 @@ export const memoryCommand: SlashCommand = {
       kind: CommandKind.BUILT_IN,
       action: async (context) => {
         const memoryContent = context.services.config?.getUserMemory() || '';
-        const fileCount = context.services.config?.getGeminiMdFileCount() || 0;
+        const fileCount = context.services.config?.getAlfredMdFileCount() || 0;
 
         const messageContent =
           memoryContent.length > 0
@@ -99,7 +99,7 @@ export const memoryCommand: SlashCommand = {
                 context.services.settings.merged.context?.discoveryMaxDirs,
               );
             config.setUserMemory(memoryContent);
-            config.setGeminiMdFileCount(fileCount);
+            config.setAlfredMdFileCount(fileCount);
 
             const successMessage =
               memoryContent.length > 0

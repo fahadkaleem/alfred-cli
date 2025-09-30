@@ -5,11 +5,11 @@
  */
 
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import type { Config } from '@google/gemini-cli-core';
+import type { Config } from '@alfred/alfred-cli-core';
 import {
   DEFAULT_GEMINI_FLASH_LITE_MODEL,
   getResponseText,
-} from '@google/gemini-cli-core';
+} from '@alfred/alfred-cli-core';
 import type { Content, GenerateContentConfig } from '@google/genai';
 import type { TextBuffer } from '../components/shared/text-buffer.js';
 import { isSlashCommand } from '../utils/commandUtils.js';
@@ -69,7 +69,7 @@ export function usePromptCompletion({
 
   const generatePromptSuggestions = useCallback(async () => {
     const trimmedText = buffer.text.trim();
-    const geminiClient = config?.getGeminiClient();
+    const alfredClient = config?.getGeminiClient();
 
     if (trimmedText === lastRequestedTextRef.current) {
       return;
@@ -81,7 +81,7 @@ export function usePromptCompletion({
 
     if (
       trimmedText.length < PROMPT_COMPLETION_MIN_LENGTH ||
-      !geminiClient ||
+      !alfredClient ||
       isSlashCommand(trimmedText) ||
       trimmedText.includes('@') ||
       !isPromptCompletionEnabled
@@ -117,7 +117,7 @@ export function usePromptCompletion({
         },
       };
 
-      const response = await geminiClient.generateContent(
+      const response = await alfredClient.generateContent(
         contents,
         generationConfig,
         signal,

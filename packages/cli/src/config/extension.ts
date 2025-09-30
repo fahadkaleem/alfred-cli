@@ -6,9 +6,9 @@
 
 import type {
   MCPServerConfig,
-  GeminiCLIExtension,
+  AlfredCLIExtension,
   ExtensionInstallMetadata,
-} from '@google/gemini-cli-core';
+} from '@alfred/alfred-cli-core';
 import {
   GEMINI_DIR,
   Storage,
@@ -21,7 +21,7 @@ import {
   logExtensionInstallEvent,
   logExtensionUninstall,
   logExtensionDisable,
-} from '@google/gemini-cli-core';
+} from '@alfred/alfred-cli-core';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
@@ -43,7 +43,7 @@ import type { ConfirmationRequest } from '../ui/types.js';
 export const EXTENSIONS_DIRECTORY_NAME = path.join(GEMINI_DIR, 'extensions');
 
 export const EXTENSIONS_CONFIG_FILENAME = 'gemini-extension.json';
-export const INSTALL_METADATA_FILENAME = '.gemini-extension-install.json';
+export const INSTALL_METADATA_FILENAME = '.alfred-extension-install.json';
 
 export interface Extension {
   path: string;
@@ -305,7 +305,7 @@ export function loadInstallMetadata(
 
 function getContextFileNames(config: ExtensionConfig): string[] {
   if (!config.contextFileName) {
-    return ['GEMINI.md'];
+    return ['ALFRED.md'];
   } else if (!Array.isArray(config.contextFileName)) {
     return [config.contextFileName];
   }
@@ -323,7 +323,7 @@ export function annotateActiveExtensions(
   extensions: Extension[],
   workspaceDir: string,
   manager: ExtensionEnablementManager,
-): GeminiCLIExtension[] {
+): AlfredCLIExtension[] {
   manager.validateExtensionOverrides(extensions);
   return extensions.map((extension) => ({
     name: extension.config.name,

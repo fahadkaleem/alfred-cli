@@ -37,7 +37,7 @@ describe('LSTool', () => {
       getFileService: () => new FileDiscoveryService(tempRootDir),
       getFileFilteringOptions: () => ({
         respectGitIgnore: true,
-        respectGeminiIgnore: true,
+        respectAlfredIgnore: true,
       }),
     } as unknown as Config;
 
@@ -152,16 +152,16 @@ describe('LSTool', () => {
       expect(result.returnDisplay).toBe('Listed 2 item(s). (2 git-ignored)');
     });
 
-    it('should respect geminiignore patterns', async () => {
+    it('should respect alfredignore patterns', async () => {
       await fs.writeFile(path.join(tempRootDir, 'file1.txt'), 'content1');
       await fs.writeFile(path.join(tempRootDir, 'file2.log'), 'content1');
-      await fs.writeFile(path.join(tempRootDir, '.geminiignore'), '*.log');
+      await fs.writeFile(path.join(tempRootDir, '.alfredignore'), '*.log');
       const invocation = lsTool.build({ path: tempRootDir });
       const result = await invocation.execute(abortSignal);
 
       expect(result.llmContent).toContain('file1.txt');
       expect(result.llmContent).not.toContain('file2.log');
-      expect(result.returnDisplay).toBe('Listed 2 item(s). (1 gemini-ignored)');
+      expect(result.returnDisplay).toBe('Listed 2 item(s). (1 alfred-ignored)');
     });
 
     it('should handle non-directory paths', async () => {

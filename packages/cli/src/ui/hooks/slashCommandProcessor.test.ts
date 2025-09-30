@@ -23,15 +23,15 @@ import {
   SlashCommandStatus,
   ToolConfirmationOutcome,
   makeFakeConfig,
-} from '@google/gemini-cli-core';
+} from '@alfred/alfred-cli-core';
 
 const { logSlashCommand } = vi.hoisted(() => ({
   logSlashCommand: vi.fn(),
 }));
 
-vi.mock('@google/gemini-cli-core', async (importOriginal) => {
+vi.mock('@alfred/alfred-cli-core', async (importOriginal) => {
   const original =
-    await importOriginal<typeof import('@google/gemini-cli-core')>();
+    await importOriginal<typeof import('@alfred/alfred-cli-core')>();
 
   return {
     ...original,
@@ -141,7 +141,7 @@ describe('useSlashCommandProcessor', () => {
         vi.fn(), // refreshStatic
         vi.fn(), // toggleVimEnabled
         setIsProcessing,
-        vi.fn(), // setGeminiMdFileCount
+        vi.fn(), // setAlfredMdFileCount
         {
           openAuthDialog: mockOpenAuthDialog,
           openThemeDialog: mockOpenThemeDialog,

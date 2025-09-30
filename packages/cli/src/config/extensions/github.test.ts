@@ -14,7 +14,7 @@ import {
 import { simpleGit, type SimpleGit } from 'simple-git';
 import { ExtensionUpdateState } from '../../ui/state/extensions.js';
 import type * as os from 'node:os';
-import type { GeminiCLIExtension } from '@google/gemini-cli-core';
+import type { AlfredCLIExtension } from '@alfred/alfred-cli-core';
 
 const mockPlatform = vi.hoisted(() => vi.fn());
 const mockArch = vi.hoisted(() => vi.fn());
@@ -122,7 +122,7 @@ describe('git extension helpers', () => {
     });
 
     it('should return NOT_UPDATABLE for non-git extensions', async () => {
-      const extension: GeminiCLIExtension = {
+      const extension: AlfredCLIExtension = {
         name: 'test',
         path: '/ext',
         version: '1.0.0',
@@ -141,7 +141,7 @@ describe('git extension helpers', () => {
     });
 
     it('should return ERROR if no remotes found', async () => {
-      const extension: GeminiCLIExtension = {
+      const extension: AlfredCLIExtension = {
         name: 'test',
         path: '/ext',
         version: '1.0.0',
@@ -161,7 +161,7 @@ describe('git extension helpers', () => {
     });
 
     it('should return UPDATE_AVAILABLE when remote hash is different', async () => {
-      const extension: GeminiCLIExtension = {
+      const extension: AlfredCLIExtension = {
         name: 'test',
         path: '/ext',
         version: '1.0.0',
@@ -186,7 +186,7 @@ describe('git extension helpers', () => {
     });
 
     it('should return UP_TO_DATE when remote and local hashes are the same', async () => {
-      const extension: GeminiCLIExtension = {
+      const extension: AlfredCLIExtension = {
         name: 'test',
         path: '/ext',
         version: '1.0.0',
@@ -211,7 +211,7 @@ describe('git extension helpers', () => {
     });
 
     it('should return ERROR on git error', async () => {
-      const extension: GeminiCLIExtension = {
+      const extension: AlfredCLIExtension = {
         name: 'test',
         path: '/ext',
         version: '1.0.0',

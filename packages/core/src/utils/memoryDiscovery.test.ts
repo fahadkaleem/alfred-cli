@@ -10,7 +10,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { loadServerHierarchicalMemory } from './memoryDiscovery.js';
 import {
-  setGeminiMdFilename,
+  setAlfredMdFilename,
   DEFAULT_CONTEXT_FILENAME,
 } from '../tools/memoryTool.js';
 import { FileDiscoveryService } from '../services/fileDiscoveryService.js';
@@ -61,7 +61,7 @@ describe('loadServerHierarchicalMemory', () => {
   afterEach(async () => {
     vi.unstubAllEnvs();
     // Some tests set this to a different value.
-    setGeminiMdFilename(DEFAULT_CONTEXT_FILENAME);
+    setAlfredMdFilename(DEFAULT_CONTEXT_FILENAME);
     // Clean up the temporary directory to prevent resource leaks.
     // Use maxRetries option for robust cleanup without race conditions
     await fsPromises.rm(testRootDir, {
@@ -159,7 +159,7 @@ describe('loadServerHierarchicalMemory', () => {
 
   it('should load only the global custom context file if present and filename is changed', async () => {
     const customFilename = 'CUSTOM_AGENTS.md';
-    setGeminiMdFilename(customFilename);
+    setAlfredMdFilename(customFilename);
 
     const customContextFile = await createTestFile(
       path.join(homedir, GEMINI_DIR, customFilename),
@@ -183,7 +183,7 @@ describe('loadServerHierarchicalMemory', () => {
 
   it('should load context files by upward traversal with custom filename', async () => {
     const customFilename = 'PROJECT_CONTEXT.md';
-    setGeminiMdFilename(customFilename);
+    setAlfredMdFilename(customFilename);
 
     const projectContextFile = await createTestFile(
       path.join(projectRoot, customFilename),
@@ -211,7 +211,7 @@ describe('loadServerHierarchicalMemory', () => {
 
   it('should load context files by downward traversal with custom filename', async () => {
     const customFilename = 'LOCAL_CONTEXT.md';
-    setGeminiMdFilename(customFilename);
+    setAlfredMdFilename(customFilename);
 
     await createTestFile(
       path.join(cwd, 'subdir', customFilename),
@@ -234,7 +234,7 @@ describe('loadServerHierarchicalMemory', () => {
     });
   });
 
-  it('should load ORIGINAL_GEMINI_MD_FILENAME files by upward traversal from CWD to project root', async () => {
+  it('should load ORIGINAL_ALFRED_MD_FILENAME files by upward traversal from CWD to project root', async () => {
     const projectRootGeminiFile = await createTestFile(
       path.join(projectRoot, DEFAULT_CONTEXT_FILENAME),
       'Project root memory',
@@ -259,7 +259,7 @@ describe('loadServerHierarchicalMemory', () => {
     });
   });
 
-  it('should load ORIGINAL_GEMINI_MD_FILENAME files by downward traversal from CWD', async () => {
+  it('should load ORIGINAL_ALFRED_MD_FILENAME files by downward traversal from CWD', async () => {
     await createTestFile(
       path.join(cwd, 'subdir', DEFAULT_CONTEXT_FILENAME),
       'Subdir memory',
@@ -284,7 +284,7 @@ describe('loadServerHierarchicalMemory', () => {
     });
   });
 
-  it('should load and correctly order global, upward, and downward ORIGINAL_GEMINI_MD_FILENAME files', async () => {
+  it('should load and correctly order global, upward, and downward ORIGINAL_ALFRED_MD_FILENAME files', async () => {
     const defaultContextFile = await createTestFile(
       path.join(homedir, GEMINI_DIR, DEFAULT_CONTEXT_FILENAME),
       'default context content',
@@ -344,7 +344,7 @@ describe('loadServerHierarchicalMemory', () => {
       'tree',
       {
         respectGitIgnore: true,
-        respectGeminiIgnore: true,
+        respectAlfredIgnore: true,
       },
       200, // maxDirs parameter
     );
@@ -377,7 +377,7 @@ describe('loadServerHierarchicalMemory', () => {
       'tree', // importFormat
       {
         respectGitIgnore: true,
-        respectGeminiIgnore: true,
+        respectAlfredIgnore: true,
       },
       1, // maxDirs
     );
@@ -406,7 +406,7 @@ describe('loadServerHierarchicalMemory', () => {
 
   it('should load extension context file paths', async () => {
     const extensionFilePath = await createTestFile(
-      path.join(testRootDir, 'extensions/ext1/GEMINI.md'),
+      path.join(testRootDir, 'extensions/ext1/ALFRED.md'),
       'Extension memory content',
     );
 
@@ -450,7 +450,7 @@ describe('loadServerHierarchicalMemory', () => {
   });
 
   it('should handle multiple directories and files in parallel correctly', async () => {
-    // Create multiple test directories with GEMINI.md files
+    // Create multiple test directories with ALFRED.md files
     const numDirs = 5;
     const createdFiles: string[] = [];
 

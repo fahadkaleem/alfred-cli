@@ -5,8 +5,8 @@
  */
 
 import { useEffect, useReducer, useRef } from 'react';
-import type { Config, FileSearch } from '@google/gemini-cli-core';
-import { FileSearchFactory, escapePath } from '@google/gemini-cli-core';
+import type { Config, FileSearch } from '@alfred/alfred-cli-core';
+import { FileSearchFactory, escapePath } from '@alfred/alfred-cli-core';
 import type { Suggestion } from '../components/SuggestionsDisplay.js';
 import { MAX_SUGGESTIONS_TO_SHOW } from '../components/SuggestionsDisplay.js';
 
@@ -161,7 +161,7 @@ export function useAtCompletion(props: UseAtCompletionProps): void {
           useGitignore:
             config?.getFileFilteringOptions()?.respectGitIgnore ?? true,
           useGeminiignore:
-            config?.getFileFilteringOptions()?.respectGeminiIgnore ?? true,
+            config?.getFileFilteringOptions()?.respectAlfredIgnore ?? true,
           cache: true,
           cacheTtl: 30, // 30 seconds
           enableRecursiveFileSearch:

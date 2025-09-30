@@ -1,13 +1,13 @@
 {
-  "name": "gemini-cli-vscode-ide-companion",
-  "displayName": "Gemini CLI Companion",
-  "description": "Enable Gemini CLI with direct access to your IDE workspace.",
+  "name": "alfred-cli-vscode-ide-companion",
+  "displayName": "Alfred CLI Companion",
+  "description": "Enable Alfred CLI with direct access to your IDE workspace.",
   "version": "0.8.0-nightly.20250925.b1da8c21",
-  "publisher": "google",
+  "publisher": "mohammedfahadkaleem",
   "icon": "assets/icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/google-gemini/gemini-cli.git",
+    "url": "https://github.com/mohammedfahadkaleem/alfred-cli.git",
     "directory": "packages/vscode-ide-companion"
   },
   "engines": {
@@ -19,10 +19,10 @@
     "AI"
   ],
   "keywords": [
-    "gemini-cli",
-    "gemini cli",
-    "gemini",
-    "gemini code",
+    "alfred-cli",
+    "alfred cli",
+    "alfred",
+    "alfred code",
     "cli",
     "ide integration",
     "ide companion"
@@ -33,63 +33,63 @@
   "contributes": {
     "languages": [
       {
-        "id": "gemini-diff-editable"
+        "id": "alfred-diff-editable"
       }
     ],
     "commands": [
       {
-        "command": "gemini.diff.accept",
-        "title": "Gemini CLI: Accept Diff",
+        "command": "alfred.diff.accept",
+        "title": "Alfred CLI: Accept Diff",
         "icon": "$(check)"
       },
       {
-        "command": "gemini.diff.cancel",
-        "title": "Gemini CLI: Close Diff Editor",
+        "command": "alfred.diff.cancel",
+        "title": "Alfred CLI: Close Diff Editor",
         "icon": "$(close)"
       },
       {
-        "command": "gemini-cli.runGeminiCLI",
-        "title": "Gemini CLI: Run"
+        "command": "alfred-cli.runAlfredCLI",
+        "title": "Alfred CLI: Run"
       },
       {
-        "command": "gemini-cli.showNotices",
-        "title": "Gemini CLI: View Third-Party Notices"
+        "command": "alfred-cli.showNotices",
+        "title": "Alfred CLI: View Third-Party Notices"
       }
     ],
     "menus": {
       "commandPalette": [
         {
-          "command": "gemini.diff.accept",
-          "when": "gemini.diff.isVisible"
+          "command": "alfred.diff.accept",
+          "when": "alfred.diff.isVisible"
         },
         {
-          "command": "gemini.diff.cancel",
-          "when": "gemini.diff.isVisible"
+          "command": "alfred.diff.cancel",
+          "when": "alfred.diff.isVisible"
         }
       ],
       "editor/title": [
         {
-          "command": "gemini.diff.accept",
-          "when": "gemini.diff.isVisible",
+          "command": "alfred.diff.accept",
+          "when": "alfred.diff.isVisible",
           "group": "navigation"
         },
         {
-          "command": "gemini.diff.cancel",
-          "when": "gemini.diff.isVisible",
+          "command": "alfred.diff.cancel",
+          "when": "alfred.diff.isVisible",
           "group": "navigation"
         }
       ]
     },
     "keybindings": [
       {
-        "command": "gemini.diff.accept",
+        "command": "alfred.diff.accept",
         "key": "ctrl+s",
-        "when": "gemini.diff.isVisible"
+        "when": "alfred.diff.isVisible"
       },
       {
-        "command": "gemini.diff.accept",
+        "command": "alfred.diff.accept",
         "key": "cmd+s",
-        "when": "gemini.diff.isVisible"
+        "when": "alfred.diff.isVisible"
       }
     ]
   },

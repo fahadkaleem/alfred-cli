@@ -26,7 +26,7 @@ import {
   UnauthorizedError,
   toFriendlyError,
 } from '../utils/errors.js';
-import type { GeminiChat } from './geminiChat.js';
+import type { AlfredChat } from './alfredChat.js';
 import { parseThought, type ThoughtSummary } from '../utils/thoughtUtils.js';
 
 // Define a structure for tools passed to the server
@@ -44,7 +44,7 @@ export interface ServerTool {
   ): Promise<ToolCallConfirmationDetails | false>;
 }
 
-export enum GeminiEventType {
+export enum AlfredEventType {
   Content = 'content',
   ToolCallRequest = 'tool_call_request',
   ToolCallResponse = 'tool_call_response',
@@ -61,7 +61,7 @@ export enum GeminiEventType {
 }
 
 export type ServerGeminiRetryEvent = {
-  type: GeminiEventType.Retry;
+  type: AlfredEventType.Retry;
 };
 
 export interface StructuredError {
@@ -102,36 +102,36 @@ export interface ServerToolCallConfirmationDetails {
 }
 
 export type ServerGeminiContentEvent = {
-  type: GeminiEventType.Content;
+  type: AlfredEventType.Content;
   value: string;
 };
 
 export type ServerGeminiThoughtEvent = {
-  type: GeminiEventType.Thought;
+  type: AlfredEventType.Thought;
   value: ThoughtSummary;
 };
 
-export type ServerGeminiToolCallRequestEvent = {
-  type: GeminiEventType.ToolCallRequest;
+export type ServerAlfredToolCallRequestEvent = {
+  type: AlfredEventType.ToolCallRequest;
   value: ToolCallRequestInfo;
 };
 
 export type ServerGeminiToolCallResponseEvent = {
-  type: GeminiEventType.ToolCallResponse;
+  type: AlfredEventType.ToolCallResponse;
   value: ToolCallResponseInfo;
 };
 
 export type ServerGeminiToolCallConfirmationEvent = {
-  type: GeminiEventType.ToolCallConfirmation;
+  type: AlfredEventType.ToolCallConfirmation;
   value: ServerToolCallConfirmationDetails;
 };
 
 export type ServerGeminiUserCancelledEvent = {
-  type: GeminiEventType.UserCancelled;
+  type: AlfredEventType.UserCancelled;
 };
 
-export type ServerGeminiErrorEvent = {
-  type: GeminiEventType.Error;
+export type ServerAlfredErrorEvent = {
+  type: AlfredEventType.Error;
   value: GeminiErrorEventValue;
 };
 
@@ -155,41 +155,41 @@ export interface ChatCompressionInfo {
   compressionStatus: CompressionStatus;
 }
 
-export type ServerGeminiChatCompressedEvent = {
-  type: GeminiEventType.ChatCompressed;
+export type ServerAlfredChatCompressedEvent = {
+  type: AlfredEventType.ChatCompressed;
   value: ChatCompressionInfo | null;
 };
 
 export type ServerGeminiMaxSessionTurnsEvent = {
-  type: GeminiEventType.MaxSessionTurns;
+  type: AlfredEventType.MaxSessionTurns;
 };
 
 export type ServerGeminiFinishedEvent = {
-  type: GeminiEventType.Finished;
+  type: AlfredEventType.Finished;
   value: GeminiFinishedEventValue;
 };
 
 export type ServerGeminiLoopDetectedEvent = {
-  type: GeminiEventType.LoopDetected;
+  type: AlfredEventType.LoopDetected;
 };
 
 export type ServerGeminiCitationEvent = {
-  type: GeminiEventType.Citation;
+  type: AlfredEventType.Citation;
   value: string;
 };
 
 // The original union type, now composed of the individual types
 export type ServerGeminiStreamEvent =
-  | ServerGeminiChatCompressedEvent
+  | ServerAlfredChatCompressedEvent
   | ServerGeminiCitationEvent
   | ServerGeminiContentEvent
-  | ServerGeminiErrorEvent
+  | ServerAlfredErrorEvent
   | ServerGeminiFinishedEvent
   | ServerGeminiLoopDetectedEvent
   | ServerGeminiMaxSessionTurnsEvent
   | ServerGeminiThoughtEvent
   | ServerGeminiToolCallConfirmationEvent
-  | ServerGeminiToolCallRequestEvent
+  | ServerAlfredToolCallRequestEvent
   | ServerGeminiToolCallResponseEvent
   | ServerGeminiUserCancelledEvent
   | ServerGeminiRetryEvent;
@@ -202,7 +202,7 @@ export class Turn {
   finishReason: FinishReason | undefined = undefined;
 
   constructor(
-    private readonly chat: GeminiChat,
+    private readonly chat: AlfredChat,
     private readonly prompt_id: string,
   ) {}
   // The run method yields simpler events suitable for server logic
@@ -227,13 +227,13 @@ export class Turn {
 
       for await (const streamEvent of responseStream) {
         if (signal?.aborted) {
-          yield { type: GeminiEventType.UserCancelled };
+          yield { type: AlfredEventType.UserCancelled };
           return;
         }
 
         // Handle the new RETRY event
         if (streamEvent.type === 'retry') {
-          yield { type: GeminiEventType.Retry };
+          yield { type: AlfredEventType.Retry };
           continue; // Skip to the next event in the stream
         }
 
@@ -247,7 +247,7 @@ export class Turn {
         if (thoughtPart?.thought) {
           const thought = parseThought(thoughtPart.text ?? '');
           yield {
-            type: GeminiEventType.Thought,
+            type: AlfredEventType.Thought,
             value: thought,
           };
           continue;
@@ -255,7 +255,7 @@ export class Turn {
 
         const text = getResponseText(resp);
         if (text) {
-          yield { type: GeminiEventType.Content, value: text };
+          yield { type: AlfredEventType.Content, value: text };
         }
 
         // Handle function calls (requesting tool execution)
@@ -278,7 +278,7 @@ export class Turn {
         if (finishReason) {
           if (this.pendingCitations.size > 0) {
             yield {
-              type: GeminiEventType.Citation,
+              type: AlfredEventType.Citation,
               value: `Citations:\n${[...this.pendingCitations].sort().join('\n')}`,
             };
             this.pendingCitations.clear();
@@ -286,7 +286,7 @@ export class Turn {
 
           this.finishReason = finishReason;
           yield {
-            type: GeminiEventType.Finished,
+            type: AlfredEventType.Finished,
             value: {
               reason: finishReason,
               usageMetadata: resp.usageMetadata,
@@ -296,7 +296,7 @@ export class Turn {
       }
     } catch (e) {
       if (signal.aborted) {
-        yield { type: GeminiEventType.UserCancelled };
+        yield { type: AlfredEventType.UserCancelled };
         // Regular cancellation error, fail gracefully.
         return;
       }
@@ -325,7 +325,7 @@ export class Turn {
         status,
       };
       await this.chat.maybeIncludeSchemaDepthContext(structuredError);
-      yield { type: GeminiEventType.Error, value: { error: structuredError } };
+      yield { type: AlfredEventType.Error, value: { error: structuredError } };
       return;
     }
   }
@@ -350,7 +350,7 @@ export class Turn {
     this.pendingToolCalls.push(toolCallRequest);
 
     // Yield a request for the tool call, not the pending/confirming status
-    return { type: GeminiEventType.ToolCallRequest, value: toolCallRequest };
+    return { type: AlfredEventType.ToolCallRequest, value: toolCallRequest };
   }
 
   getDebugResponses(): GenerateContentResponse[] {

@@ -6,7 +6,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { directoryCommand, expandHomeDir } from './directoryCommand.js';
-import type { Config, WorkspaceContext } from '@google/gemini-cli-core';
+import type { Config, WorkspaceContext } from '@alfred/alfred-cli-core';
 import type { CommandContext } from './types.js';
 import { MessageType } from '../types.js';
 import * as os from 'node:os';
@@ -47,7 +47,7 @@ describe('directoryCommand', () => {
       getExtensionContextFilePaths: () => [],
       getFileFilteringOptions: () => ({ ignore: [], include: [] }),
       setUserMemory: vi.fn(),
-      setGeminiMdFileCount: vi.fn(),
+      setAlfredMdFileCount: vi.fn(),
     } as unknown as Config;
 
     mockContext = {
