@@ -16,7 +16,7 @@ import {
 } from '../../config/extension.js';
 import { createExtension } from '../../test-utils/createExtension.js';
 import { useExtensionUpdates } from './useExtensionUpdates.js';
-import { GEMINI_DIR, type GeminiCLIExtension } from '@google/gemini-cli-core';
+import { GEMINI_DIR, type AlfredCLIExtension } from '@alfred/alfred-cli-core';
 import { isWorkspaceTrusted } from '../../config/trustedFolders.js';
 import { renderHook, waitFor } from '@testing-library/react';
 import { MessageType } from '../types.js';
@@ -61,9 +61,9 @@ vi.mock('../../config/trustedFolders.js', async (importOriginal) => {
 const mockLogExtensionInstallEvent = vi.hoisted(() => vi.fn());
 const mockLogExtensionUninstall = vi.hoisted(() => vi.fn());
 
-vi.mock('@google/gemini-cli-core', async (importOriginal) => {
+vi.mock('@alfred/alfred-cli-core', async (importOriginal) => {
   const actual =
-    await importOriginal<typeof import('@google/gemini-cli-core')>();
+    await importOriginal<typeof import('@alfred/alfred-cli-core')>();
   return {
     ...actual,
     logExtensionInstallEvent: mockLogExtensionInstallEvent,
@@ -96,7 +96,7 @@ describe('useExtensionUpdates', () => {
 
   beforeEach(() => {
     tempHomeDir = fs.mkdtempSync(
-      path.join(os.tmpdir(), 'gemini-cli-test-home-'),
+      path.join(os.tmpdir(), 'alfred-cli-test-home-'),
     );
     vi.mocked(os.homedir).mockReturnValue(tempHomeDir);
     userExtensionsDir = path.join(tempHomeDir, GEMINI_DIR, 'extensions');
@@ -138,7 +138,7 @@ describe('useExtensionUpdates', () => {
     mockGit.listRemote.mockResolvedValue('remote-hash\tHEAD');
 
     renderHook(() =>
-      useExtensionUpdates(extensions as GeminiCLIExtension[], addItem, cwd),
+      useExtensionUpdates(extensions as AlfredCLIExtension[], addItem, cwd),
     );
 
     await waitFor(() => {

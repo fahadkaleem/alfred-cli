@@ -65,7 +65,7 @@ expect.extend({
     const { isNot } = this;
     const event = JSON.parse(received[0].source_extension_json) as LogEvent;
     const metadata = event['event_metadata'][0];
-    const data = metadata.find((m) => m.gemini_cli_key === key)?.value;
+    const data = metadata.find((m) => m.alfred_cli_key === key)?.value;
 
     const pass = data !== undefined && data === value;
 
@@ -81,7 +81,7 @@ expect.extend({
     const event = JSON.parse(received[0].source_extension_json) as LogEvent;
     const metadata = event['event_metadata'][0];
 
-    const pass = metadata.some((m) => m.gemini_cli_key === key);
+    const pass = metadata.some((m) => m.alfred_cli_key === key);
 
     return {
       pass,
@@ -203,7 +203,7 @@ describe('ClearcutLogger', () => {
       const event = logger?.createLogEvent(EventNames.API_ERROR, []);
 
       expect(event?.event_metadata[0]).toContainEqual({
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_GOOGLE_ACCOUNTS_COUNT,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_GOOGLE_ACCOUNTS_COUNT,
         value: '9001',
       });
     });
@@ -216,7 +216,7 @@ describe('ClearcutLogger', () => {
       const event = logger?.createLogEvent(EventNames.CHAT_COMPRESSION, []);
 
       expect(event?.event_metadata[0]).toContainEqual({
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_SURFACE,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_SURFACE,
         value: 'GitHub',
       });
     });
@@ -278,39 +278,39 @@ describe('ClearcutLogger', () => {
       expect(event?.event_metadata[0]).toEqual(
         expect.arrayContaining([
           {
-            gemini_cli_key: EventMetadataKey.GEMINI_CLI_SESSION_ID,
+            alfred_cli_key: EventMetadataKey.ALFRED_CLI_SESSION_ID,
             value: session_id,
           },
           {
-            gemini_cli_key: EventMetadataKey.GEMINI_CLI_AUTH_TYPE,
+            alfred_cli_key: EventMetadataKey.ALFRED_CLI_AUTH_TYPE,
             value: JSON.stringify(auth_type),
           },
           {
-            gemini_cli_key: EventMetadataKey.GEMINI_CLI_GOOGLE_ACCOUNTS_COUNT,
+            alfred_cli_key: EventMetadataKey.ALFRED_CLI_GOOGLE_ACCOUNTS_COUNT,
             value: `${google_accounts}`,
           },
           {
-            gemini_cli_key: EventMetadataKey.GEMINI_CLI_SURFACE,
+            alfred_cli_key: EventMetadataKey.ALFRED_CLI_SURFACE,
             value: surface,
           },
           {
-            gemini_cli_key: EventMetadataKey.GEMINI_CLI_VERSION,
+            alfred_cli_key: EventMetadataKey.ALFRED_CLI_VERSION,
             value: cli_version,
           },
           {
-            gemini_cli_key: EventMetadataKey.GEMINI_CLI_GIT_COMMIT_HASH,
+            alfred_cli_key: EventMetadataKey.ALFRED_CLI_GIT_COMMIT_HASH,
             value: git_commit_hash,
           },
           {
-            gemini_cli_key: EventMetadataKey.GEMINI_CLI_PROMPT_ID,
+            alfred_cli_key: EventMetadataKey.ALFRED_CLI_PROMPT_ID,
             value: prompt_id,
           },
           {
-            gemini_cli_key: EventMetadataKey.GEMINI_CLI_OS,
+            alfred_cli_key: EventMetadataKey.ALFRED_CLI_OS,
             value: process.platform,
           },
           {
-            gemini_cli_key: EventMetadataKey.GEMINI_CLI_USER_SETTINGS,
+            alfred_cli_key: EventMetadataKey.ALFRED_CLI_USER_SETTINGS,
             value: user_settings,
           },
         ]),
@@ -323,7 +323,7 @@ describe('ClearcutLogger', () => {
       const event = logger?.createLogEvent(EventNames.API_ERROR, []);
 
       expect(event?.event_metadata[0]).toContainEqual({
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_NODE_VERSION,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_NODE_VERSION,
         value: process.versions.node,
       });
     });
@@ -337,7 +337,7 @@ describe('ClearcutLogger', () => {
       const event = logger?.createLogEvent(EventNames.API_ERROR, []);
 
       expect(event?.event_metadata[0]).toContainEqual({
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_SURFACE,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_SURFACE,
         value: 'ide-1234',
       });
     });
@@ -357,7 +357,7 @@ describe('ClearcutLogger', () => {
       const event = logger?.createLogEvent(EventNames.TOOL_CALL, []);
 
       expect(event?.event_metadata[0]).toContainEqual({
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_USER_SETTINGS,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_USER_SETTINGS,
         value: user_settings,
       });
     });
@@ -412,7 +412,7 @@ describe('ClearcutLogger', () => {
         }
         const event = logger?.createLogEvent(EventNames.API_ERROR, []);
         expect(event?.event_metadata[0][3]).toEqual({
-          gemini_cli_key: EventMetadataKey.GEMINI_CLI_SURFACE,
+          alfred_cli_key: EventMetadataKey.ALFRED_CLI_SURFACE,
           value: expectedValue,
         });
       },
@@ -433,11 +433,11 @@ describe('ClearcutLogger', () => {
       expect(events.length).toBe(1);
       expect(events[0]).toHaveEventName(EventNames.CHAT_COMPRESSION);
       expect(events[0]).toHaveMetadataValue([
-        EventMetadataKey.GEMINI_CLI_COMPRESSION_TOKENS_BEFORE,
+        EventMetadataKey.ALFRED_CLI_COMPRESSION_TOKENS_BEFORE,
         '9001',
       ]);
       expect(events[0]).toHaveMetadataValue([
-        EventMetadataKey.GEMINI_CLI_COMPRESSION_TOKENS_AFTER,
+        EventMetadataKey.ALFRED_CLI_COMPRESSION_TOKENS_AFTER,
         '8000',
       ]);
     });
@@ -475,7 +475,7 @@ describe('ClearcutLogger', () => {
         logger!.enqueueLogEvent(
           logger!.createLogEvent(EventNames.API_ERROR, [
             {
-              gemini_cli_key: EventMetadataKey.GEMINI_CLI_AI_ADDED_LINES,
+              alfred_cli_key: EventMetadataKey.ALFRED_CLI_AI_ADDED_LINES,
               value: `${i}`,
             },
           ]),
@@ -485,7 +485,7 @@ describe('ClearcutLogger', () => {
       let events = getEvents(logger!);
       expect(events.length).toBe(TEST_ONLY.MAX_EVENTS);
       expect(events[0]).toHaveMetadataValue([
-        EventMetadataKey.GEMINI_CLI_AI_ADDED_LINES,
+        EventMetadataKey.ALFRED_CLI_AI_ADDED_LINES,
         '0',
       ]);
 
@@ -493,7 +493,7 @@ describe('ClearcutLogger', () => {
       logger!.enqueueLogEvent(
         logger!.createLogEvent(EventNames.API_ERROR, [
           {
-            gemini_cli_key: EventMetadataKey.GEMINI_CLI_AI_ADDED_LINES,
+            alfred_cli_key: EventMetadataKey.ALFRED_CLI_AI_ADDED_LINES,
             value: `${TEST_ONLY.MAX_EVENTS}`,
           },
         ]),
@@ -501,12 +501,12 @@ describe('ClearcutLogger', () => {
       events = getEvents(logger!);
       expect(events.length).toBe(TEST_ONLY.MAX_EVENTS);
       expect(events[0]).toHaveMetadataValue([
-        EventMetadataKey.GEMINI_CLI_AI_ADDED_LINES,
+        EventMetadataKey.ALFRED_CLI_AI_ADDED_LINES,
         '1',
       ]);
 
       expect(events.at(TEST_ONLY.MAX_EVENTS - 1)).toHaveMetadataValue([
-        EventMetadataKey.GEMINI_CLI_AI_ADDED_LINES,
+        EventMetadataKey.ALFRED_CLI_AI_ADDED_LINES,
         `${TEST_ONLY.MAX_EVENTS}`,
       ]);
     });
@@ -665,19 +665,19 @@ describe('ClearcutLogger', () => {
       expect(events.length).toBe(1);
       expect(events[0]).toHaveEventName(EventNames.MODEL_ROUTING);
       expect(events[0]).toHaveMetadataValue([
-        EventMetadataKey.GEMINI_CLI_ROUTING_DECISION,
+        EventMetadataKey.ALFRED_CLI_ROUTING_DECISION,
         'gemini-pro',
       ]);
       expect(events[0]).toHaveMetadataValue([
-        EventMetadataKey.GEMINI_CLI_ROUTING_DECISION_SOURCE,
+        EventMetadataKey.ALFRED_CLI_ROUTING_DECISION_SOURCE,
         'default-strategy',
       ]);
       expect(events[0]).toHaveMetadataValue([
-        EventMetadataKey.GEMINI_CLI_ROUTING_LATENCY_MS,
+        EventMetadataKey.ALFRED_CLI_ROUTING_LATENCY_MS,
         '123',
       ]);
       expect(events[0]).toHaveMetadataValue([
-        EventMetadataKey.GEMINI_CLI_ROUTING_FAILURE,
+        EventMetadataKey.ALFRED_CLI_ROUTING_FAILURE,
         'false',
       ]);
     });
@@ -699,23 +699,23 @@ describe('ClearcutLogger', () => {
       expect(events.length).toBe(1);
       expect(events[0]).toHaveEventName(EventNames.MODEL_ROUTING);
       expect(events[0]).toHaveMetadataValue([
-        EventMetadataKey.GEMINI_CLI_ROUTING_DECISION,
+        EventMetadataKey.ALFRED_CLI_ROUTING_DECISION,
         'gemini-pro',
       ]);
       expect(events[0]).toHaveMetadataValue([
-        EventMetadataKey.GEMINI_CLI_ROUTING_DECISION_SOURCE,
+        EventMetadataKey.ALFRED_CLI_ROUTING_DECISION_SOURCE,
         'router-exception',
       ]);
       expect(events[0]).toHaveMetadataValue([
-        EventMetadataKey.GEMINI_CLI_ROUTING_LATENCY_MS,
+        EventMetadataKey.ALFRED_CLI_ROUTING_LATENCY_MS,
         '234',
       ]);
       expect(events[0]).toHaveMetadataValue([
-        EventMetadataKey.GEMINI_CLI_ROUTING_FAILURE,
+        EventMetadataKey.ALFRED_CLI_ROUTING_FAILURE,
         'true',
       ]);
       expect(events[0]).toHaveMetadataValue([
-        EventMetadataKey.GEMINI_CLI_ROUTING_FAILURE_REASON,
+        EventMetadataKey.ALFRED_CLI_ROUTING_FAILURE_REASON,
         'Something went wrong',
       ]);
     });
@@ -749,35 +749,35 @@ describe('ClearcutLogger', () => {
       expect(events.length).toBe(1);
       expect(events[0]).toHaveEventName(EventNames.TOOL_CALL);
       expect(events[0]).toHaveMetadataValue([
-        EventMetadataKey.GEMINI_CLI_AI_ADDED_LINES,
+        EventMetadataKey.ALFRED_CLI_AI_ADDED_LINES,
         '1',
       ]);
       expect(events[0]).toHaveMetadataValue([
-        EventMetadataKey.GEMINI_CLI_AI_REMOVED_LINES,
+        EventMetadataKey.ALFRED_CLI_AI_REMOVED_LINES,
         '2',
       ]);
       expect(events[0]).toHaveMetadataValue([
-        EventMetadataKey.GEMINI_CLI_AI_ADDED_CHARS,
+        EventMetadataKey.ALFRED_CLI_AI_ADDED_CHARS,
         '3',
       ]);
       expect(events[0]).toHaveMetadataValue([
-        EventMetadataKey.GEMINI_CLI_AI_REMOVED_CHARS,
+        EventMetadataKey.ALFRED_CLI_AI_REMOVED_CHARS,
         '4',
       ]);
       expect(events[0]).toHaveMetadataValue([
-        EventMetadataKey.GEMINI_CLI_USER_ADDED_LINES,
+        EventMetadataKey.ALFRED_CLI_USER_ADDED_LINES,
         '5',
       ]);
       expect(events[0]).toHaveMetadataValue([
-        EventMetadataKey.GEMINI_CLI_USER_REMOVED_LINES,
+        EventMetadataKey.ALFRED_CLI_USER_REMOVED_LINES,
         '6',
       ]);
       expect(events[0]).toHaveMetadataValue([
-        EventMetadataKey.GEMINI_CLI_USER_ADDED_CHARS,
+        EventMetadataKey.ALFRED_CLI_USER_ADDED_CHARS,
         '7',
       ]);
       expect(events[0]).toHaveMetadataValue([
-        EventMetadataKey.GEMINI_CLI_USER_REMOVED_CHARS,
+        EventMetadataKey.ALFRED_CLI_USER_REMOVED_CHARS,
         '8',
       ]);
     });
@@ -806,32 +806,32 @@ describe('ClearcutLogger', () => {
       expect(events.length).toBe(1);
       expect(events[0]).toHaveEventName(EventNames.TOOL_CALL);
       expect(events[0]).toHaveMetadataValue([
-        EventMetadataKey.GEMINI_CLI_AI_ADDED_LINES,
+        EventMetadataKey.ALFRED_CLI_AI_ADDED_LINES,
         '1',
       ]);
       expect(events[0]).toHaveMetadataValue([
-        EventMetadataKey.GEMINI_CLI_AI_REMOVED_LINES,
+        EventMetadataKey.ALFRED_CLI_AI_REMOVED_LINES,
         '2',
       ]);
       expect(events[0]).toHaveMetadataValue([
-        EventMetadataKey.GEMINI_CLI_AI_ADDED_CHARS,
+        EventMetadataKey.ALFRED_CLI_AI_ADDED_CHARS,
         '3',
       ]);
       expect(events[0]).toHaveMetadataValue([
-        EventMetadataKey.GEMINI_CLI_AI_REMOVED_CHARS,
+        EventMetadataKey.ALFRED_CLI_AI_REMOVED_CHARS,
         '4',
       ]);
       expect(events[0]).not.toHaveMetadataKey(
-        EventMetadataKey.GEMINI_CLI_USER_ADDED_LINES,
+        EventMetadataKey.ALFRED_CLI_USER_ADDED_LINES,
       );
       expect(events[0]).not.toHaveMetadataKey(
-        EventMetadataKey.GEMINI_CLI_USER_REMOVED_LINES,
+        EventMetadataKey.ALFRED_CLI_USER_REMOVED_LINES,
       );
       expect(events[0]).not.toHaveMetadataKey(
-        EventMetadataKey.GEMINI_CLI_USER_ADDED_CHARS,
+        EventMetadataKey.ALFRED_CLI_USER_ADDED_CHARS,
       );
       expect(events[0]).not.toHaveMetadataKey(
-        EventMetadataKey.GEMINI_CLI_USER_REMOVED_CHARS,
+        EventMetadataKey.ALFRED_CLI_USER_REMOVED_CHARS,
       );
     });
 
@@ -852,7 +852,7 @@ describe('ClearcutLogger', () => {
       expect(events.length).toBe(1);
       expect(events[0]).toHaveEventName(EventNames.TOOL_CALL);
       expect(events[0]).not.toHaveMetadataKey(
-        EventMetadataKey.GEMINI_CLI_AI_ADDED_LINES,
+        EventMetadataKey.ALFRED_CLI_AI_ADDED_LINES,
       );
     });
   });

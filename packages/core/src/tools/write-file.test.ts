@@ -37,7 +37,7 @@ import { StandardFileSystemService } from '../services/fileSystemService.js';
 import type { DiffUpdateResult } from '../ide/ide-client.js';
 import { IdeClient } from '../ide/ide-client.js';
 
-const rootDir = path.resolve(os.tmpdir(), 'gemini-cli-test-root');
+const rootDir = path.resolve(os.tmpdir(), 'alfred-cli-test-root');
 
 // --- MOCKS ---
 vi.mock('../core/client.js');
@@ -89,8 +89,8 @@ const mockConfigInternal = {
   getUserAgent: () => 'test-agent',
   getUserMemory: () => '',
   setUserMemory: vi.fn(),
-  getGeminiMdFileCount: () => 0,
-  setGeminiMdFileCount: vi.fn(),
+  getAlfredMdFileCount: () => 0,
+  setAlfredMdFileCount: vi.fn(),
   getToolRegistry: () =>
     ({
       registerTool: vi.fn(),

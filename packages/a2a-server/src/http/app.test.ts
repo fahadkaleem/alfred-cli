@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { Config } from '@google/gemini-cli-core';
+import type { Config } from '@alfred/alfred-cli-core';
 import {
-  GeminiEventType,
+  AlfredEventType,
   ApprovalMode,
   type ToolCallConfirmationDetails,
-} from '@google/gemini-cli-core';
+} from '@alfred/alfred-cli-core';
 import type {
   TaskStatusUpdateEvent,
   SendStreamingMessageSuccessResponse,
@@ -34,7 +34,7 @@ import {
   createStreamMessageRequest,
   createMockConfig,
 } from '../utils/testing_utils.js';
-import { MockTool } from '@google/gemini-cli-core';
+import { MockTool } from '@alfred/alfred-cli-core';
 
 const mockToolConfirmationFn = async () =>
   ({}) as unknown as ToolCallConfirmationDetails;
@@ -83,8 +83,8 @@ vi.mock('../config/config.js', async () => {
 
 // Mock the GeminiClient to avoid actual API calls
 const sendMessageStreamSpy = vi.fn();
-vi.mock('@google/gemini-cli-core', async () => {
-  const actual = await vi.importActual('@google/gemini-cli-core');
+vi.mock('@alfred/alfred-cli-core', async () => {
+  const actual = await vi.importActual('@alfred/alfred-cli-core');
   return {
     ...actual,
     GeminiClient: vi.fn().mockImplementation(() => ({
@@ -163,7 +163,7 @@ describe('E2E Tests', () => {
     sendMessageStreamSpy.mockImplementationOnce(async function* () {
       yield* [
         {
-          type: GeminiEventType.ToolCallRequest,
+          type: AlfredEventType.ToolCallRequest,
           value: {
             callId: 'test-call-id',
             name: 'test-tool',
@@ -247,7 +247,7 @@ describe('E2E Tests', () => {
     sendMessageStreamSpy.mockImplementationOnce(async function* () {
       yield* [
         {
-          type: GeminiEventType.ToolCallRequest,
+          type: AlfredEventType.ToolCallRequest,
           value: {
             callId: 'test-call-id-1',
             name: 'test-tool-1',
@@ -255,7 +255,7 @@ describe('E2E Tests', () => {
           },
         },
         {
-          type: GeminiEventType.ToolCallRequest,
+          type: AlfredEventType.ToolCallRequest,
           value: {
             callId: 'test-call-id-2',
             name: 'test-tool-2',
@@ -371,7 +371,7 @@ describe('E2E Tests', () => {
     sendMessageStreamSpy.mockImplementationOnce(async function* () {
       yield* [
         {
-          type: GeminiEventType.ToolCallRequest,
+          type: AlfredEventType.ToolCallRequest,
           value: {
             callId: 'test-call-id-no-approval',
             name: 'test-tool-no-approval',
@@ -499,7 +499,7 @@ describe('E2E Tests', () => {
     sendMessageStreamSpy.mockImplementationOnce(async function* () {
       yield* [
         {
-          type: GeminiEventType.ToolCallRequest,
+          type: AlfredEventType.ToolCallRequest,
           value: {
             callId: 'test-call-id-yolo',
             name: 'test-tool-yolo',

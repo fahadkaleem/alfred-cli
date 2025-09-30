@@ -15,7 +15,7 @@ import {
 import { type PartListUnion } from '@google/genai';
 import process from 'node:process';
 import type { UseHistoryManagerReturn } from './useHistoryManager.js';
-import type { Config } from '@google/gemini-cli-core';
+import type { Config } from '@alfred/alfred-cli-core';
 import {
   GitService,
   Logger,
@@ -25,7 +25,7 @@ import {
   ToolConfirmationOutcome,
   Storage,
   IdeClient,
-} from '@google/gemini-cli-core';
+} from '@alfred/alfred-cli-core';
 import { useSessionStats } from '../contexts/SessionContext.js';
 import type {
   Message,
@@ -73,7 +73,7 @@ export const useSlashCommandProcessor = (
   refreshStatic: () => void,
   toggleVimEnabled: () => Promise<boolean>,
   setIsProcessing: (isProcessing: boolean) => void,
-  setGeminiMdFileCount: (count: number) => void,
+  setAlfredMdFileCount: (count: number) => void,
   actions: SlashCommandProcessorActions,
   extensionsUpdateState: Map<string, ExtensionUpdateState>,
   isConfigInitialized: boolean,
@@ -204,7 +204,7 @@ export const useSlashCommandProcessor = (
         setPendingItem,
         toggleCorgiMode: actions.toggleCorgiMode,
         toggleVimEnabled,
-        setGeminiMdFileCount,
+        setAlfredMdFileCount,
         reloadCommands,
         extensionsUpdateState,
         setExtensionsUpdateState: actions.setExtensionsUpdateState,
@@ -231,7 +231,7 @@ export const useSlashCommandProcessor = (
       setPendingItem,
       toggleVimEnabled,
       sessionShellAllowlist,
-      setGeminiMdFileCount,
+      setAlfredMdFileCount,
       reloadCommands,
       extensionsUpdateState,
     ],

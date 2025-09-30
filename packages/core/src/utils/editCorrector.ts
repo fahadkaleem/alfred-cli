@@ -89,7 +89,7 @@ function getTimestampFromFunctionId(fcnId: string): number {
  * Will look through the gemini client history and determine when the most recent
  * edit to a target file occurred. If no edit happened, it will return -1
  * @param filePath the path to the file
- * @param client the geminiClient, so that we can get the history
+ * @param client the alfredClient, so that we can get the history
  * @returns a DateTime (as a number) of when the last edit occurred, or -1 if no edit was found.
  */
 async function findLastEditTimestamp(
@@ -173,7 +173,7 @@ export async function ensureCorrectEdit(
   filePath: string,
   currentContent: string,
   originalParams: EditToolParams, // This is the EditToolParams from edit.ts, without \'corrected\'
-  geminiClient: GeminiClient,
+  alfredClient: GeminiClient,
   baseLlmClient: BaseLlmClient,
   abortSignal: AbortSignal,
 ): Promise<CorrectedEditResult> {
@@ -257,7 +257,7 @@ export async function ensureCorrectEdit(
         // our system has done
         const lastEditedByUsTime = await findLastEditTimestamp(
           filePath,
-          geminiClient,
+          alfredClient,
         );
 
         // Add a 1-second buffer to account for timing inaccuracies. If the file

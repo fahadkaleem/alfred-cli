@@ -33,13 +33,13 @@ import {
   runExitCleanup,
 } from './utils/cleanup.js';
 import { getCliVersion } from './utils/version.js';
-import type { Config } from '@google/gemini-cli-core';
+import type { Config } from '@alfred/alfred-cli-core';
 import {
   sessionId,
   logUserPrompt,
   AuthType,
   getOauthClient,
-} from '@google/gemini-cli-core';
+} from '@alfred/alfred-cli-core';
 import {
   initializeApp,
   type InitializationResult,
@@ -95,7 +95,7 @@ function getNodeMemoryArgs(isDebugMode: boolean): string[] {
     );
   }
 
-  if (process.env['GEMINI_CLI_NO_RELAUNCH']) {
+  if (process.env['ALFRED_CLI_NO_RELAUNCH']) {
     return [];
   }
 

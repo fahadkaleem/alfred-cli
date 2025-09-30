@@ -6,7 +6,7 @@
 
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import { spawnAsync } from '@google/gemini-cli-core';
+import { spawnAsync } from '@alfred/alfred-cli-core';
 
 /**
  * Checks if the system clipboard contains an image (macOS only for now)
@@ -44,7 +44,7 @@ export async function saveClipboardImage(
     // Create a temporary directory for clipboard images within the target directory
     // This avoids security restrictions on paths outside the target directory
     const baseDir = targetDir || process.cwd();
-    const tempDir = path.join(baseDir, '.gemini-clipboard');
+    const tempDir = path.join(baseDir, '.alfred-clipboard');
     await fs.mkdir(tempDir, { recursive: true });
 
     // Generate a unique filename with timestamp
@@ -120,7 +120,7 @@ export async function cleanupOldClipboardImages(
 ): Promise<void> {
   try {
     const baseDir = targetDir || process.cwd();
-    const tempDir = path.join(baseDir, '.gemini-clipboard');
+    const tempDir = path.join(baseDir, '.alfred-clipboard');
     const files = await fs.readdir(tempDir);
     const oneHourAgo = Date.now() - 60 * 60 * 1000;
 

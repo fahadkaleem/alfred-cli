@@ -87,12 +87,12 @@ export interface LogEventEntry {
 }
 
 export interface EventValue {
-  gemini_cli_key: EventMetadataKey;
+  alfred_cli_key: EventMetadataKey;
   value: string;
 }
 
 export interface LogEvent {
-  console_type: 'GEMINI_CLI';
+  console_type: 'ALFRED_CLI';
   application: number;
   event_name: string;
   event_metadata: EventValue[][];
@@ -245,8 +245,8 @@ export class ClearcutLogger {
     data = this.addDefaultFields(data, totalAccounts);
 
     const logEvent: LogEvent = {
-      console_type: 'GEMINI_CLI',
-      application: 102, // GEMINI_CLI
+      console_type: 'ALFRED_CLI',
+      application: 102, // ALFRED_CLI
       event_name: eventName as string,
       event_metadata: [data],
     };
@@ -355,79 +355,79 @@ export class ClearcutLogger {
   logStartSessionEvent(event: StartSessionEvent): void {
     const data: EventValue[] = [
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_START_SESSION_MODEL,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_START_SESSION_MODEL,
         value: event.model,
       },
       {
-        gemini_cli_key:
-          EventMetadataKey.GEMINI_CLI_START_SESSION_EMBEDDING_MODEL,
+        alfred_cli_key:
+          EventMetadataKey.ALFRED_CLI_START_SESSION_EMBEDDING_MODEL,
         value: event.embedding_model,
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_START_SESSION_SANDBOX,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_START_SESSION_SANDBOX,
         value: event.sandbox_enabled.toString(),
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_START_SESSION_CORE_TOOLS,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_START_SESSION_CORE_TOOLS,
         value: event.core_tools_enabled,
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_START_SESSION_APPROVAL_MODE,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_START_SESSION_APPROVAL_MODE,
         value: event.approval_mode,
       },
       {
-        gemini_cli_key:
-          EventMetadataKey.GEMINI_CLI_START_SESSION_API_KEY_ENABLED,
+        alfred_cli_key:
+          EventMetadataKey.ALFRED_CLI_START_SESSION_API_KEY_ENABLED,
         value: event.api_key_enabled.toString(),
       },
       {
-        gemini_cli_key:
-          EventMetadataKey.GEMINI_CLI_START_SESSION_VERTEX_API_ENABLED,
+        alfred_cli_key:
+          EventMetadataKey.ALFRED_CLI_START_SESSION_VERTEX_API_ENABLED,
         value: event.vertex_ai_enabled.toString(),
       },
       {
-        gemini_cli_key:
-          EventMetadataKey.GEMINI_CLI_START_SESSION_DEBUG_MODE_ENABLED,
+        alfred_cli_key:
+          EventMetadataKey.ALFRED_CLI_START_SESSION_DEBUG_MODE_ENABLED,
         value: event.debug_enabled.toString(),
       },
       {
-        gemini_cli_key:
-          EventMetadataKey.GEMINI_CLI_START_SESSION_VERTEX_API_ENABLED,
+        alfred_cli_key:
+          EventMetadataKey.ALFRED_CLI_START_SESSION_VERTEX_API_ENABLED,
         value: event.vertex_ai_enabled.toString(),
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_START_SESSION_MCP_SERVERS,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_START_SESSION_MCP_SERVERS,
         value: event.mcp_servers,
       },
       {
-        gemini_cli_key:
-          EventMetadataKey.GEMINI_CLI_START_SESSION_VERTEX_API_ENABLED,
+        alfred_cli_key:
+          EventMetadataKey.ALFRED_CLI_START_SESSION_VERTEX_API_ENABLED,
         value: event.vertex_ai_enabled.toString(),
       },
       {
-        gemini_cli_key:
-          EventMetadataKey.GEMINI_CLI_START_SESSION_TELEMETRY_ENABLED,
+        alfred_cli_key:
+          EventMetadataKey.ALFRED_CLI_START_SESSION_TELEMETRY_ENABLED,
         value: event.telemetry_enabled.toString(),
       },
       {
-        gemini_cli_key:
-          EventMetadataKey.GEMINI_CLI_START_SESSION_TELEMETRY_LOG_USER_PROMPTS_ENABLED,
+        alfred_cli_key:
+          EventMetadataKey.ALFRED_CLI_START_SESSION_TELEMETRY_LOG_USER_PROMPTS_ENABLED,
         value: event.telemetry_log_user_prompts_enabled.toString(),
       },
       {
-        gemini_cli_key:
-          EventMetadataKey.GEMINI_CLI_START_SESSION_MCP_SERVERS_COUNT,
+        alfred_cli_key:
+          EventMetadataKey.ALFRED_CLI_START_SESSION_MCP_SERVERS_COUNT,
         value: event.mcp_servers_count
           ? event.mcp_servers_count.toString()
           : '',
       },
       {
-        gemini_cli_key:
-          EventMetadataKey.GEMINI_CLI_START_SESSION_MCP_TOOLS_COUNT,
+        alfred_cli_key:
+          EventMetadataKey.ALFRED_CLI_START_SESSION_MCP_TOOLS_COUNT,
         value: event.mcp_tools_count?.toString() ?? '',
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_START_SESSION_MCP_TOOLS,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_START_SESSION_MCP_TOOLS,
         value: event.mcp_tools ? event.mcp_tools : '',
       },
     ];
@@ -444,7 +444,7 @@ export class ClearcutLogger {
     this.promptId = event.prompt_id;
     const data: EventValue[] = [
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_USER_PROMPT_LENGTH,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_USER_PROMPT_LENGTH,
         value: JSON.stringify(event.prompt_length),
       },
     ];
@@ -456,59 +456,59 @@ export class ClearcutLogger {
   logToolCallEvent(event: ToolCallEvent): void {
     const data: EventValue[] = [
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_TOOL_CALL_NAME,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_TOOL_CALL_NAME,
         value: JSON.stringify(event.function_name),
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_TOOL_CALL_DECISION,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_TOOL_CALL_DECISION,
         value: JSON.stringify(event.decision),
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_TOOL_CALL_SUCCESS,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_TOOL_CALL_SUCCESS,
         value: JSON.stringify(event.success),
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_TOOL_CALL_DURATION_MS,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_TOOL_CALL_DURATION_MS,
         value: JSON.stringify(event.duration_ms),
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_TOOL_ERROR_MESSAGE,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_TOOL_ERROR_MESSAGE,
         value: JSON.stringify(event.error),
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_TOOL_CALL_ERROR_TYPE,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_TOOL_CALL_ERROR_TYPE,
         value: JSON.stringify(event.error_type),
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_TOOL_TYPE,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_TOOL_TYPE,
         value: JSON.stringify(event.tool_type),
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_TOOL_CALL_CONTENT_LENGTH,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_TOOL_CALL_CONTENT_LENGTH,
         value: JSON.stringify(event.content_length),
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_TOOL_CALL_MCP_SERVER_NAME,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_TOOL_CALL_MCP_SERVER_NAME,
         value: JSON.stringify(event.mcp_server_name),
       },
     ];
 
     if (event.metadata) {
       const metadataMapping: { [key: string]: EventMetadataKey } = {
-        model_added_lines: EventMetadataKey.GEMINI_CLI_AI_ADDED_LINES,
-        model_removed_lines: EventMetadataKey.GEMINI_CLI_AI_REMOVED_LINES,
-        model_added_chars: EventMetadataKey.GEMINI_CLI_AI_ADDED_CHARS,
-        model_removed_chars: EventMetadataKey.GEMINI_CLI_AI_REMOVED_CHARS,
-        user_added_lines: EventMetadataKey.GEMINI_CLI_USER_ADDED_LINES,
-        user_removed_lines: EventMetadataKey.GEMINI_CLI_USER_REMOVED_LINES,
-        user_added_chars: EventMetadataKey.GEMINI_CLI_USER_ADDED_CHARS,
-        user_removed_chars: EventMetadataKey.GEMINI_CLI_USER_REMOVED_CHARS,
+        model_added_lines: EventMetadataKey.ALFRED_CLI_AI_ADDED_LINES,
+        model_removed_lines: EventMetadataKey.ALFRED_CLI_AI_REMOVED_LINES,
+        model_added_chars: EventMetadataKey.ALFRED_CLI_AI_ADDED_CHARS,
+        model_removed_chars: EventMetadataKey.ALFRED_CLI_AI_REMOVED_CHARS,
+        user_added_lines: EventMetadataKey.ALFRED_CLI_USER_ADDED_LINES,
+        user_removed_lines: EventMetadataKey.ALFRED_CLI_USER_REMOVED_LINES,
+        user_added_chars: EventMetadataKey.ALFRED_CLI_USER_ADDED_CHARS,
+        user_removed_chars: EventMetadataKey.ALFRED_CLI_USER_REMOVED_CHARS,
       };
 
-      for (const [key, gemini_cli_key] of Object.entries(metadataMapping)) {
+      for (const [key, alfred_cli_key] of Object.entries(metadataMapping)) {
         if (event.metadata[key] !== undefined) {
           data.push({
-            gemini_cli_key,
+            alfred_cli_key,
             value: JSON.stringify(event.metadata[key]),
           });
         }
@@ -523,30 +523,30 @@ export class ClearcutLogger {
   logFileOperationEvent(event: FileOperationEvent): void {
     const data: EventValue[] = [
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_TOOL_CALL_NAME,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_TOOL_CALL_NAME,
         value: JSON.stringify(event.tool_name),
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_FILE_OPERATION_TYPE,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_FILE_OPERATION_TYPE,
         value: JSON.stringify(event.operation),
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_FILE_OPERATION_LINES,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_FILE_OPERATION_LINES,
         value: JSON.stringify(event.lines),
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_FILE_OPERATION_MIMETYPE,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_FILE_OPERATION_MIMETYPE,
         value: JSON.stringify(event.mimetype),
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_FILE_OPERATION_EXTENSION,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_FILE_OPERATION_EXTENSION,
         value: JSON.stringify(event.extension),
       },
     ];
 
     if (event.programming_language) {
       data.push({
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_PROGRAMMING_LANGUAGE,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_PROGRAMMING_LANGUAGE,
         value: event.programming_language,
       });
     }
@@ -559,7 +559,7 @@ export class ClearcutLogger {
   logApiRequestEvent(event: ApiRequestEvent): void {
     const data: EventValue[] = [
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_API_REQUEST_MODEL,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_API_REQUEST_MODEL,
         value: JSON.stringify(event.model),
       },
     ];
@@ -571,40 +571,40 @@ export class ClearcutLogger {
   logApiResponseEvent(event: ApiResponseEvent): void {
     const data: EventValue[] = [
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_API_RESPONSE_MODEL,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_API_RESPONSE_MODEL,
         value: JSON.stringify(event.model),
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_API_RESPONSE_STATUS_CODE,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_API_RESPONSE_STATUS_CODE,
         value: JSON.stringify(event.status_code),
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_API_RESPONSE_DURATION_MS,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_API_RESPONSE_DURATION_MS,
         value: JSON.stringify(event.duration_ms),
       },
       {
-        gemini_cli_key:
-          EventMetadataKey.GEMINI_CLI_API_RESPONSE_INPUT_TOKEN_COUNT,
+        alfred_cli_key:
+          EventMetadataKey.ALFRED_CLI_API_RESPONSE_INPUT_TOKEN_COUNT,
         value: JSON.stringify(event.input_token_count),
       },
       {
-        gemini_cli_key:
-          EventMetadataKey.GEMINI_CLI_API_RESPONSE_OUTPUT_TOKEN_COUNT,
+        alfred_cli_key:
+          EventMetadataKey.ALFRED_CLI_API_RESPONSE_OUTPUT_TOKEN_COUNT,
         value: JSON.stringify(event.output_token_count),
       },
       {
-        gemini_cli_key:
-          EventMetadataKey.GEMINI_CLI_API_RESPONSE_CACHED_TOKEN_COUNT,
+        alfred_cli_key:
+          EventMetadataKey.ALFRED_CLI_API_RESPONSE_CACHED_TOKEN_COUNT,
         value: JSON.stringify(event.cached_content_token_count),
       },
       {
-        gemini_cli_key:
-          EventMetadataKey.GEMINI_CLI_API_RESPONSE_THINKING_TOKEN_COUNT,
+        alfred_cli_key:
+          EventMetadataKey.ALFRED_CLI_API_RESPONSE_THINKING_TOKEN_COUNT,
         value: JSON.stringify(event.thoughts_token_count),
       },
       {
-        gemini_cli_key:
-          EventMetadataKey.GEMINI_CLI_API_RESPONSE_TOOL_TOKEN_COUNT,
+        alfred_cli_key:
+          EventMetadataKey.ALFRED_CLI_API_RESPONSE_TOOL_TOKEN_COUNT,
         value: JSON.stringify(event.tool_token_count),
       },
     ];
@@ -616,19 +616,19 @@ export class ClearcutLogger {
   logApiErrorEvent(event: ApiErrorEvent): void {
     const data: EventValue[] = [
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_API_ERROR_MODEL,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_API_ERROR_MODEL,
         value: JSON.stringify(event.model),
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_API_ERROR_TYPE,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_API_ERROR_TYPE,
         value: JSON.stringify(event.error_type),
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_API_ERROR_STATUS_CODE,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_API_ERROR_STATUS_CODE,
         value: JSON.stringify(event.status_code),
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_API_ERROR_DURATION_MS,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_API_ERROR_DURATION_MS,
         value: JSON.stringify(event.duration_ms),
       },
     ];
@@ -640,11 +640,11 @@ export class ClearcutLogger {
   logChatCompressionEvent(event: ChatCompressionEvent): void {
     const data: EventValue[] = [
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_COMPRESSION_TOKENS_BEFORE,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_COMPRESSION_TOKENS_BEFORE,
         value: `${event.tokens_before}`,
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_COMPRESSION_TOKENS_AFTER,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_COMPRESSION_TOKENS_AFTER,
         value: `${event.tokens_after}`,
       },
     ];
@@ -671,7 +671,7 @@ export class ClearcutLogger {
   logLoopDetectedEvent(event: LoopDetectedEvent): void {
     const data: EventValue[] = [
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_LOOP_DETECTED_TYPE,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_LOOP_DETECTED_TYPE,
         value: JSON.stringify(event.loop_type),
       },
     ];
@@ -692,11 +692,11 @@ export class ClearcutLogger {
   logNextSpeakerCheck(event: NextSpeakerCheckEvent): void {
     const data: EventValue[] = [
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_RESPONSE_FINISH_REASON,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_RESPONSE_FINISH_REASON,
         value: JSON.stringify(event.finish_reason),
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_NEXT_SPEAKER_CHECK_RESULT,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_NEXT_SPEAKER_CHECK_RESULT,
         value: JSON.stringify(event.result),
       },
     ];
@@ -710,21 +710,21 @@ export class ClearcutLogger {
   logSlashCommandEvent(event: SlashCommandEvent): void {
     const data: EventValue[] = [
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_SLASH_COMMAND_NAME,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_SLASH_COMMAND_NAME,
         value: JSON.stringify(event.command),
       },
     ];
 
     if (event.subcommand) {
       data.push({
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_SLASH_COMMAND_SUBCOMMAND,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_SLASH_COMMAND_SUBCOMMAND,
         value: JSON.stringify(event.subcommand),
       });
     }
 
     if (event.status) {
       data.push({
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_SLASH_COMMAND_STATUS,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_SLASH_COMMAND_STATUS,
         value: JSON.stringify(event.status),
       });
     }
@@ -736,8 +736,8 @@ export class ClearcutLogger {
   logMalformedJsonResponseEvent(event: MalformedJsonResponseEvent): void {
     const data: EventValue[] = [
       {
-        gemini_cli_key:
-          EventMetadataKey.GEMINI_CLI_MALFORMED_JSON_RESPONSE_MODEL,
+        alfred_cli_key:
+          EventMetadataKey.ALFRED_CLI_MALFORMED_JSON_RESPONSE_MODEL,
         value: JSON.stringify(event.model),
       },
     ];
@@ -751,7 +751,7 @@ export class ClearcutLogger {
   logIdeConnectionEvent(event: IdeConnectionEvent): void {
     const data: EventValue[] = [
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_IDE_CONNECTION_TYPE,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_IDE_CONNECTION_TYPE,
         value: JSON.stringify(event.connection_type),
       },
     ];
@@ -763,15 +763,15 @@ export class ClearcutLogger {
   logConversationFinishedEvent(event: ConversationFinishedEvent): void {
     const data: EventValue[] = [
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_SESSION_ID,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_SESSION_ID,
         value: this.config?.getSessionId() ?? '',
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_CONVERSATION_TURN_COUNT,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_CONVERSATION_TURN_COUNT,
         value: JSON.stringify(event.turnCount),
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_APPROVAL_MODE,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_APPROVAL_MODE,
         value: event.approvalMode,
       },
     ];
@@ -785,11 +785,11 @@ export class ClearcutLogger {
   logKittySequenceOverflowEvent(event: KittySequenceOverflowEvent): void {
     const data: EventValue[] = [
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_KITTY_SEQUENCE_LENGTH,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_KITTY_SEQUENCE_LENGTH,
         value: event.sequence_length.toString(),
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_KITTY_TRUNCATED_SEQUENCE,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_KITTY_TRUNCATED_SEQUENCE,
         value: event.truncated_sequence,
       },
     ];
@@ -813,7 +813,7 @@ export class ClearcutLogger {
 
     if (event.error_message) {
       data.push({
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_INVALID_CHUNK_ERROR_MESSAGE,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_INVALID_CHUNK_ERROR_MESSAGE,
         value: event.error_message,
       });
     }
@@ -825,20 +825,20 @@ export class ClearcutLogger {
   logContentRetryEvent(event: ContentRetryEvent): void {
     const data: EventValue[] = [
       {
-        gemini_cli_key:
-          EventMetadataKey.GEMINI_CLI_CONTENT_RETRY_ATTEMPT_NUMBER,
+        alfred_cli_key:
+          EventMetadataKey.ALFRED_CLI_CONTENT_RETRY_ATTEMPT_NUMBER,
         value: String(event.attempt_number),
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_CONTENT_RETRY_ERROR_TYPE,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_CONTENT_RETRY_ERROR_TYPE,
         value: event.error_type,
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_CONTENT_RETRY_DELAY_MS,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_CONTENT_RETRY_DELAY_MS,
         value: String(event.retry_delay_ms),
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_API_REQUEST_MODEL,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_API_REQUEST_MODEL,
         value: event.model,
       },
     ];
@@ -850,25 +850,25 @@ export class ClearcutLogger {
   logContentRetryFailureEvent(event: ContentRetryFailureEvent): void {
     const data: EventValue[] = [
       {
-        gemini_cli_key:
-          EventMetadataKey.GEMINI_CLI_CONTENT_RETRY_FAILURE_TOTAL_ATTEMPTS,
+        alfred_cli_key:
+          EventMetadataKey.ALFRED_CLI_CONTENT_RETRY_FAILURE_TOTAL_ATTEMPTS,
         value: String(event.total_attempts),
       },
       {
-        gemini_cli_key:
-          EventMetadataKey.GEMINI_CLI_CONTENT_RETRY_FAILURE_FINAL_ERROR_TYPE,
+        alfred_cli_key:
+          EventMetadataKey.ALFRED_CLI_CONTENT_RETRY_FAILURE_FINAL_ERROR_TYPE,
         value: event.final_error_type,
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_API_REQUEST_MODEL,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_API_REQUEST_MODEL,
         value: event.model,
       },
     ];
 
     if (event.total_duration_ms) {
       data.push({
-        gemini_cli_key:
-          EventMetadataKey.GEMINI_CLI_CONTENT_RETRY_FAILURE_TOTAL_DURATION_MS,
+        alfred_cli_key:
+          EventMetadataKey.ALFRED_CLI_CONTENT_RETRY_FAILURE_TOTAL_DURATION_MS,
         value: String(event.total_duration_ms),
       });
     }
@@ -882,19 +882,19 @@ export class ClearcutLogger {
   logExtensionInstallEvent(event: ExtensionInstallEvent): void {
     const data: EventValue[] = [
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_EXTENSION_NAME,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_EXTENSION_NAME,
         value: event.extension_name,
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_EXTENSION_VERSION,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_EXTENSION_VERSION,
         value: event.extension_version,
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_EXTENSION_SOURCE,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_EXTENSION_SOURCE,
         value: event.extension_source,
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_EXTENSION_INSTALL_STATUS,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_EXTENSION_INSTALL_STATUS,
         value: event.status,
       },
     ];
@@ -908,11 +908,11 @@ export class ClearcutLogger {
   logExtensionUninstallEvent(event: ExtensionUninstallEvent): void {
     const data: EventValue[] = [
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_EXTENSION_NAME,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_EXTENSION_NAME,
         value: event.extension_name,
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_EXTENSION_UNINSTALL_STATUS,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_EXTENSION_UNINSTALL_STATUS,
         value: event.status,
       },
     ];
@@ -926,26 +926,26 @@ export class ClearcutLogger {
   logToolOutputTruncatedEvent(event: ToolOutputTruncatedEvent): void {
     const data: EventValue[] = [
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_TOOL_CALL_NAME,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_TOOL_CALL_NAME,
         value: JSON.stringify(event.tool_name),
       },
       {
-        gemini_cli_key:
-          EventMetadataKey.GEMINI_CLI_TOOL_OUTPUT_TRUNCATED_ORIGINAL_LENGTH,
+        alfred_cli_key:
+          EventMetadataKey.ALFRED_CLI_TOOL_OUTPUT_TRUNCATED_ORIGINAL_LENGTH,
         value: JSON.stringify(event.original_content_length),
       },
       {
-        gemini_cli_key:
-          EventMetadataKey.GEMINI_CLI_TOOL_OUTPUT_TRUNCATED_TRUNCATED_LENGTH,
+        alfred_cli_key:
+          EventMetadataKey.ALFRED_CLI_TOOL_OUTPUT_TRUNCATED_TRUNCATED_LENGTH,
         value: JSON.stringify(event.truncated_content_length),
       },
       {
-        gemini_cli_key:
-          EventMetadataKey.GEMINI_CLI_TOOL_OUTPUT_TRUNCATED_THRESHOLD,
+        alfred_cli_key:
+          EventMetadataKey.ALFRED_CLI_TOOL_OUTPUT_TRUNCATED_THRESHOLD,
         value: JSON.stringify(event.threshold),
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_TOOL_OUTPUT_TRUNCATED_LINES,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_TOOL_OUTPUT_TRUNCATED_LINES,
         value: JSON.stringify(event.lines),
       },
     ];
@@ -959,26 +959,26 @@ export class ClearcutLogger {
   logModelRoutingEvent(event: ModelRoutingEvent): void {
     const data: EventValue[] = [
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_ROUTING_DECISION,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_ROUTING_DECISION,
         value: event.decision_model,
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_ROUTING_DECISION_SOURCE,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_ROUTING_DECISION_SOURCE,
         value: event.decision_source,
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_ROUTING_LATENCY_MS,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_ROUTING_LATENCY_MS,
         value: event.routing_latency_ms.toString(),
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_ROUTING_FAILURE,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_ROUTING_FAILURE,
         value: event.failed.toString(),
       },
     ];
 
     if (event.error_message) {
       data.push({
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_ROUTING_FAILURE_REASON,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_ROUTING_FAILURE_REASON,
         value: event.error_message,
       });
     }
@@ -990,12 +990,12 @@ export class ClearcutLogger {
   logExtensionEnableEvent(event: ExtensionEnableEvent): void {
     const data: EventValue[] = [
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_EXTENSION_NAME,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_EXTENSION_NAME,
         value: event.extension_name,
       },
       {
-        gemini_cli_key:
-          EventMetadataKey.GEMINI_CLI_EXTENSION_ENABLE_SETTING_SCOPE,
+        alfred_cli_key:
+          EventMetadataKey.ALFRED_CLI_EXTENSION_ENABLE_SETTING_SCOPE,
         value: event.setting_scope,
       },
     ];
@@ -1009,7 +1009,7 @@ export class ClearcutLogger {
   logModelSlashCommandEvent(event: ModelSlashCommandEvent): void {
     const data: EventValue[] = [
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_MODEL_SLASH_COMMAND,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_MODEL_SLASH_COMMAND,
         value: event.model_name,
       },
     ];
@@ -1023,12 +1023,12 @@ export class ClearcutLogger {
   logExtensionDisableEvent(event: ExtensionDisableEvent): void {
     const data: EventValue[] = [
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_EXTENSION_NAME,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_EXTENSION_NAME,
         value: event.extension_name,
       },
       {
-        gemini_cli_key:
-          EventMetadataKey.GEMINI_CLI_EXTENSION_DISABLE_SETTING_SCOPE,
+        alfred_cli_key:
+          EventMetadataKey.ALFRED_CLI_EXTENSION_DISABLE_SETTING_SCOPE,
         value: event.setting_scope,
       },
     ];
@@ -1048,45 +1048,45 @@ export class ClearcutLogger {
 
     const defaultLogMetadata: EventValue[] = [
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_SESSION_ID,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_SESSION_ID,
         value: this.config?.getSessionId() ?? '',
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_AUTH_TYPE,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_AUTH_TYPE,
         value: JSON.stringify(
           this.config?.getContentGeneratorConfig()?.authType,
         ),
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_GOOGLE_ACCOUNTS_COUNT,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_GOOGLE_ACCOUNTS_COUNT,
         value: `${totalAccounts}`,
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_SURFACE,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_SURFACE,
         value: surface,
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_VERSION,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_VERSION,
         value: CLI_VERSION,
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_GIT_COMMIT_HASH,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_GIT_COMMIT_HASH,
         value: GIT_COMMIT_INFO,
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_PROMPT_ID,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_PROMPT_ID,
         value: this.promptId,
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_OS,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_OS,
         value: process.platform,
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_NODE_VERSION,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_NODE_VERSION,
         value: process.versions.node,
       },
       {
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_USER_SETTINGS,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_USER_SETTINGS,
         value: safeJsonStringify([
           {
             smart_edit_enabled: this.config?.getUseSmartEdit() ?? false,

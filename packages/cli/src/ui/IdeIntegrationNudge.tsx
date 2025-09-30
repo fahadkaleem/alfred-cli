@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { IdeInfo } from '@google/gemini-cli-core';
+import type { IdeInfo } from '@alfred/alfred-cli-core';
 import { Box, Text } from 'ink';
 import type { RadioSelectItem } from './components/shared/RadioButtonSelect.js';
 import { RadioButtonSelect } from './components/shared/RadioButtonSelect.js';
@@ -40,8 +40,8 @@ export function IdeIntegrationNudge({
   const { displayName: ideName } = ide;
   // Assume extension is already installed if the env variables are set.
   const isExtensionPreInstalled =
-    !!process.env['GEMINI_CLI_IDE_SERVER_PORT'] &&
-    !!process.env['GEMINI_CLI_IDE_WORKSPACE_PATH'];
+    !!process.env['ALFRED_CLI_IDE_SERVER_PORT'] &&
+    !!process.env['ALFRED_CLI_IDE_WORKSPACE_PATH'];
 
   const OPTIONS: Array<RadioSelectItem<IdeIntegrationNudgeResult>> = [
     {

@@ -75,9 +75,9 @@ export interface GlobToolParams {
   respect_git_ignore?: boolean;
 
   /**
-   * Whether to respect .geminiignore patterns (optional, defaults to true)
+   * Whether to respect .alfredignore patterns (optional, defaults to true)
    */
-  respect_gemini_ignore?: boolean;
+  respect_alfred_ignore?: boolean;
 }
 
 class GlobToolInvocation extends BaseToolInvocation<
@@ -164,16 +164,16 @@ class GlobToolInvocation extends BaseToolInvocation<
         path.relative(this.config.getTargetDir(), p.fullpath()),
       );
 
-      const { filteredPaths, gitIgnoredCount, geminiIgnoredCount } =
+      const { filteredPaths, gitIgnoredCount, alfredIgnoredCount } =
         fileDiscovery.filterFilesWithReport(relativePaths, {
           respectGitIgnore:
             this.params?.respect_git_ignore ??
             this.config.getFileFilteringOptions().respectGitIgnore ??
             DEFAULT_FILE_FILTERING_OPTIONS.respectGitIgnore,
-          respectGeminiIgnore:
-            this.params?.respect_gemini_ignore ??
-            this.config.getFileFilteringOptions().respectGeminiIgnore ??
-            DEFAULT_FILE_FILTERING_OPTIONS.respectGeminiIgnore,
+          respectAlfredIgnore:
+            this.params?.respect_alfred_ignore ??
+            this.config.getFileFilteringOptions().respectAlfredIgnore ??
+            DEFAULT_FILE_FILTERING_OPTIONS.respectAlfredIgnore,
         });
 
       const filteredAbsolutePaths = new Set(
@@ -194,8 +194,8 @@ class GlobToolInvocation extends BaseToolInvocation<
         if (gitIgnoredCount > 0) {
           message += ` (${gitIgnoredCount} files were git-ignored)`;
         }
-        if (geminiIgnoredCount > 0) {
-          message += ` (${geminiIgnoredCount} files were gemini-ignored)`;
+        if (alfredIgnoredCount > 0) {
+          message += ` (${alfredIgnoredCount} files were alfred-ignored)`;
         }
         return {
           llmContent: message,
@@ -229,8 +229,8 @@ class GlobToolInvocation extends BaseToolInvocation<
       if (gitIgnoredCount > 0) {
         resultMessage += ` (${gitIgnoredCount} additional files were git-ignored)`;
       }
-      if (geminiIgnoredCount > 0) {
-        resultMessage += ` (${geminiIgnoredCount} additional files were gemini-ignored)`;
+      if (alfredIgnoredCount > 0) {
+        resultMessage += ` (${alfredIgnoredCount} additional files were alfred-ignored)`;
       }
       resultMessage += `, sorted by modification time (newest first):\n${fileListDescription}`;
 
@@ -289,9 +289,9 @@ export class GlobTool extends BaseDeclarativeTool<GlobToolParams, ToolResult> {
               'Optional: Whether to respect .gitignore patterns when finding files. Only available in git repositories. Defaults to true.',
             type: 'boolean',
           },
-          respect_gemini_ignore: {
+          respect_alfred_ignore: {
             description:
-              'Optional: Whether to respect .geminiignore patterns when finding files. Defaults to true.',
+              'Optional: Whether to respect .alfredignore patterns when finding files. Defaults to true.',
             type: 'boolean',
           },
         },

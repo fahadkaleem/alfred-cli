@@ -1,4 +1,4 @@
-# Gemini CLI Releases
+# Alfred CLI Releases
 
 ## Release Cadence and Tags
 

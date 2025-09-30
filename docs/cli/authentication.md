@@ -1,16 +1,16 @@
 # Authentication Setup
 
-Gemini CLI requires you to authenticate with Google's AI services. On initial startup you'll need to configure **one** of the following authentication methods:
+Alfred CLI requires you to authenticate with Google's AI services. On initial startup you'll need to configure **one** of the following authentication methods:
 
 1.  **Login with Google**
     1. **Google AI Pro and AI Ultra subscribers**
        - Use this option to log in with your Google account that you use with Google AI Pro and Ultra.
-       - During initial startup, Gemini CLI will direct you to a webpage for authentication. Once authenticated, your credentials will be cached locally so the web login can be skipped on subsequent runs.
-       - Note that the web login must be done in a browser that can communicate with the machine Gemini CLI is being run from. (Specifically, the browser will be redirected to a localhost URL that Gemini CLI will be listening on.)
+       - During initial startup, Alfred CLI will direct you to a webpage for authentication. Once authenticated, your credentials will be cached locally so the web login can be skipped on subsequent runs.
+       - Note that the web login must be done in a browser that can communicate with the machine Alfred CLI is being run from. (Specifically, the browser will be redirected to a localhost URL that Alfred CLI will be listening on.)
     2. **Gemini Code Assist:**
        - Use this option to log in with your Google account.
-       - During initial startup, Gemini CLI will direct you to a webpage for authentication. Once authenticated, your credentials will be cached locally so the web login can be skipped on subsequent runs.
-       - Note that the web login must be done in a browser that can communicate with the machine Gemini CLI is being run from. (Specifically, the browser will be redirected to a localhost url that Gemini CLI will be listening on.)
+       - During initial startup, Alfred CLI will direct you to a webpage for authentication. Once authenticated, your credentials will be cached locally so the web login can be skipped on subsequent runs.
+       - Note that the web login must be done in a browser that can communicate with the machine Alfred CLI is being run from. (Specifically, the browser will be redirected to a localhost url that Alfred CLI will be listening on.)
        - <a id="workspace-gca">Users may have to specify a GOOGLE_CLOUD_PROJECT if:</a>
          1. You have a Google Workspace account. Google Workspace is a paid service for businesses and organizations that provides a suite of productivity tools, including a custom email domain (e.g. your-name@your-company.com), enhanced security features, and administrative controls. These accounts are often managed by an employer or school.
          1. You have received a Gemini Code Assist license through the [Google Developer Program](https://developers.google.com/program/plans-and-pricing) (including qualified Google Developer Experts).
@@ -122,17 +122,17 @@ Gemini CLI requires you to authenticate with Google's AI services. On initial st
 
 ### Persisting Environment Variables with `.env` Files
 
-You can create a **`.gemini/.env`** file in your project directory or in your home directory. Creating a plain **`.env`** file also works, but `.gemini/.env` is recommended to keep Gemini variables isolated from other tools.
+You can create a **`.alfred/.env`** file in your project directory or in your home directory. Creating a plain **`.env`** file also works, but `.alfred/.env` is recommended to keep Gemini variables isolated from other tools.
 
-**Important:** Some environment variables (like `DEBUG` and `DEBUG_MODE`) are automatically excluded from project `.env` files to prevent interference with gemini-cli behavior. Use `.gemini/.env` files for gemini-cli specific variables.
+**Important:** Some environment variables (like `DEBUG` and `DEBUG_MODE`) are automatically excluded from project `.env` files to prevent interference with gemini-cli behavior. Use `.alfred/.env` files for gemini-cli specific variables.
 
-Gemini CLI automatically loads environment variables from the **first** `.env` file it finds, using the following search order:
+Alfred CLI automatically loads environment variables from the **first** `.env` file it finds, using the following search order:
 
 1. Starting in the **current directory** and moving upward toward `/`, for each directory it checks:
-   1. `.gemini/.env`
+   1. `.alfred/.env`
    2. `.env`
 2. If no file is found, it falls back to your **home directory**:
-   - `~/.gemini/.env`
+   - `~/.alfred/.env`
    - `~/.env`
 
 > **Important:** The search stops at the **first** file encountered—variables are **not merged** across multiple files.
@@ -142,15 +142,15 @@ Gemini CLI automatically loads environment variables from the **first** `.env` f
 **Project-specific overrides** (take precedence when you are inside the project):
 
 ```bash
-mkdir -p .gemini
-echo 'GOOGLE_CLOUD_PROJECT="your-project-id"' >> .gemini/.env
+mkdir -p .alfred
+echo 'GOOGLE_CLOUD_PROJECT="your-project-id"' >> .alfred/.env
 ```
 
 **User-wide settings** (available in every directory):
 
 ```bash
-mkdir -p ~/.gemini
-cat >> ~/.gemini/.env <<'EOF'
+mkdir -p ~/.alfred
+cat >> ~/.alfred/.env <<'EOF'
 GOOGLE_CLOUD_PROJECT="your-project-id"
 GEMINI_API_KEY="your-gemini-api-key"
 EOF
@@ -158,7 +158,7 @@ EOF
 
 ## Non-Interactive Mode / Headless Environments
 
-When running the Gemini CLI in a non-interactive environment, you cannot use the interactive login flow.
+When running the Alfred CLI in a non-interactive environment, you cannot use the interactive login flow.
 Instead, you must configure authentication using environment variables.
 
 The CLI will automatically detect if it is running in a non-interactive terminal and will use one of the
@@ -177,5 +177,5 @@ following authentication methods if available:
 
 If none of these environment variables are set in a non-interactive session, the CLI will exit with an error.
 
-For comprehensive guidance on using Gemini CLI programmatically and in
+For comprehensive guidance on using Alfred CLI programmatically and in
 automation workflows, see the [Headless Mode Guide](../headless.md).

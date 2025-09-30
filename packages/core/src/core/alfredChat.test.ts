@@ -13,11 +13,11 @@ import type {
 import { ApiError } from '@google/genai';
 import type { ContentGenerator } from '../core/contentGenerator.js';
 import {
-  GeminiChat,
+  AlfredChat,
   InvalidStreamError,
   StreamEventType,
   type StreamEvent,
-} from './geminiChat.js';
+} from './alfredChat.js';
 import type { Config } from '../config/config.js';
 import { setSimulate429 } from '../utils/testUtils.js';
 import { DEFAULT_GEMINI_FLASH_MODEL } from '../config/models.js';
@@ -86,9 +86,9 @@ vi.mock('../telemetry/uiTelemetry.js', () => ({
   },
 }));
 
-describe('GeminiChat', () => {
+describe('AlfredChat', () => {
   let mockContentGenerator: ContentGenerator;
-  let chat: GeminiChat;
+  let chat: AlfredChat;
   let mockConfig: Config;
   const config: GenerateContentConfig = {};
 
@@ -134,7 +134,7 @@ describe('GeminiChat', () => {
     // Disable 429 simulation for tests
     setSimulate429(false);
     // Reset history for each test by creating a new instance
-    chat = new GeminiChat(mockConfig, config, []);
+    chat = new AlfredChat(mockConfig, config, []);
   });
 
   afterEach(() => {

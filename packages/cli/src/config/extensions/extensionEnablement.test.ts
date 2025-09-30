@@ -27,7 +27,7 @@ let manager: ExtensionEnablementManager;
 describe('ExtensionEnablementManager', () => {
   beforeEach(() => {
     testDir = createTestDir();
-    configDir = path.join(testDir.path, '.gemini');
+    configDir = path.join(testDir.path, '.alfred');
     manager = new ExtensionEnablementManager(configDir);
   });
 

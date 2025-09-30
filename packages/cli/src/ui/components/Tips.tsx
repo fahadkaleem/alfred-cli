@@ -7,14 +7,14 @@
 import type React from 'react';
 import { Box, Text } from 'ink';
 import { theme } from '../semantic-colors.js';
-import { type Config } from '@google/gemini-cli-core';
+import { type Config } from '@alfred/alfred-cli-core';
 
 interface TipsProps {
   config: Config;
 }
 
 export const Tips: React.FC<TipsProps> = ({ config }) => {
-  const geminiMdFileCount = config.getGeminiMdFileCount();
+  const alfredMdFileCount = config.getAlfredMdFileCount();
   return (
     <Box flexDirection="column">
       <Text color={theme.text.primary}>Tips for getting started:</Text>
@@ -24,17 +24,17 @@ export const Tips: React.FC<TipsProps> = ({ config }) => {
       <Text color={theme.text.primary}>
         2. Be specific for the best results.
       </Text>
-      {geminiMdFileCount === 0 && (
+      {alfredMdFileCount === 0 && (
         <Text color={theme.text.primary}>
           3. Create{' '}
           <Text bold color={theme.text.accent}>
-            GEMINI.md
+            ALFRED.md
           </Text>{' '}
           files to customize your interactions with Gemini.
         </Text>
       )}
       <Text color={theme.text.primary}>
-        {geminiMdFileCount === 0 ? '4.' : '3.'}{' '}
+        {alfredMdFileCount === 0 ? '4.' : '3.'}{' '}
         <Text bold color={theme.text.accent}>
           /help
         </Text>{' '}

@@ -8,10 +8,10 @@ import type { WritableStream, ReadableStream } from 'node:stream/web';
 
 import type {
   Config,
-  GeminiChat,
+  AlfredChat,
   ToolResult,
   ToolCallConfirmationDetails,
-} from '@google/gemini-cli-core';
+} from '@alfred/alfred-cli-core';
 import {
   AuthType,
   logToolCall,
@@ -28,7 +28,7 @@ import {
   DEFAULT_GEMINI_MODEL,
   DEFAULT_GEMINI_MODEL_AUTO,
   DEFAULT_GEMINI_FLASH_MODEL,
-} from '@google/gemini-cli-core';
+} from '@alfred/alfred-cli-core';
 import * as acp from './acp.js';
 import { AcpFileSystemService } from './fileSystemService.js';
 import { Readable, Writable } from 'node:stream';
@@ -175,8 +175,8 @@ class GeminiAgent {
       config.setFileSystemService(acpFileSystemService);
     }
 
-    const geminiClient = config.getGeminiClient();
-    const chat = await geminiClient.startChat();
+    const alfredClient = config.getGeminiClient();
+    const chat = await alfredClient.startChat();
     const session = new Session(sessionId, chat, config, this.client);
     this.sessions.set(sessionId, session);
 
@@ -240,7 +240,7 @@ class Session {
 
   constructor(
     private readonly id: string,
-    private readonly chat: GeminiChat,
+    private readonly chat: AlfredChat,
     private readonly config: Config,
     private readonly client: acp.Client,
   ) {}

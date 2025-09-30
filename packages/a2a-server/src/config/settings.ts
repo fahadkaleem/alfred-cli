@@ -8,14 +8,14 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { homedir } from 'node:os';
 
-import type { MCPServerConfig } from '@google/gemini-cli-core';
+import type { MCPServerConfig } from '@alfred/alfred-cli-core';
 import {
   getErrorMessage,
   type TelemetrySettings,
-} from '@google/gemini-cli-core';
+} from '@alfred/alfred-cli-core';
 import stripJsonComments from 'strip-json-comments';
 
-export const SETTINGS_DIRECTORY_NAME = '.gemini';
+export const SETTINGS_DIRECTORY_NAME = '.alfred';
 export const USER_SETTINGS_DIR = path.join(homedir(), SETTINGS_DIRECTORY_NAME);
 export const USER_SETTINGS_PATH = path.join(USER_SETTINGS_DIR, 'settings.json');
 

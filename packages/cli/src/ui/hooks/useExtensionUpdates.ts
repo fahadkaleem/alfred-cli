@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { GeminiCLIExtension } from '@google/gemini-cli-core';
+import type { AlfredCLIExtension } from '@alfred/alfred-cli-core';
 import { getErrorMessage } from '../../utils/errors.js';
 import { ExtensionUpdateState } from '../state/extensions.js';
 import { useCallback, useState } from 'react';
@@ -17,7 +17,7 @@ import {
 import { requestConsentInteractive } from '../../config/extension.js';
 
 export const useExtensionUpdates = (
-  extensions: GeminiCLIExtension[],
+  extensions: AlfredCLIExtension[],
   addItem: UseHistoryManagerReturn['addItem'],
   cwd: string,
 ) => {

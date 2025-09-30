@@ -448,21 +448,21 @@ describe('ReadFileTool', () => {
       expect(result.returnDisplay).toBe('');
     });
 
-    describe('with .geminiignore', () => {
+    describe('with .alfredignore', () => {
       beforeEach(async () => {
         await fsp.writeFile(
-          path.join(tempRootDir, '.geminiignore'),
+          path.join(tempRootDir, '.alfredignore'),
           ['foo.*', 'ignored/'].join('\n'),
         );
       });
 
-      it('should throw error if path is ignored by a .geminiignore pattern', async () => {
+      it('should throw error if path is ignored by a .alfredignore pattern', async () => {
         const ignoredFilePath = path.join(tempRootDir, 'foo.bar');
         await fsp.writeFile(ignoredFilePath, 'content', 'utf-8');
         const params: ReadFileToolParams = {
           absolute_path: ignoredFilePath,
         };
-        const expectedError = `File path '${ignoredFilePath}' is ignored by .geminiignore pattern(s).`;
+        const expectedError = `File path '${ignoredFilePath}' is ignored by .alfredignore pattern(s).`;
         expect(() => tool.build(params)).toThrow(expectedError);
       });
 
@@ -474,7 +474,7 @@ describe('ReadFileTool', () => {
         const params: ReadFileToolParams = {
           absolute_path: ignoredFilePath,
         };
-        const expectedError = `File path '${ignoredFilePath}' is ignored by .geminiignore pattern(s).`;
+        const expectedError = `File path '${ignoredFilePath}' is ignored by .alfredignore pattern(s).`;
         expect(() => tool.build(params)).toThrow(expectedError);
       });
 

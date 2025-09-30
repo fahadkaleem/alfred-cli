@@ -13,7 +13,7 @@ import {
 import {
   type MCPServerConfig,
   type ExtensionInstallMetadata,
-} from '@google/gemini-cli-core';
+} from '@alfred/alfred-cli-core';
 
 export function createExtension({
   extensionsDir = 'extensions-dir',
@@ -32,7 +32,7 @@ export function createExtension({
   );
 
   if (addContextFile) {
-    fs.writeFileSync(path.join(extDir, 'GEMINI.md'), 'context');
+    fs.writeFileSync(path.join(extDir, 'ALFRED.md'), 'context');
   }
 
   if (contextFileName) {

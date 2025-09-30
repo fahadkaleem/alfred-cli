@@ -14,7 +14,7 @@ import type {
 } from './types.js';
 import { createMockCommandContext } from '../../test-utils/mockCommandContext.js';
 import type { Content } from '@google/genai';
-import type { GeminiClient } from '@google/gemini-cli-core';
+import type { GeminiClient } from '@alfred/alfred-cli-core';
 
 import * as fsPromises from 'node:fs/promises';
 import { chatCommand, serializeHistoryToMarkdown } from './chatCommand.js';
@@ -68,7 +68,7 @@ describe('chatCommand', () => {
               getChat: mockGetChat,
             }) as unknown as GeminiClient,
           storage: {
-            getProjectTempDir: () => '/project/root/.gemini/tmp/mockhash',
+            getProjectTempDir: () => '/project/root/.alfred/tmp/mockhash',
           },
         },
         logger: {

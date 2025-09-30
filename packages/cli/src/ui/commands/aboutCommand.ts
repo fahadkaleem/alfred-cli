@@ -9,7 +9,7 @@ import type { CommandContext, SlashCommand } from './types.js';
 import { CommandKind } from './types.js';
 import process from 'node:process';
 import { MessageType, type HistoryItemAbout } from '../types.js';
-import { IdeClient } from '@google/gemini-cli-core';
+import { IdeClient } from '@alfred/alfred-cli-core';
 
 export const aboutCommand: SlashCommand = {
   name: 'about',

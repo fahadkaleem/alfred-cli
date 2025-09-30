@@ -441,7 +441,7 @@ describe('Telemetry Metrics', () => {
           'settings_loading',
           100,
           {
-            auth_type: 'gemini',
+            auth_type: 'alfred',
           },
         );
 
@@ -453,7 +453,7 @@ describe('Telemetry Metrics', () => {
         mockHistogramRecordFn.mockClear();
 
         recordStartupPerformanceModule(mockConfig, 'settings_loading', 150, {
-          auth_type: 'gemini',
+          auth_type: 'alfred',
           telemetry_enabled: true,
           settings_sources: 2,
         });
@@ -461,7 +461,7 @@ describe('Telemetry Metrics', () => {
         expect(mockHistogramRecordFn).toHaveBeenCalledWith(150, {
           'session.id': 'test-session-id',
           phase: 'settings_loading',
-          auth_type: 'gemini',
+          auth_type: 'alfred',
           telemetry_enabled: true,
           settings_sources: 2,
         });

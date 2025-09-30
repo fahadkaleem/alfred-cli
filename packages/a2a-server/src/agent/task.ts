@@ -7,7 +7,7 @@
 import {
   CoreToolScheduler,
   type GeminiClient,
-  GeminiEventType,
+  AlfredEventType,
   ToolConfirmationOutcome,
   ApprovalMode,
   getAllMCPServerStatuses,
@@ -20,13 +20,13 @@ import {
   type ToolConfirmationPayload,
   type CompletedToolCall,
   type ToolCallRequestInfo,
-  type ServerGeminiErrorEvent,
+  type ServerAlfredErrorEvent,
   type ServerGeminiStreamEvent,
   type ToolCallConfirmationDetails,
   type Config,
   type UserTierId,
   type AnsiOutput,
-} from '@google/gemini-cli-core';
+} from '@alfred/alfred-cli-core';
 import type { RequestContext } from '@a2a-js/sdk/server';
 import { type ExecutionEventBus } from '@a2a-js/sdk/server';
 import type {
@@ -60,7 +60,7 @@ export class Task {
   contextId: string;
   scheduler: CoreToolScheduler;
   config: Config;
-  geminiClient: GeminiClient;
+  alfredClient: GeminiClient;
   pendingToolConfirmationDetails: Map<string, ToolCallConfirmationDetails>;
   taskState: TaskState;
   eventBus?: ExecutionEventBus;
@@ -85,7 +85,7 @@ export class Task {
     this.contextId = contextId;
     this.config = config;
     this.scheduler = this.createScheduler();
-    this.geminiClient = this.config.getGeminiClient();
+    this.alfredClient = this.config.getGeminiClient();
     this.pendingToolConfirmationDetails = new Map();
     this.taskState = 'submitted';
     this.eventBus = eventBus;
@@ -583,18 +583,18 @@ export class Task {
       kind: CoderAgentEvent.StateChangeEvent,
     };
     switch (event.type) {
-      case GeminiEventType.Content:
+      case AlfredEventType.Content:
         logger.info('[Task] Sending agent message content...');
         this._sendTextContent(event.value);
         break;
-      case GeminiEventType.ToolCallRequest:
+      case AlfredEventType.ToolCallRequest:
         // This is now handled by the agent loop, which collects all requests
         // and calls scheduleToolCalls once.
         logger.warn(
           '[Task] A single tool call request was passed to acceptAgentMessage. This should be handled in a batch by the agent. Ignoring.',
         );
         break;
-      case GeminiEventType.ToolCallResponse:
+      case AlfredEventType.ToolCallResponse:
         // This event type from ServerGeminiStreamEvent might be for when LLM *generates* a tool response part.
         // The actual execution result comes via user message.
         logger.info(
@@ -602,7 +602,7 @@ export class Task {
           event.value,
         );
         break;
-      case GeminiEventType.ToolCallConfirmation:
+      case AlfredEventType.ToolCallConfirmation:
         // This is when LLM requests confirmation, not when user provides it.
         logger.info(
           '[Task] Received tool call confirmation request from LLM:',
@@ -615,7 +615,7 @@ export class Task {
         // This will be handled by the scheduler and _schedulerToolCallsUpdate will set InputRequired if needed.
         // No direct state change here, scheduler drives it.
         break;
-      case GeminiEventType.UserCancelled:
+      case AlfredEventType.UserCancelled:
         logger.info('[Task] Received user cancelled event from LLM stream.');
         this.cancelPendingTools('User cancelled via LLM stream event');
         this.setTaskStateAndPublishUpdate(
@@ -626,19 +626,19 @@ export class Task {
           true,
         );
         break;
-      case GeminiEventType.Thought:
+      case AlfredEventType.Thought:
         logger.info('[Task] Sending agent thought...');
         this._sendThought(event.value);
         break;
-      case GeminiEventType.ChatCompressed:
+      case AlfredEventType.ChatCompressed:
         break;
-      case GeminiEventType.Finished:
+      case AlfredEventType.Finished:
         logger.info(`[Task ${this.id}] Agent finished its turn.`);
         break;
-      case GeminiEventType.Error:
+      case AlfredEventType.Error:
       default: {
         // Block scope for lexical declaration
-        const errorEvent = event as ServerGeminiErrorEvent; // Type assertion
+        const errorEvent = event as ServerAlfredErrorEvent; // Type assertion
         const errorMessage =
           errorEvent.value?.error.message ?? 'Unknown error from LLM stream';
         logger.error(
@@ -801,7 +801,7 @@ export class Task {
       } else {
         parts = [response];
       }
-      this.geminiClient.addHistory({
+      this.alfredClient.addHistory({
         role: 'user',
         parts,
       });
@@ -840,7 +840,7 @@ export class Task {
     // Set task state to working as we are about to call LLM
     this.setTaskStateAndPublishUpdate('working', stateChange);
     // TODO: Determine what it mean to have, then add a prompt ID.
-    yield* this.geminiClient.sendMessageStream(
+    yield* this.alfredClient.sendMessageStream(
       llmParts,
       aborted,
       /*prompt_id*/ '',
@@ -880,7 +880,7 @@ export class Task {
       // Set task state to working as we are about to call LLM
       this.setTaskStateAndPublishUpdate('working', stateChange);
       // TODO: Determine what it mean to have, then add a prompt ID.
-      yield* this.geminiClient.sendMessageStream(
+      yield* this.alfredClient.sendMessageStream(
         llmParts,
         aborted,
         /*prompt_id*/ '',

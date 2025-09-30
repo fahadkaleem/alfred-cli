@@ -12,7 +12,7 @@ import {
   isGenericQuotaExceededError,
   isProQuotaExceededError,
   UserTierId,
-} from '@google/gemini-cli-core';
+} from '@alfred/alfred-cli-core';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { type UseHistoryManagerReturn } from './useHistoryManager.js';
 import { AuthState, MessageType } from '../types.js';
@@ -73,7 +73,7 @@ export function useQuotaAndFallback({
           message = `⚡ You have reached your daily ${failedModel} quota limit.
 ⚡ You can choose to authenticate with a paid API key or continue with the fallback model.
 ⚡ To increase your limits, upgrade to a Gemini Code Assist Standard or Enterprise plan with higher limits at https://goo.gle/set-up-gemini-code-assist
-⚡ Or you can utilize a Gemini API Key. See: https://goo.gle/gemini-cli-docs-auth#gemini-api-key
+⚡ Or you can utilize a Gemini API Key. See: https://goo.gle/gemini-cli-docs-auth#alfred-api-key
 ⚡ You can switch authentication methods by typing /auth`;
         }
       } else if (error && isGenericQuotaExceededError(error)) {
@@ -86,7 +86,7 @@ export function useQuotaAndFallback({
         } else {
           message = `${actionMessage}
 ⚡ To increase your limits, upgrade to a Gemini Code Assist Standard or Enterprise plan with higher limits at https://goo.gle/set-up-gemini-code-assist
-⚡ Or you can utilize a Gemini API Key. See: https://goo.gle/gemini-cli-docs-auth#gemini-api-key
+⚡ Or you can utilize a Gemini API Key. See: https://goo.gle/gemini-cli-docs-auth#alfred-api-key
 ⚡ You can switch authentication methods by typing /auth`;
         }
       } else {
@@ -101,7 +101,7 @@ export function useQuotaAndFallback({
           message = `${actionMessage}
 ⚡ Possible reasons for this are that you have received multiple consecutive capacity errors or you have reached your daily ${failedModel} quota limit
 ⚡ To increase your limits, upgrade to a Gemini Code Assist Standard or Enterprise plan with higher limits at https://goo.gle/set-up-gemini-code-assist
-⚡ Or you can utilize a Gemini API Key. See: https://goo.gle/gemini-cli-docs-auth#gemini-api-key
+⚡ Or you can utilize a Gemini API Key. See: https://goo.gle/gemini-cli-docs-auth#alfred-api-key
 ⚡ You can switch authentication methods by typing /auth`;
         }
       }

@@ -15,12 +15,12 @@ import {
   getErrorMessage,
   loadServerHierarchicalMemory,
   type FileDiscoveryService,
-} from '@google/gemini-cli-core';
-import type { LoadServerHierarchicalMemoryResponse } from '@google/gemini-cli-core/index.js';
+} from '@alfred/alfred-cli-core';
+import type { LoadServerHierarchicalMemoryResponse } from '@alfred/alfred-cli-core/index.js';
 
-vi.mock('@google/gemini-cli-core', async (importOriginal) => {
+vi.mock('@alfred/alfred-cli-core', async (importOriginal) => {
   const original =
-    await importOriginal<typeof import('@google/gemini-cli-core')>();
+    await importOriginal<typeof import('@alfred/alfred-cli-core')>();
   return {
     ...original,
     getErrorMessage: vi.fn((error: unknown) => {
@@ -61,7 +61,7 @@ describe('memoryCommand', () => {
         services: {
           config: {
             getUserMemory: mockGetUserMemory,
-            getGeminiMdFileCount: mockGetGeminiMdFileCount,
+            getAlfredMdFileCount: mockGetGeminiMdFileCount,
           },
         },
       });
@@ -158,7 +158,7 @@ describe('memoryCommand', () => {
       mockSetGeminiMdFileCount = vi.fn();
       const mockConfig = {
         setUserMemory: mockSetUserMemory,
-        setGeminiMdFileCount: mockSetGeminiMdFileCount,
+        setAlfredMdFileCount: mockSetGeminiMdFileCount,
         getWorkingDir: () => '/test/dir',
         getDebugMode: () => false,
         getFileService: () => ({}) as FileDiscoveryService,

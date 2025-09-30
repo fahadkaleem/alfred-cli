@@ -9,16 +9,16 @@ import type {
   Config,
   EditorType,
   GeminiClient,
-  ServerGeminiChatCompressedEvent,
+  ServerAlfredChatCompressedEvent,
   ServerGeminiContentEvent as ContentEvent,
   ServerGeminiFinishedEvent,
   ServerGeminiStreamEvent as GeminiEvent,
   ThoughtSummary,
   ToolCallRequestInfo,
   GeminiErrorEventValue,
-} from '@google/gemini-cli-core';
+} from '@alfred/alfred-cli-core';
 import {
-  GeminiEventType as ServerGeminiEventType,
+  AlfredEventType as ServerAlfredEventType,
   getErrorMessage,
   isNodeError,
   MessageSenderType,
@@ -33,7 +33,7 @@ import {
   parseAndFormatApiError,
   ToolConfirmationOutcome,
   promptIdContext,
-} from '@google/gemini-cli-core';
+} from '@alfred/alfred-cli-core';
 import { type Part, type PartListUnion, FinishReason } from '@google/genai';
 import type {
   HistoryItem,
@@ -84,7 +84,7 @@ function showCitations(settings: LoadedSettings): boolean {
  * API interaction, and tool call lifecycle.
  */
 export const useGeminiStream = (
-  geminiClient: GeminiClient,
+  alfredClient: GeminiClient,
   history: HistoryItem[],
   addItem: UseHistoryManagerReturn['addItem'],
   config: Config,
@@ -184,7 +184,7 @@ export const useGeminiStream = (
     onExec,
     onDebugMessage,
     config,
-    geminiClient,
+    alfredClient,
     setShellInputFocused,
     terminalWidth,
     terminalHeight,
@@ -583,7 +583,7 @@ export const useGeminiStream = (
 
   const handleChatCompressionEvent = useCallback(
     (
-      eventValue: ServerGeminiChatCompressedEvent['value'],
+      eventValue: ServerAlfredChatCompressedEvent['value'],
       userMessageTimestamp: number,
     ) => {
       if (pendingHistoryItemRef.current) {
@@ -662,50 +662,50 @@ export const useGeminiStream = (
       const toolCallRequests: ToolCallRequestInfo[] = [];
       for await (const event of stream) {
         switch (event.type) {
-          case ServerGeminiEventType.Thought:
+          case ServerAlfredEventType.Thought:
             setThought(event.value);
             break;
-          case ServerGeminiEventType.Content:
+          case ServerAlfredEventType.Content:
             geminiMessageBuffer = handleContentEvent(
               event.value,
               geminiMessageBuffer,
               userMessageTimestamp,
             );
             break;
-          case ServerGeminiEventType.ToolCallRequest:
+          case ServerAlfredEventType.ToolCallRequest:
             toolCallRequests.push(event.value);
             break;
-          case ServerGeminiEventType.UserCancelled:
+          case ServerAlfredEventType.UserCancelled:
             handleUserCancelledEvent(userMessageTimestamp);
             break;
-          case ServerGeminiEventType.Error:
+          case ServerAlfredEventType.Error:
             handleErrorEvent(event.value, userMessageTimestamp);
             break;
-          case ServerGeminiEventType.ChatCompressed:
+          case ServerAlfredEventType.ChatCompressed:
             handleChatCompressionEvent(event.value, userMessageTimestamp);
             break;
-          case ServerGeminiEventType.ToolCallConfirmation:
-          case ServerGeminiEventType.ToolCallResponse:
+          case ServerAlfredEventType.ToolCallConfirmation:
+          case ServerAlfredEventType.ToolCallResponse:
             // do nothing
             break;
-          case ServerGeminiEventType.MaxSessionTurns:
+          case ServerAlfredEventType.MaxSessionTurns:
             handleMaxSessionTurnsEvent();
             break;
-          case ServerGeminiEventType.Finished:
+          case ServerAlfredEventType.Finished:
             handleFinishedEvent(
               event as ServerGeminiFinishedEvent,
               userMessageTimestamp,
             );
             break;
-          case ServerGeminiEventType.Citation:
+          case ServerAlfredEventType.Citation:
             handleCitationEvent(event.value, userMessageTimestamp);
             break;
-          case ServerGeminiEventType.LoopDetected:
+          case ServerAlfredEventType.LoopDetected:
             // handle later because we want to move pending history to history
             // before we add loop detected message to history
             loopDetectedRef.current = true;
             break;
-          case ServerGeminiEventType.Retry:
+          case ServerAlfredEventType.Retry:
             // Will add the missing logic later
             break;
           default: {
@@ -794,7 +794,7 @@ export const useGeminiStream = (
         setInitError(null);
 
         try {
-          const stream = geminiClient.sendMessageStream(
+          const stream = alfredClient.sendMessageStream(
             queryToSend,
             abortSignal,
             prompt_id,
@@ -849,7 +849,7 @@ export const useGeminiStream = (
       addItem,
       setPendingHistoryItem,
       setInitError,
-      geminiClient,
+      alfredClient,
       onAuthError,
       config,
       startNewPrompt,
@@ -964,13 +964,13 @@ export const useGeminiStream = (
       );
 
       if (allToolsCancelled) {
-        if (geminiClient) {
+        if (alfredClient) {
           // We need to manually add the function responses to the history
           // so the model knows the tools were cancelled.
           const combinedParts = geminiTools.flatMap(
             (toolCall) => toolCall.response.responseParts,
           );
-          geminiClient.addHistory({
+          alfredClient.addHistory({
             role: 'user',
             parts: combinedParts,
           });
@@ -1013,7 +1013,7 @@ export const useGeminiStream = (
       isResponding,
       submitQuery,
       markToolsAsSubmitted,
-      geminiClient,
+      alfredClient,
       performMemoryRefresh,
       modelSwitchedFromQuotaError,
     ],
@@ -1102,7 +1102,7 @@ export const useGeminiStream = (
             const toolName = toolCall.request.name;
             const fileName = path.basename(filePath);
             const toolCallWithSnapshotFileName = `${timestamp}-${fileName}-${toolName}.json`;
-            const clientHistory = await geminiClient?.getHistory();
+            const clientHistory = await alfredClient?.getHistory();
             const toolCallWithSnapshotFilePath = path.join(
               checkpointDir,
               toolCallWithSnapshotFileName,
@@ -1142,7 +1142,7 @@ export const useGeminiStream = (
     onDebugMessage,
     gitService,
     history,
-    geminiClient,
+    alfredClient,
     storage,
   ]);
 

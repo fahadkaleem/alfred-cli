@@ -6,8 +6,8 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { validateNonInteractiveAuth } from './validateNonInterActiveAuth.js';
-import { AuthType, OutputFormat } from '@google/gemini-cli-core';
-import type { Config } from '@google/gemini-cli-core';
+import { AuthType, OutputFormat } from '@alfred/alfred-cli-core';
+import type { Config } from '@alfred/alfred-cli-core';
 import * as auth from './config/auth.js';
 import { type LoadedSettings } from './config/settings.js';
 
@@ -380,7 +380,7 @@ describe('validateNonInterActiveAuth', () => {
         expect(payload.error.type).toBe('Error');
         expect(payload.error.code).toBe(1);
         expect(payload.error.message).toContain(
-          'The configured auth type is gemini-api-key, but the current auth type is oauth-personal.',
+          'The configured auth type is alfred-api-key, but the current auth type is oauth-personal.',
         );
       }
     });

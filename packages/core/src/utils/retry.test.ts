@@ -334,7 +334,7 @@ describe('retryWithBackoff', () => {
         maxAttempts: 3,
         initialDelayMs: 100,
         onPersistent429: fallbackCallback,
-        authType: 'gemini-api-key',
+        authType: 'alfred-api-key',
       });
 
       // Handle the promise properly to avoid unhandled rejections

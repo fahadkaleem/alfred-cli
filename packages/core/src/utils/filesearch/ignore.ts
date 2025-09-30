@@ -28,9 +28,9 @@ export function loadIgnoreRules(options: LoadIgnoreRulesOptions): Ignore {
   }
 
   if (options.useGeminiignore) {
-    const geminiignorePath = path.join(options.projectRoot, '.geminiignore');
-    if (fs.existsSync(geminiignorePath)) {
-      ignorer.add(fs.readFileSync(geminiignorePath, 'utf8'));
+    const alfredignorePath = path.join(options.projectRoot, '.alfredignore');
+    if (fs.existsSync(alfredignorePath)) {
+      ignorer.add(fs.readFileSync(alfredignorePath, 'utf8'));
     }
   }
 

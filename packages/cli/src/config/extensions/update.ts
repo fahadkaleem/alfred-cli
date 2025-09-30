@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { GeminiCLIExtension } from '@google/gemini-cli-core';
+import type { AlfredCLIExtension } from '@alfred/alfred-cli-core';
 import * as fs from 'node:fs';
 import { getErrorMessage } from '../../utils/errors.js';
 import { ExtensionUpdateState } from '../../ui/state/extensions.js';
@@ -27,7 +27,7 @@ export interface ExtensionUpdateInfo {
 }
 
 export async function updateExtension(
-  extension: GeminiCLIExtension,
+  extension: AlfredCLIExtension,
   cwd: string = process.cwd(),
   requestConsent: (consent: string) => Promise<boolean>,
   currentState: ExtensionUpdateState,
@@ -97,7 +97,7 @@ export async function updateExtension(
 export async function updateAllUpdatableExtensions(
   cwd: string = process.cwd(),
   requestConsent: (consent: string) => Promise<boolean>,
-  extensions: GeminiCLIExtension[],
+  extensions: AlfredCLIExtension[],
   extensionsState: Map<string, ExtensionUpdateState>,
   setExtensionsUpdateState: Dispatch<
     SetStateAction<Map<string, ExtensionUpdateState>>
@@ -136,7 +136,7 @@ export interface ExtensionUpdateCheckResult {
 }
 
 export async function checkForAllExtensionUpdates(
-  extensions: GeminiCLIExtension[],
+  extensions: AlfredCLIExtension[],
   extensionsUpdateState: Map<string, ExtensionUpdateState>,
   setExtensionsUpdateState: Dispatch<
     SetStateAction<Map<string, ExtensionUpdateState>>

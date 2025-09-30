@@ -9,16 +9,16 @@ import type {
   ToolRegistry,
   ServerGeminiStreamEvent,
   SessionMetrics,
-} from '@google/gemini-cli-core';
+} from '@alfred/alfred-cli-core';
 import {
   executeToolCall,
   ToolErrorType,
   shutdownTelemetry,
-  GeminiEventType,
+  AlfredEventType,
   OutputFormat,
   uiTelemetryService,
   FatalInputError,
-} from '@google/gemini-cli-core';
+} from '@alfred/alfred-cli-core';
 import type { Part } from '@google/genai';
 import { runNonInteractive } from './nonInteractiveCli.js';
 import { vi } from 'vitest';
@@ -26,9 +26,9 @@ import type { LoadedSettings } from './config/settings.js';
 
 // Mock core modules
 vi.mock('./ui/hooks/atCommandProcessor.js');
-vi.mock('@google/gemini-cli-core', async (importOriginal) => {
+vi.mock('@alfred/alfred-cli-core', async (importOriginal) => {
   const original =
-    await importOriginal<typeof import('@google/gemini-cli-core')>();
+    await importOriginal<typeof import('@alfred/alfred-cli-core')>();
 
   class MockChatRecordingService {
     initialize = vi.fn();
@@ -109,7 +109,7 @@ describe('runNonInteractive', () => {
       getSessionId: vi.fn().mockReturnValue('test-session-id'),
       getProjectRoot: vi.fn().mockReturnValue('/test/project'),
       storage: {
-        getProjectTempDir: vi.fn().mockReturnValue('/test/project/.gemini/tmp'),
+        getProjectTempDir: vi.fn().mockReturnValue('/test/project/.alfred/tmp'),
       },
       getIdeMode: vi.fn().mockReturnValue(false),
       getFullContext: vi.fn().mockReturnValue(false),
@@ -163,10 +163,10 @@ describe('runNonInteractive', () => {
 
   it('should process input and write text output', async () => {
     const events: ServerGeminiStreamEvent[] = [
-      { type: GeminiEventType.Content, value: 'Hello' },
-      { type: GeminiEventType.Content, value: ' World' },
+      { type: AlfredEventType.Content, value: 'Hello' },
+      { type: AlfredEventType.Content, value: ' World' },
       {
-        type: GeminiEventType.Finished,
+        type: AlfredEventType.Finished,
         value: { reason: undefined, usageMetadata: { totalTokenCount: 10 } },
       },
     ];
@@ -194,7 +194,7 @@ describe('runNonInteractive', () => {
 
   it('should handle a single tool call and respond', async () => {
     const toolCallEvent: ServerGeminiStreamEvent = {
-      type: GeminiEventType.ToolCallRequest,
+      type: AlfredEventType.ToolCallRequest,
       value: {
         callId: 'tool-1',
         name: 'testTool',
@@ -208,9 +208,9 @@ describe('runNonInteractive', () => {
 
     const firstCallEvents: ServerGeminiStreamEvent[] = [toolCallEvent];
     const secondCallEvents: ServerGeminiStreamEvent[] = [
-      { type: GeminiEventType.Content, value: 'Final answer' },
+      { type: AlfredEventType.Content, value: 'Final answer' },
       {
-        type: GeminiEventType.Finished,
+        type: AlfredEventType.Finished,
         value: { reason: undefined, usageMetadata: { totalTokenCount: 10 } },
       },
     ];
@@ -244,7 +244,7 @@ describe('runNonInteractive', () => {
 
   it('should handle error during tool execution and should send error back to the model', async () => {
     const toolCallEvent: ServerGeminiStreamEvent = {
-      type: GeminiEventType.ToolCallRequest,
+      type: AlfredEventType.ToolCallRequest,
       value: {
         callId: 'tool-1',
         name: 'errorTool',
@@ -270,11 +270,11 @@ describe('runNonInteractive', () => {
     });
     const finalResponse: ServerGeminiStreamEvent[] = [
       {
-        type: GeminiEventType.Content,
+        type: AlfredEventType.Content,
         value: 'Sorry, let me try again.',
       },
       {
-        type: GeminiEventType.Finished,
+        type: AlfredEventType.Finished,
         value: { reason: undefined, usageMetadata: { totalTokenCount: 10 } },
       },
     ];
@@ -330,7 +330,7 @@ describe('runNonInteractive', () => {
 
   it('should not exit if a tool is not found, and should send error back to model', async () => {
     const toolCallEvent: ServerGeminiStreamEvent = {
-      type: GeminiEventType.ToolCallRequest,
+      type: AlfredEventType.ToolCallRequest,
       value: {
         callId: 'tool-1',
         name: 'nonexistentTool',
@@ -346,11 +346,11 @@ describe('runNonInteractive', () => {
     });
     const finalResponse: ServerGeminiStreamEvent[] = [
       {
-        type: GeminiEventType.Content,
+        type: AlfredEventType.Content,
         value: "Sorry, I can't find that tool.",
       },
       {
-        type: GeminiEventType.Finished,
+        type: AlfredEventType.Finished,
         value: { reason: undefined, usageMetadata: { totalTokenCount: 10 } },
       },
     ];
@@ -412,9 +412,9 @@ describe('runNonInteractive', () => {
 
     // Mock a simple stream response from the Gemini client
     const events: ServerGeminiStreamEvent[] = [
-      { type: GeminiEventType.Content, value: 'Summary complete.' },
+      { type: AlfredEventType.Content, value: 'Summary complete.' },
       {
-        type: GeminiEventType.Finished,
+        type: AlfredEventType.Finished,
         value: { reason: undefined, usageMetadata: { totalTokenCount: 10 } },
       },
     ];
@@ -438,9 +438,9 @@ describe('runNonInteractive', () => {
 
   it('should process input and write JSON output with stats', async () => {
     const events: ServerGeminiStreamEvent[] = [
-      { type: GeminiEventType.Content, value: 'Hello World' },
+      { type: AlfredEventType.Content, value: 'Hello World' },
       {
-        type: GeminiEventType.Finished,
+        type: AlfredEventType.Finished,
         value: { reason: undefined, usageMetadata: { totalTokenCount: 10 } },
       },
     ];
@@ -491,7 +491,7 @@ describe('runNonInteractive', () => {
     // Test the scenario where a command completes successfully with only tool calls
     // but no text response - this would have caught the original bug
     const toolCallEvent: ServerGeminiStreamEvent = {
-      type: GeminiEventType.ToolCallRequest,
+      type: AlfredEventType.ToolCallRequest,
       value: {
         callId: 'tool-1',
         name: 'testTool',
@@ -507,7 +507,7 @@ describe('runNonInteractive', () => {
     const firstCallEvents: ServerGeminiStreamEvent[] = [
       toolCallEvent,
       {
-        type: GeminiEventType.Finished,
+        type: AlfredEventType.Finished,
         value: { reason: undefined, usageMetadata: { totalTokenCount: 5 } },
       },
     ];
@@ -515,7 +515,7 @@ describe('runNonInteractive', () => {
     // Second call returns no content (tool-only completion)
     const secondCallEvents: ServerGeminiStreamEvent[] = [
       {
-        type: GeminiEventType.Finished,
+        type: AlfredEventType.Finished,
         value: { reason: undefined, usageMetadata: { totalTokenCount: 3 } },
       },
     ];
@@ -584,7 +584,7 @@ describe('runNonInteractive', () => {
     // Test the scenario where a command completes but produces no content at all
     const events: ServerGeminiStreamEvent[] = [
       {
-        type: GeminiEventType.Finished,
+        type: AlfredEventType.Finished,
         value: { reason: undefined, usageMetadata: { totalTokenCount: 1 } },
       },
     ];
@@ -735,9 +735,9 @@ describe('runNonInteractive', () => {
     mockGetCommands.mockReturnValue([mockCommand]);
 
     const events: ServerGeminiStreamEvent[] = [
-      { type: GeminiEventType.Content, value: 'Response from command' },
+      { type: AlfredEventType.Content, value: 'Response from command' },
       {
-        type: GeminiEventType.Finished,
+        type: AlfredEventType.Finished,
         value: { reason: undefined, usageMetadata: { totalTokenCount: 5 } },
       },
     ];
@@ -790,9 +790,9 @@ describe('runNonInteractive', () => {
     mockGetCommands.mockReturnValue([]);
 
     const events: ServerGeminiStreamEvent[] = [
-      { type: GeminiEventType.Content, value: 'Response to unknown' },
+      { type: AlfredEventType.Content, value: 'Response to unknown' },
       {
-        type: GeminiEventType.Finished,
+        type: AlfredEventType.Finished,
         value: { reason: undefined, usageMetadata: { totalTokenCount: 5 } },
       },
     ];
@@ -852,9 +852,9 @@ describe('runNonInteractive', () => {
     mockGetCommands.mockReturnValue([mockCommand]);
 
     const events: ServerGeminiStreamEvent[] = [
-      { type: GeminiEventType.Content, value: 'Acknowledged' },
+      { type: AlfredEventType.Content, value: 'Acknowledged' },
       {
-        type: GeminiEventType.Finished,
+        type: AlfredEventType.Finished,
         value: { reason: undefined, usageMetadata: { totalTokenCount: 1 } },
       },
     ];

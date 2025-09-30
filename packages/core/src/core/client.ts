@@ -17,13 +17,13 @@ import {
 } from '../utils/environmentContext.js';
 import type { ServerGeminiStreamEvent, ChatCompressionInfo } from './turn.js';
 import { CompressionStatus } from './turn.js';
-import { Turn, GeminiEventType } from './turn.js';
+import { Turn, AlfredEventType } from './turn.js';
 import type { Config } from '../config/config.js';
 import { getCoreSystemPrompt, getCompressionPrompt } from './prompts.js';
 import { getResponseText } from '../utils/partUtils.js';
 import { checkNextSpeaker } from '../utils/nextSpeakerChecker.js';
 import { reportError } from '../utils/errorReporting.js';
-import { GeminiChat } from './geminiChat.js';
+import { AlfredChat } from './alfredChat.js';
 import { retryWithBackoff } from '../utils/retry.js';
 import { getErrorMessage } from '../utils/errors.js';
 import { tokenLimit } from './tokenLimits.js';
@@ -125,7 +125,7 @@ const COMPRESSION_TOKEN_THRESHOLD = 0.7;
 const COMPRESSION_PRESERVE_THRESHOLD = 0.3;
 
 export class GeminiClient {
-  private chat?: GeminiChat;
+  private chat?: AlfredChat;
   private readonly generateContentConfig: GenerateContentConfig = {
     temperature: 0,
     topP: 1,
@@ -164,7 +164,7 @@ export class GeminiClient {
     this.getChat().addHistory(content);
   }
 
-  getChat(): GeminiChat {
+  getChat(): AlfredChat {
     if (!this.chat) {
       throw new Error('Chat not initialized');
     }
@@ -218,7 +218,7 @@ export class GeminiClient {
     });
   }
 
-  async startChat(extraHistory?: Content[]): Promise<GeminiChat> {
+  async startChat(extraHistory?: Content[]): Promise<AlfredChat> {
     this.forceFullIdeContext = true;
     this.hasFailedCompressionAttempt = false;
     const envParts = await getEnvironmentContext(this.config);
@@ -252,7 +252,7 @@ export class GeminiClient {
         };
       }
 
-      return new GeminiChat(
+      return new AlfredChat(
         this.config,
         {
           systemInstruction,
@@ -456,7 +456,7 @@ export class GeminiClient {
       this.config.getMaxSessionTurns() > 0 &&
       this.sessionTurnCount > this.config.getMaxSessionTurns()
     ) {
-      yield { type: GeminiEventType.MaxSessionTurns };
+      yield { type: AlfredEventType.MaxSessionTurns };
       return new Turn(this.getChat(), prompt_id);
     }
     // Ensure turns never exceeds MAX_TURNS to prevent infinite loops
@@ -468,7 +468,7 @@ export class GeminiClient {
     const compressed = await this.tryCompressChat(prompt_id, false);
 
     if (compressed.compressionStatus === CompressionStatus.COMPRESSED) {
-      yield { type: GeminiEventType.ChatCompressed, value: compressed };
+      yield { type: AlfredEventType.ChatCompressed, value: compressed };
     }
 
     // Prevent context updates from being sent while a tool call is
@@ -505,7 +505,7 @@ export class GeminiClient {
 
     const loopDetected = await this.loopDetector.turnStarted(signal);
     if (loopDetected) {
-      yield { type: GeminiEventType.LoopDetected };
+      yield { type: AlfredEventType.LoopDetected };
       return turn;
     }
 
@@ -531,12 +531,12 @@ export class GeminiClient {
     const resultStream = turn.run(modelToUse, request, linkedSignal);
     for await (const event of resultStream) {
       if (this.loopDetector.addAndCheck(event)) {
-        yield { type: GeminiEventType.LoopDetected };
+        yield { type: AlfredEventType.LoopDetected };
         controller.abort();
         return turn;
       }
       yield event;
-      if (event.type === GeminiEventType.Error) {
+      if (event.type === AlfredEventType.Error) {
         return turn;
       }
     }

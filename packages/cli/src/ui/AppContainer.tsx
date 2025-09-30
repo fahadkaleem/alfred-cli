@@ -38,11 +38,11 @@ import {
   IdeClient,
   ideContextStore,
   getErrorMessage,
-  getAllGeminiMdFilenames,
+  getAllAlfredMdFilenames,
   AuthType,
   clearCachedCredentialFile,
   ShellExecutionService,
-} from '@google/gemini-cli-core';
+} from '@alfred/alfred-cli-core';
 import { validateAuthMethod } from '../config/auth.js';
 import { loadHierarchicalGeminiMemory } from '../config/config.js';
 import process from 'node:process';
@@ -140,8 +140,8 @@ export const AppContainer = (props: AppContainerProps) => {
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [embeddedShellFocused, setEmbeddedShellFocused] = useState(false);
 
-  const [geminiMdFileCount, setGeminiMdFileCount] = useState<number>(
-    initializationResult.geminiMdFileCount,
+  const [alfredMdFileCount, setAlfredMdFileCount] = useState<number>(
+    initializationResult.alfredMdFileCount,
   );
   const [shellModeActive, setShellModeActive] = useState(false);
   const [modelSwitchedFromQuotaError, setModelSwitchedFromQuotaError] =
@@ -494,7 +494,7 @@ Logging in with Google... Please restart Gemini CLI to continue.
     refreshStatic,
     toggleVimEnabled,
     setIsProcessing,
-    setGeminiMdFileCount,
+    setAlfredMdFileCount,
     slashCommandActions,
     extensionsUpdateState,
     isConfigInitialized,
@@ -504,7 +504,7 @@ Logging in with Google... Please restart Gemini CLI to continue.
     historyManager.addItem(
       {
         type: MessageType.INFO,
-        text: 'Refreshing hierarchical memory (GEMINI.md or other context files)...',
+        text: 'Refreshing hierarchical memory (ALFRED.md or other context files)...',
       },
       Date.now(),
     );
@@ -524,8 +524,8 @@ Logging in with Google... Please restart Gemini CLI to continue.
       );
 
       config.setUserMemory(memoryContent);
-      config.setGeminiMdFileCount(fileCount);
-      setGeminiMdFileCount(fileCount);
+      config.setAlfredMdFileCount(fileCount);
+      setAlfredMdFileCount(fileCount);
 
       historyManager.addItem(
         {
@@ -706,12 +706,12 @@ Logging in with Google... Please restart Gemini CLI to continue.
       ? Array.isArray(fromSettings)
         ? fromSettings
         : [fromSettings]
-      : getAllGeminiMdFilenames();
+      : getAllAlfredMdFilenames();
   }, [settings.merged.context?.fileName]);
   // Initial prompt handling
   const initialPrompt = useMemo(() => config.getQuestion(), [config]);
   const initialPromptSubmitted = useRef(false);
-  const geminiClient = config.getGeminiClient();
+  const alfredClient = config.getGeminiClient();
 
   useEffect(() => {
     if (activePtyId) {
@@ -733,7 +733,7 @@ Logging in with Google... Please restart Gemini CLI to continue.
       !isThemeDialogOpen &&
       !isEditorDialogOpen &&
       !showPrivacyNotice &&
-      geminiClient?.isInitialized?.()
+      alfredClient?.isInitialized?.()
     ) {
       handleFinalSubmit(initialPrompt);
       initialPromptSubmitted.current = true;
@@ -747,7 +747,7 @@ Logging in with Google... Please restart Gemini CLI to continue.
     isThemeDialogOpen,
     isEditorDialogOpen,
     showPrivacyNotice,
-    geminiClient,
+    alfredClient,
   ]);
 
   const [idePromptAnswered, setIdePromptAnswered] = useState(false);
@@ -1087,7 +1087,7 @@ Logging in with Google... Please restart Gemini CLI to continue.
       confirmationRequest,
       confirmUpdateExtensionRequests,
       loopDetectionConfirmationRequest,
-      geminiMdFileCount,
+      alfredMdFileCount,
       streamingState,
       initError,
       pendingGeminiHistoryItems,
@@ -1166,7 +1166,7 @@ Logging in with Google... Please restart Gemini CLI to continue.
       confirmationRequest,
       confirmUpdateExtensionRequests,
       loopDetectionConfirmationRequest,
-      geminiMdFileCount,
+      alfredMdFileCount,
       streamingState,
       initError,
       pendingGeminiHistoryItems,

@@ -13,7 +13,7 @@ import type { ContentGenerator } from '../core/contentGenerator.js';
 import type { Config } from '../config/config.js';
 import type { NextSpeakerResponse } from './nextSpeakerChecker.js';
 import { checkNextSpeaker } from './nextSpeakerChecker.js';
-import { GeminiChat } from '../core/geminiChat.js';
+import { AlfredChat } from '../core/alfredChat.js';
 
 // Mock fs module to prevent actual file system operations during tests
 const mockFileSystem = new Map<string, string>();
@@ -46,7 +46,7 @@ vi.mock('../core/baseLlmClient.js');
 vi.mock('../config/config.js');
 
 describe('checkNextSpeaker', () => {
-  let chatInstance: GeminiChat;
+  let chatInstance: AlfredChat;
   let mockConfig: Config;
   let mockBaseLlmClient: BaseLlmClient;
   const abortSignal = new AbortController().signal;
@@ -73,8 +73,8 @@ describe('checkNextSpeaker', () => {
       mockConfig,
     );
 
-    // GeminiChat will receive the mocked instances via the mocked GoogleGenAI constructor
-    chatInstance = new GeminiChat(
+    // AlfredChat will receive the mocked instances via the mocked GoogleGenAI constructor
+    chatInstance = new AlfredChat(
       mockConfig,
       {},
       [], // initial history

@@ -21,7 +21,7 @@ export function createNonInteractiveUI(): CommandContext['ui'] {
     setPendingItem: (_item) => {},
     toggleCorgiMode: () => {},
     toggleVimEnabled: async () => false,
-    setGeminiMdFileCount: (_count) => {},
+    setAlfredMdFileCount: (_count) => {},
     reloadCommands: () => {},
     extensionsUpdateState: new Map(),
     setExtensionsUpdateState: (_updateState) => {},

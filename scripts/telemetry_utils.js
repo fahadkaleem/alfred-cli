@@ -23,16 +23,16 @@ const projectHash = crypto
   .update(projectRoot)
   .digest('hex');
 
-// User-level .gemini directory in home
-const USER_GEMINI_DIR = path.join(os.homedir(), '.gemini');
-// Project-level .gemini directory in the workspace
-const WORKSPACE_GEMINI_DIR = path.join(projectRoot, '.gemini');
+// User-level .alfred directory in home
+const USER_GEMINI_DIR = path.join(os.homedir(), '.alfred');
+// Project-level .alfred directory in the workspace
+const WORKSPACE_GEMINI_DIR = path.join(projectRoot, '.alfred');
 
-// Telemetry artifacts are stored in a hashed directory under the user's ~/.gemini/tmp
+// Telemetry artifacts are stored in a hashed directory under the user's ~/.alfred/tmp
 export const OTEL_DIR = path.join(USER_GEMINI_DIR, 'tmp', projectHash, 'otel');
 export const BIN_DIR = path.join(OTEL_DIR, 'bin');
 
-// Workspace settings remain in the project's .gemini directory
+// Workspace settings remain in the project's .alfred directory
 export const WORKSPACE_SETTINGS_FILE = path.join(
   WORKSPACE_GEMINI_DIR,
   'settings.json',

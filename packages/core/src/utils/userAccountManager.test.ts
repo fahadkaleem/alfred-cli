@@ -26,11 +26,11 @@ describe('UserAccountManager', () => {
 
   beforeEach(() => {
     tempHomeDir = fs.mkdtempSync(
-      path.join(os.tmpdir(), 'gemini-cli-test-home-'),
+      path.join(os.tmpdir(), 'alfred-cli-test-home-'),
     );
     (os.homedir as Mock).mockReturnValue(tempHomeDir);
     accountsFile = () =>
-      path.join(tempHomeDir, '.gemini', 'google_accounts.json');
+      path.join(tempHomeDir, '.alfred', 'google_accounts.json');
     userAccountManager = new UserAccountManager();
   });
 

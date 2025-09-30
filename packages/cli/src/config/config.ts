@@ -15,13 +15,13 @@ import type {
   FileFilteringOptions,
   MCPServerConfig,
   OutputFormat,
-} from '@google/gemini-cli-core';
+} from '@alfred/alfred-cli-core';
 import { extensionsCommand } from '../commands/extensions.js';
 import {
   Config,
   loadServerHierarchicalMemory,
-  setGeminiMdFilename as setServerGeminiMdFilename,
-  getCurrentGeminiMdFilename,
+  setAlfredMdFilename as setServerGeminiMdFilename,
+  getCurrentAlfredMdFilename,
   ApprovalMode,
   DEFAULT_GEMINI_MODEL,
   DEFAULT_GEMINI_MODEL_AUTO,
@@ -33,7 +33,7 @@ import {
   WriteFileTool,
   resolveTelemetrySettings,
   FatalConfigError,
-} from '@google/gemini-cli-core';
+} from '@alfred/alfred-cli-core';
 import type { Settings } from './settings.js';
 
 import type { Extension } from './extension.js';
@@ -468,13 +468,13 @@ export async function loadCliConfig(
 
   // Set the context filename in the server's memoryTool module BEFORE loading memory
   // TODO(b/343434939): This is a bit of a hack. The contextFileName should ideally be passed
-  // directly to the Config constructor in core, and have core handle setGeminiMdFilename.
+  // directly to the Config constructor in core, and have core handle setAlfredMdFilename.
   // However, loadHierarchicalGeminiMemory is called *before* createServerConfig.
   if (settings.context?.fileName) {
     setServerGeminiMdFilename(settings.context.fileName);
   } else {
     // Reset to default if not provided in settings.
-    setServerGeminiMdFilename(getCurrentGeminiMdFilename());
+    setServerGeminiMdFilename(getCurrentAlfredMdFilename());
   }
 
   const extensionContextFilePaths = activeExtensions.flatMap(
@@ -656,7 +656,7 @@ export async function loadCliConfig(
     mcpServerCommand: settings.mcp?.serverCommand,
     mcpServers,
     userMemory: memoryContent,
-    geminiMdFileCount: fileCount,
+    alfredMdFileCount: fileCount,
     approvalMode,
     showMemoryUsage:
       argv.showMemoryUsage || settings.ui?.showMemoryUsage || false,

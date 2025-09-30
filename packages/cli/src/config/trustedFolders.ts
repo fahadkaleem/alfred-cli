@@ -12,17 +12,17 @@ import {
   getErrorMessage,
   isWithinRoot,
   ideContextStore,
-} from '@google/gemini-cli-core';
+} from '@alfred/alfred-cli-core';
 import type { Settings } from './settings.js';
 import stripJsonComments from 'strip-json-comments';
 
 export const TRUSTED_FOLDERS_FILENAME = 'trustedFolders.json';
-export const SETTINGS_DIRECTORY_NAME = '.gemini';
+export const SETTINGS_DIRECTORY_NAME = '.alfred';
 export const USER_SETTINGS_DIR = path.join(homedir(), SETTINGS_DIRECTORY_NAME);
 
 export function getTrustedFoldersPath(): string {
-  if (process.env['GEMINI_CLI_TRUSTED_FOLDERS_PATH']) {
-    return process.env['GEMINI_CLI_TRUSTED_FOLDERS_PATH'];
+  if (process.env['ALFRED_CLI_TRUSTED_FOLDERS_PATH']) {
+    return process.env['ALFRED_CLI_TRUSTED_FOLDERS_PATH'];
   }
   return path.join(USER_SETTINGS_DIR, TRUSTED_FOLDERS_FILENAME);
 }

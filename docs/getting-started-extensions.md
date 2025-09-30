@@ -1,10 +1,10 @@
-# Getting Started with Gemini CLI Extensions
+# Getting Started with Alfred CLI Extensions
 
-This guide will walk you through creating your first Gemini CLI extension. You'll learn how to set up a new extension, add a custom tool via an MCP server, create a custom command, and provide context to the model with a `GEMINI.md` file.
+This guide will walk you through creating your first Alfred CLI extension. You'll learn how to set up a new extension, add a custom tool via an MCP server, create a custom command, and provide context to the model with a `ALFRED.md` file.
 
 ## Prerequisites
 
-Before you start, make sure you have the Gemini CLI installed and a basic understanding of Node.js and TypeScript.
+Before you start, make sure you have the Alfred CLI installed and a basic understanding of Node.js and TypeScript.
 
 ## Step 1: Create a New Extension
 
@@ -32,7 +32,7 @@ Let's look at the key files in your new extension.
 
 ### `gemini-extension.json`
 
-This is the manifest file for your extension. It tells Gemini CLI how to load and use your extension.
+This is the manifest file for your extension. It tells Alfred CLI how to load and use your extension.
 
 ```json
 {
@@ -51,7 +51,7 @@ This is the manifest file for your extension. It tells Gemini CLI how to load an
 - `name`: The unique name for your extension.
 - `version`: The version of your extension.
 - `mcpServers`: This section defines one or more Model Context Protocol (MCP) servers. MCP servers are how you can add new tools for the model to use.
-  - `command`, `args`, `cwd`: These fields specify how to start your server. Notice the use of the `${extensionPath}` variable, which Gemini CLI replaces with the absolute path to your extension's installation directory. This allows your extension to work regardless of where it's installed.
+  - `command`, `args`, `cwd`: These fields specify how to start your server. Notice the use of the `${extensionPath}` variable, which Alfred CLI replaces with the absolute path to your extension's installation directory. This allows your extension to work regardless of where it's installed.
 
 ### `example.ts`
 
@@ -111,7 +111,7 @@ These are standard configuration files for a TypeScript project. The `package.js
 
 ## Step 3: Build and Link Your Extension
 
-Before you can use the extension, you need to compile the TypeScript code and link the extension to your Gemini CLI installation for local development.
+Before you can use the extension, you need to compile the TypeScript code and link the extension to your Alfred CLI installation for local development.
 
 1.  **Install dependencies:**
 
@@ -130,13 +130,13 @@ Before you can use the extension, you need to compile the TypeScript code and li
 
 3.  **Link the extension:**
 
-    The `link` command creates a symbolic link from the Gemini CLI extensions directory to your development directory. This means any changes you make will be reflected immediately without needing to reinstall.
+    The `link` command creates a symbolic link from the Alfred CLI extensions directory to your development directory. This means any changes you make will be reflected immediately without needing to reinstall.
 
     ```bash
     gemini extensions link .
     ```
 
-Now, restart your Gemini CLI session. The new `fetch_posts` tool will be available. You can test it by asking: "fetch posts".
+Now, restart your Alfred CLI session. The new `fetch_posts` tool will be available. You can test it by asking: "fetch posts".
 
 ## Step 4: Add a Custom Command
 
@@ -161,13 +161,13 @@ Custom commands provide a way to create shortcuts for complex prompts. Let's add
 
     This command, `/fs:grep-code`, will take an argument, run the `grep` shell command with it, and pipe the results into a prompt for summarization.
 
-After saving the file, restart the Gemini CLI. You can now run `/fs:grep-code "some pattern"` to use your new command.
+After saving the file, restart the Alfred CLI. You can now run `/fs:grep-code "some pattern"` to use your new command.
 
-## Step 5: Add a Custom `GEMINI.md`
+## Step 5: Add a Custom `ALFRED.md`
 
-You can provide persistent context to the model by adding a `GEMINI.md` file to your extension. This is useful for giving the model instructions on how to behave or information about your extension's tools. Note that you may not always need this for extensions built to expose commands and prompts.
+You can provide persistent context to the model by adding a `ALFRED.md` file to your extension. This is useful for giving the model instructions on how to behave or information about your extension's tools. Note that you may not always need this for extensions built to expose commands and prompts.
 
-1.  Create a file named `GEMINI.md` in the root of your extension directory:
+1.  Create a file named `ALFRED.md` in the root of your extension directory:
 
     ```markdown
     # My First Extension Instructions
@@ -181,7 +181,7 @@ You can provide persistent context to the model by adding a `GEMINI.md` file to 
     {
       "name": "my-first-extension",
       "version": "1.0.0",
-      "contextFileName": "GEMINI.md",
+      "contextFileName": "ALFRED.md",
       "mcpServers": {
         "nodeServer": {
           "command": "node",
@@ -192,7 +192,7 @@ You can provide persistent context to the model by adding a `GEMINI.md` file to 
     }
     ```
 
-Restart the CLI again. The model will now have the context from your `GEMINI.md` file in every session where the extension is active.
+Restart the CLI again. The model will now have the context from your `ALFRED.md` file in every session where the extension is active.
 
 ## Step 6: Releasing Your Extension
 
@@ -202,7 +202,7 @@ For detailed instructions on both methods, please refer to the [Extension Releas
 
 ## Conclusion
 
-You've successfully created a Gemini CLI extension! You learned how to:
+You've successfully created a Alfred CLI extension! You learned how to:
 
 - Bootstrap a new extension from a template.
 - Add custom tools with an MCP server.
@@ -210,4 +210,4 @@ You've successfully created a Gemini CLI extension! You learned how to:
 - Provide persistent context to the model.
 - Link your extension for local development.
 
-From here, you can explore more advanced features and build powerful new capabilities into the Gemini CLI.
+From here, you can explore more advanced features and build powerful new capabilities into the Alfred CLI.

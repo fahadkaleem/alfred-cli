@@ -9,7 +9,7 @@ import * as path from 'node:path';
 import { homedir } from 'node:os';
 import * as dotenv from 'dotenv';
 
-import type { TelemetryTarget } from '@google/gemini-cli-core';
+import type { TelemetryTarget } from '@alfred/alfred-cli-core';
 import {
   AuthType,
   Config,
@@ -17,10 +17,10 @@ import {
   FileDiscoveryService,
   ApprovalMode,
   loadServerHierarchicalMemory,
-  GEMINI_CONFIG_DIR,
+  ALFRED_CONFIG_DIR,
   DEFAULT_GEMINI_EMBEDDING_MODEL,
   DEFAULT_GEMINI_MODEL,
-} from '@google/gemini-cli-core';
+} from '@alfred/alfred-cli-core';
 
 import { logger } from '../utils/logger.js';
 import type { Settings } from './settings.js';
@@ -83,7 +83,7 @@ export async function loadConfig(
     settings.folderTrust === true,
   );
   configParams.userMemory = memoryContent;
-  configParams.geminiMdFileCount = fileCount;
+  configParams.alfredMdFileCount = fileCount;
   const config = new Config({
     ...configParams,
   });
@@ -175,7 +175,7 @@ function findEnvFile(startDir: string): string | null {
   let currentDir = path.resolve(startDir);
   while (true) {
     // prefer gemini-specific .env under GEMINI_DIR
-    const geminiEnvPath = path.join(currentDir, GEMINI_CONFIG_DIR, '.env');
+    const geminiEnvPath = path.join(currentDir, ALFRED_CONFIG_DIR, '.env');
     if (fs.existsSync(geminiEnvPath)) {
       return geminiEnvPath;
     }
@@ -188,7 +188,7 @@ function findEnvFile(startDir: string): string | null {
       // check .env under home as fallback, again preferring gemini-specific .env
       const homeGeminiEnvPath = path.join(
         process.cwd(),
-        GEMINI_CONFIG_DIR,
+        ALFRED_CONFIG_DIR,
         '.env',
       );
       if (fs.existsSync(homeGeminiEnvPath)) {

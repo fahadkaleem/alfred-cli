@@ -11,9 +11,9 @@ import type { BaseLlmClient } from '../core/baseLlmClient.js';
 import type {
   ServerGeminiContentEvent,
   ServerGeminiStreamEvent,
-  ServerGeminiToolCallRequestEvent,
+  ServerAlfredToolCallRequestEvent,
 } from '../core/turn.js';
-import { GeminiEventType } from '../core/turn.js';
+import { AlfredEventType } from '../core/turn.js';
 import * as loggers from '../telemetry/loggers.js';
 import { LoopType } from '../telemetry/types.js';
 import { LoopDetectionService } from './loopDetectionService.js';
@@ -42,8 +42,8 @@ describe('LoopDetectionService', () => {
   const createToolCallRequestEvent = (
     name: string,
     args: Record<string, unknown>,
-  ): ServerGeminiToolCallRequestEvent => ({
-    type: GeminiEventType.ToolCallRequest,
+  ): ServerAlfredToolCallRequestEvent => ({
+    type: AlfredEventType.ToolCallRequest,
     value: {
       name,
       args,
@@ -54,7 +54,7 @@ describe('LoopDetectionService', () => {
   });
 
   const createContentEvent = (content: string): ServerGeminiContentEvent => ({
-    type: GeminiEventType.Content,
+    type: AlfredEventType.Content,
     value: content,
   });
 
