@@ -21,7 +21,7 @@ import {
 } from './gemini.js';
 import { type LoadedSettings } from './config/settings.js';
 import { appEvents, AppEvent } from './utils/events.js';
-import type { Config } from '@google/gemini-cli-core';
+import type { Config } from '@alfred/alfred-cli-core';
 
 // Custom error to identify mock process.exit calls
 class MockProcessExitError extends Error {
@@ -94,9 +94,9 @@ describe('gemini.tsx main function', () => {
 
   beforeEach(() => {
     // Store and clear sandbox-related env variables to ensure a consistent test environment
-    originalEnvGeminiSandbox = process.env['GEMINI_SANDBOX'];
+    originalEnvGeminiSandbox = process.env['ALFRED_SANDBOX'];
     originalEnvSandbox = process.env['SANDBOX'];
-    delete process.env['GEMINI_SANDBOX'];
+    delete process.env['ALFRED_SANDBOX'];
     delete process.env['SANDBOX'];
 
     initialUnhandledRejectionListeners =
@@ -106,9 +106,9 @@ describe('gemini.tsx main function', () => {
   afterEach(() => {
     // Restore original env variables
     if (originalEnvGeminiSandbox !== undefined) {
-      process.env['GEMINI_SANDBOX'] = originalEnvGeminiSandbox;
+      process.env['ALFRED_SANDBOX'] = originalEnvGeminiSandbox;
     } else {
-      delete process.env['GEMINI_SANDBOX'];
+      delete process.env['ALFRED_SANDBOX'];
     }
     if (originalEnvSandbox !== undefined) {
       process.env['SANDBOX'] = originalEnvSandbox;
@@ -156,7 +156,7 @@ describe('gemini.tsx main function', () => {
         getIdeMode: () => false,
         getExperimentalZedIntegration: () => false,
         getScreenReader: () => false,
-        getGeminiMdFileCount: () => 0,
+        getAlfredMdFileCount: () => 0,
         getProjectRoot: () => '/',
       } as unknown as Config;
     });
@@ -240,8 +240,8 @@ describe('gemini.tsx main function kitty protocol', () => {
 
   beforeEach(() => {
     // Set no relaunch in tests since process spawning causing issues in tests
-    originalEnvNoRelaunch = process.env['GEMINI_CLI_NO_RELAUNCH'];
-    process.env['GEMINI_CLI_NO_RELAUNCH'] = 'true';
+    originalEnvNoRelaunch = process.env['ALFRED_CLI_NO_RELAUNCH'];
+    process.env['ALFRED_CLI_NO_RELAUNCH'] = 'true';
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (!(process.stdin as any).setRawMode) {
@@ -263,9 +263,9 @@ describe('gemini.tsx main function kitty protocol', () => {
   afterEach(() => {
     // Restore original env variables
     if (originalEnvNoRelaunch !== undefined) {
-      process.env['GEMINI_CLI_NO_RELAUNCH'] = originalEnvNoRelaunch;
+      process.env['ALFRED_CLI_NO_RELAUNCH'] = originalEnvNoRelaunch;
     } else {
-      delete process.env['GEMINI_CLI_NO_RELAUNCH'];
+      delete process.env['ALFRED_CLI_NO_RELAUNCH'];
     }
   });
 
@@ -288,7 +288,7 @@ describe('gemini.tsx main function kitty protocol', () => {
       getIdeMode: () => false,
       getExperimentalZedIntegration: () => false,
       getScreenReader: () => false,
-      getGeminiMdFileCount: () => 0,
+      getAlfredMdFileCount: () => 0,
     } as unknown as Config);
     vi.mocked(loadSettings).mockReturnValue({
       errors: [],
@@ -423,7 +423,7 @@ describe('startInteractiveUI', () => {
       authError: null,
       themeError: null,
       shouldOpenAuthDialog: false,
-      geminiMdFileCount: 0,
+      alfredMdFileCount: 0,
     };
 
     await startInteractiveUI(
@@ -457,7 +457,7 @@ describe('startInteractiveUI', () => {
       authError: null,
       themeError: null,
       shouldOpenAuthDialog: false,
-      geminiMdFileCount: 0,
+      alfredMdFileCount: 0,
     };
 
     await startInteractiveUI(

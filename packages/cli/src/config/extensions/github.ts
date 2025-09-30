@@ -8,8 +8,8 @@ import { simpleGit } from 'simple-git';
 import { getErrorMessage } from '../../utils/errors.js';
 import type {
   ExtensionInstallMetadata,
-  GeminiCLIExtension,
-} from '@google/gemini-cli-core';
+  AlfredCLIExtension,
+} from '@alfred/alfred-cli-core';
 import { ExtensionUpdateState } from '../../ui/state/extensions.js';
 import * as os from 'node:os';
 import * as https from 'node:https';
@@ -114,7 +114,7 @@ async function fetchReleaseFromGithub(
 }
 
 export async function checkForExtensionUpdate(
-  extension: GeminiCLIExtension,
+  extension: AlfredCLIExtension,
   setExtensionUpdateState: (updateState: ExtensionUpdateState) => void,
   cwd: string = process.cwd(),
 ): Promise<void> {

@@ -5,12 +5,12 @@
  */
 
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { GeminiIgnoreParser } from './geminiIgnoreParser.js';
+import { AlfredIgnoreParser } from './alfredIgnoreParser.js';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as os from 'node:os';
 
-describe('GeminiIgnoreParser', () => {
+describe('AlfredIgnoreParser', () => {
   let projectRoot: string;
 
   async function createTestFile(filePath: string, content = '') {
@@ -21,7 +21,7 @@ describe('GeminiIgnoreParser', () => {
 
   beforeEach(async () => {
     projectRoot = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'geminiignore-test-'),
+      path.join(os.tmpdir(), 'alfredignore-test-'),
     );
   });
 
@@ -30,10 +30,10 @@ describe('GeminiIgnoreParser', () => {
     vi.restoreAllMocks();
   });
 
-  describe('when .geminiignore exists', () => {
+  describe('when .alfredignore exists', () => {
     beforeEach(async () => {
       await createTestFile(
-        '.geminiignore',
+        '.alfredignore',
         'ignored.txt\n# A comment\n/ignored_dir/\n',
       );
       await createTestFile('ignored.txt', 'ignored');
@@ -48,8 +48,8 @@ describe('GeminiIgnoreParser', () => {
       );
     });
 
-    it('should ignore files specified in .geminiignore', () => {
-      const parser = new GeminiIgnoreParser(projectRoot);
+    it('should ignore files specified in .alfredignore', () => {
+      const parser = new AlfredIgnoreParser(projectRoot);
       expect(parser.getPatterns()).toEqual(['ignored.txt', '/ignored_dir/']);
       expect(parser.isIgnored('ignored.txt')).toBe(true);
       expect(parser.isIgnored('not_ignored.txt')).toBe(false);
@@ -60,9 +60,9 @@ describe('GeminiIgnoreParser', () => {
     });
   });
 
-  describe('when .geminiignore does not exist', () => {
+  describe('when .alfredignore does not exist', () => {
     it('should not load any patterns and not ignore any files', () => {
-      const parser = new GeminiIgnoreParser(projectRoot);
+      const parser = new AlfredIgnoreParser(projectRoot);
       expect(parser.getPatterns()).toEqual([]);
       expect(parser.isIgnored('any_file.txt')).toBe(false);
     });

@@ -26,11 +26,11 @@ import {
   type ContentGenerator,
   type ContentGeneratorConfig,
 } from './contentGenerator.js';
-import { type GeminiChat } from './geminiChat.js';
+import { type AlfredChat } from './alfredChat.js';
 import type { Config } from '../config/config.js';
 import {
   CompressionStatus,
-  GeminiEventType,
+  AlfredEventType,
   Turn,
   type ChatCompressionInfo,
 } from './turn.js';
@@ -341,7 +341,7 @@ describe('Gemini Client (client.ts)', () => {
     it('should call chat.addHistory with the provided content', async () => {
       const mockChat = {
         addHistory: vi.fn(),
-      } as unknown as GeminiChat;
+      } as unknown as AlfredChat;
       client['chat'] = mockChat;
 
       const newContent = {
@@ -394,7 +394,7 @@ describe('Gemini Client (client.ts)', () => {
         getHistory: mockGetHistory,
         addHistory: vi.fn(),
         setHistory: vi.fn(),
-      } as unknown as GeminiChat;
+      } as unknown as AlfredChat;
     });
 
     function setup({
@@ -405,11 +405,11 @@ describe('Gemini Client (client.ts)', () => {
       originalTokenCount = 1000,
       summaryText = 'This is a summary.',
     } = {}) {
-      const mockOriginalChat: Partial<GeminiChat> = {
+      const mockOriginalChat: Partial<AlfredChat> = {
         getHistory: vi.fn((_curated?: boolean) => chatHistory),
         setHistory: vi.fn(),
       };
-      client['chat'] = mockOriginalChat as GeminiChat;
+      client['chat'] = mockOriginalChat as AlfredChat;
 
       vi.mocked(uiTelemetryService.getLastPromptTokenCount).mockReturnValue(
         originalTokenCount,
@@ -454,14 +454,14 @@ describe('Gemini Client (client.ts)', () => {
         ...historyToKeep,
       ];
 
-      const mockNewChat: Partial<GeminiChat> = {
+      const mockNewChat: Partial<AlfredChat> = {
         getHistory: vi.fn().mockReturnValue(newCompressedHistory),
         setHistory: vi.fn(),
       };
 
       client['startChat'] = vi
         .fn()
-        .mockResolvedValue(mockNewChat as GeminiChat);
+        .mockResolvedValue(mockNewChat as AlfredChat);
 
       const totalChars = newCompressedHistory.reduce(
         (total, content) => total + JSON.stringify(content).length,
@@ -623,12 +623,12 @@ describe('Gemini Client (client.ts)', () => {
         },
         ...historyToKeep,
       ];
-      const mockNewChat: Partial<GeminiChat> = {
+      const mockNewChat: Partial<AlfredChat> = {
         getHistory: vi.fn().mockReturnValue(newCompressedHistory),
       };
       client['startChat'] = vi
         .fn()
-        .mockResolvedValue(mockNewChat as GeminiChat);
+        .mockResolvedValue(mockNewChat as AlfredChat);
 
       const totalChars = newCompressedHistory.reduce(
         (total, content) => total + JSON.stringify(content).length,
@@ -697,12 +697,12 @@ describe('Gemini Client (client.ts)', () => {
         },
         ...historyToKeep,
       ];
-      const mockNewChat: Partial<GeminiChat> = {
+      const mockNewChat: Partial<AlfredChat> = {
         getHistory: vi.fn().mockReturnValue(newCompressedHistory),
       };
       client['startChat'] = vi
         .fn()
-        .mockResolvedValue(mockNewChat as GeminiChat);
+        .mockResolvedValue(mockNewChat as AlfredChat);
 
       const totalChars = newCompressedHistory.reduce(
         (total, content) => total + JSON.stringify(content).length,
@@ -787,12 +787,12 @@ describe('Gemini Client (client.ts)', () => {
         },
         ...historyToKeep,
       ];
-      const mockNewChat: Partial<GeminiChat> = {
+      const mockNewChat: Partial<AlfredChat> = {
         getHistory: vi.fn().mockReturnValue(newCompressedHistory),
       };
       client['startChat'] = vi
         .fn()
-        .mockResolvedValue(mockNewChat as GeminiChat);
+        .mockResolvedValue(mockNewChat as AlfredChat);
 
       const totalChars = newCompressedHistory.reduce(
         (total, content) => total + JSON.stringify(content).length,
@@ -859,12 +859,12 @@ describe('Gemini Client (client.ts)', () => {
         },
         ...historyToKeep,
       ];
-      const mockNewChat: Partial<GeminiChat> = {
+      const mockNewChat: Partial<AlfredChat> = {
         getHistory: vi.fn().mockReturnValue(newCompressedHistory),
       };
       client['startChat'] = vi
         .fn()
-        .mockResolvedValue(mockNewChat as GeminiChat);
+        .mockResolvedValue(mockNewChat as AlfredChat);
 
       const totalChars = newCompressedHistory.reduce(
         (total, content) => total + JSON.stringify(content).length,
@@ -931,7 +931,7 @@ describe('Gemini Client (client.ts)', () => {
 
       // Assert
       expect(events).toContainEqual({
-        type: GeminiEventType.ChatCompressed,
+        type: AlfredEventType.ChatCompressed,
         value: compressionInfo,
       });
     });
@@ -972,7 +972,7 @@ describe('Gemini Client (client.ts)', () => {
 
         // Assert
         expect(events).not.toContainEqual({
-          type: GeminiEventType.ChatCompressed,
+          type: AlfredEventType.ChatCompressed,
           value: expect.anything(),
         });
       },
@@ -1019,7 +1019,7 @@ describe('Gemini Client (client.ts)', () => {
       const mockChat = {
         addHistory: vi.fn(),
         getHistory: vi.fn().mockReturnValue([]),
-      } as unknown as GeminiChat;
+      } as unknown as AlfredChat;
       client['chat'] = mockChat;
 
       const initialRequest: Part[] = [{ text: 'Hi' }];
@@ -1078,11 +1078,11 @@ ${JSON.stringify(
       })();
       mockTurnRunFn.mockReturnValue(mockStream);
 
-      const mockChat: Partial<GeminiChat> = {
+      const mockChat: Partial<AlfredChat> = {
         addHistory: vi.fn(),
         getHistory: vi.fn().mockReturnValue([]),
       };
-      client['chat'] = mockChat as GeminiChat;
+      client['chat'] = mockChat as AlfredChat;
 
       const initialRequest = [{ text: 'Hi' }];
 
@@ -1138,11 +1138,11 @@ ${JSON.stringify(
       })();
       mockTurnRunFn.mockReturnValue(mockStream);
 
-      const mockChat: Partial<GeminiChat> = {
+      const mockChat: Partial<AlfredChat> = {
         addHistory: vi.fn(),
         getHistory: vi.fn().mockReturnValue([]),
       };
-      client['chat'] = mockChat as GeminiChat;
+      client['chat'] = mockChat as AlfredChat;
 
       const initialRequest = [{ text: 'Hi' }];
 
@@ -1214,11 +1214,11 @@ ${JSON.stringify(
       })();
       mockTurnRunFn.mockReturnValue(mockStream);
 
-      const mockChat: Partial<GeminiChat> = {
+      const mockChat: Partial<AlfredChat> = {
         addHistory: vi.fn(),
         getHistory: vi.fn().mockReturnValue([]),
       };
-      client['chat'] = mockChat as GeminiChat;
+      client['chat'] = mockChat as AlfredChat;
 
       const initialRequest = [{ text: 'Hi' }];
 
@@ -1260,11 +1260,11 @@ ${JSON.stringify(
       })();
       mockTurnRunFn.mockReturnValue(mockStream);
 
-      const mockChat: Partial<GeminiChat> = {
+      const mockChat: Partial<AlfredChat> = {
         addHistory: vi.fn(),
         getHistory: vi.fn().mockReturnValue([]),
       };
-      client['chat'] = mockChat as GeminiChat;
+      client['chat'] = mockChat as AlfredChat;
 
       // Act
       const stream = client.sendMessageStream(
@@ -1304,11 +1304,11 @@ ${JSON.stringify(
       })();
       mockTurnRunFn.mockReturnValue(mockStream);
 
-      const mockChat: Partial<GeminiChat> = {
+      const mockChat: Partial<AlfredChat> = {
         addHistory: vi.fn(),
         getHistory: vi.fn().mockReturnValue([]),
       };
-      client['chat'] = mockChat as GeminiChat;
+      client['chat'] = mockChat as AlfredChat;
 
       // Use a signal that never gets aborted
       const abortController = new AbortController();
@@ -1391,11 +1391,11 @@ ${JSON.stringify(
       })();
       mockTurnRunFn.mockReturnValue(mockStream);
 
-      const mockChat: Partial<GeminiChat> = {
+      const mockChat: Partial<AlfredChat> = {
         addHistory: vi.fn(),
         getHistory: vi.fn().mockReturnValue([]),
       };
-      client['chat'] = mockChat as GeminiChat;
+      client['chat'] = mockChat as AlfredChat;
 
       // Act & Assert
       // Run up to the limit
@@ -1423,7 +1423,7 @@ ${JSON.stringify(
         events.push(event);
       }
 
-      expect(events).toEqual([{ type: GeminiEventType.MaxSessionTurns }]);
+      expect(events).toEqual([{ type: AlfredEventType.MaxSessionTurns }]);
       expect(mockTurnRunFn).toHaveBeenCalledTimes(MAX_SESSION_TURNS);
     });
 
@@ -1447,11 +1447,11 @@ ${JSON.stringify(
       })();
       mockTurnRunFn.mockReturnValue(mockStream);
 
-      const mockChat: Partial<GeminiChat> = {
+      const mockChat: Partial<AlfredChat> = {
         addHistory: vi.fn(),
         getHistory: vi.fn().mockReturnValue([]),
       };
-      client['chat'] = mockChat as GeminiChat;
+      client['chat'] = mockChat as AlfredChat;
 
       // Use a signal that never gets aborted
       const abortController = new AbortController();
@@ -1692,7 +1692,7 @@ ${JSON.stringify(
         vi.spyOn(client['config'], 'getIdeMode').mockReturnValue(true);
         mockTurnRunFn.mockReturnValue(mockStream);
 
-        const mockChat: Partial<GeminiChat> = {
+        const mockChat: Partial<AlfredChat> = {
           addHistory: vi.fn(),
           setHistory: vi.fn(),
           // Assume history is not empty for delta checks
@@ -1702,7 +1702,7 @@ ${JSON.stringify(
               { role: 'user', parts: [{ text: 'previous message' }] },
             ]),
         };
-        client['chat'] = mockChat as GeminiChat;
+        client['chat'] = mockChat as AlfredChat;
       });
 
       const testCases = [
@@ -1937,7 +1937,7 @@ ${JSON.stringify(
     });
 
     describe('IDE context with pending tool calls', () => {
-      let mockChat: Partial<GeminiChat>;
+      let mockChat: Partial<AlfredChat>;
 
       beforeEach(() => {
         vi.spyOn(client, 'tryCompressChat').mockResolvedValue({
@@ -1956,7 +1956,7 @@ ${JSON.stringify(
           getHistory: vi.fn().mockReturnValue([]), // Default empty history
           setHistory: vi.fn(),
         };
-        client['chat'] = mockChat as GeminiChat;
+        client['chat'] = mockChat as AlfredChat;
 
         vi.spyOn(client['config'], 'getIdeMode').mockReturnValue(true);
         vi.mocked(ideContextStore.get).mockReturnValue({
@@ -2286,17 +2286,17 @@ ${JSON.stringify(
 
       const mockStream = (async function* () {
         yield {
-          type: GeminiEventType.Error,
+          type: AlfredEventType.Error,
           value: { error: { message: 'test error' } },
         };
       })();
       mockTurnRunFn.mockReturnValue(mockStream);
 
-      const mockChat: Partial<GeminiChat> = {
+      const mockChat: Partial<AlfredChat> = {
         addHistory: vi.fn(),
         getHistory: vi.fn().mockReturnValue([]),
       };
-      client['chat'] = mockChat as GeminiChat;
+      client['chat'] = mockChat as AlfredChat;
 
       // Act
       const stream = client.sendMessageStream(
@@ -2320,19 +2320,19 @@ ${JSON.stringify(
       const mockCheckNextSpeaker = vi.mocked(checkNextSpeaker);
 
       const mockStream = (async function* () {
-        yield { type: GeminiEventType.Content, value: 'some content' };
+        yield { type: AlfredEventType.Content, value: 'some content' };
         yield {
-          type: GeminiEventType.Error,
+          type: AlfredEventType.Error,
           value: { error: { message: 'test error' } },
         };
       })();
       mockTurnRunFn.mockReturnValue(mockStream);
 
-      const mockChat: Partial<GeminiChat> = {
+      const mockChat: Partial<AlfredChat> = {
         addHistory: vi.fn(),
         getHistory: vi.fn().mockReturnValue([]),
       };
-      client['chat'] = mockChat as GeminiChat;
+      client['chat'] = mockChat as AlfredChat;
 
       // Act
       const stream = client.sendMessageStream(
@@ -2364,11 +2364,11 @@ ${JSON.stringify(
         })();
       });
 
-      const mockChat: Partial<GeminiChat> = {
+      const mockChat: Partial<AlfredChat> = {
         addHistory: vi.fn(),
         getHistory: vi.fn().mockReturnValue([]),
       };
-      client['chat'] = mockChat as GeminiChat;
+      client['chat'] = mockChat as AlfredChat;
 
       // Act
       const stream = client.sendMessageStream(
@@ -2383,7 +2383,7 @@ ${JSON.stringify(
       }
 
       // Assert
-      expect(events).toContainEqual({ type: GeminiEventType.LoopDetected });
+      expect(events).toContainEqual({ type: AlfredEventType.LoopDetected });
       expect(capturedSignal!.aborted).toBe(true);
     });
   });

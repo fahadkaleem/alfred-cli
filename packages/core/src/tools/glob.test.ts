@@ -6,7 +6,7 @@
 
 import type { GlobToolParams, GlobPath } from './glob.js';
 import { GlobTool, sortFileEntries } from './glob.js';
-import { partListUnionToString } from '../core/geminiRequest.js';
+import { partListUnionToString } from '../core/alfredRequest.js';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import os from 'node:os';
@@ -30,7 +30,7 @@ describe('GlobTool', () => {
     getFileFilteringRespectGitIgnore: () => true,
     getFileFilteringOptions: () => ({
       respectGitIgnore: true,
-      respectGeminiIgnore: true,
+      respectAlfredIgnore: true,
     }),
     getTargetDir: () => tempRootDir,
     getWorkspaceContext: () => createMockWorkspaceContext(tempRootDir),
@@ -392,13 +392,13 @@ describe('GlobTool', () => {
       expect(result.llmContent).not.toContain('a.ignored.txt');
     });
 
-    it('should respect .geminiignore files by default', async () => {
+    it('should respect .alfredignore files by default', async () => {
       await fs.writeFile(
-        path.join(tempRootDir, '.geminiignore'),
-        '*.geminiignored.txt',
+        path.join(tempRootDir, '.alfredignore'),
+        '*.alfredignored.txt',
       );
       await fs.writeFile(
-        path.join(tempRootDir, 'a.geminiignored.txt'),
+        path.join(tempRootDir, 'a.alfredignored.txt'),
         'ignored content',
       );
       await fs.writeFile(
@@ -411,7 +411,7 @@ describe('GlobTool', () => {
       const result = await invocation.execute(abortSignal);
 
       expect(result.llmContent).toContain('Found 3 file(s)'); // fileA.txt, FileB.TXT, b.notignored.txt
-      expect(result.llmContent).not.toContain('a.geminiignored.txt');
+      expect(result.llmContent).not.toContain('a.alfredignored.txt');
     });
 
     it('should not respect .gitignore when respect_git_ignore is false', async () => {
@@ -432,25 +432,25 @@ describe('GlobTool', () => {
       expect(result.llmContent).toContain('a.ignored.txt');
     });
 
-    it('should not respect .geminiignore when respect_gemini_ignore is false', async () => {
+    it('should not respect .alfredignore when respect_alfred_ignore is false', async () => {
       await fs.writeFile(
-        path.join(tempRootDir, '.geminiignore'),
-        '*.geminiignored.txt',
+        path.join(tempRootDir, '.alfredignore'),
+        '*.alfredignored.txt',
       );
       await fs.writeFile(
-        path.join(tempRootDir, 'a.geminiignored.txt'),
+        path.join(tempRootDir, 'a.alfredignored.txt'),
         'ignored content',
       );
 
       const params: GlobToolParams = {
         pattern: '*.txt',
-        respect_gemini_ignore: false,
+        respect_alfred_ignore: false,
       };
       const invocation = globTool.build(params);
       const result = await invocation.execute(abortSignal);
 
-      expect(result.llmContent).toContain('Found 3 file(s)'); // fileA.txt, FileB.TXT, a.geminiignored.txt
-      expect(result.llmContent).toContain('a.geminiignored.txt');
+      expect(result.llmContent).toContain('Found 3 file(s)'); // fileA.txt, FileB.TXT, a.alfredignored.txt
+      expect(result.llmContent).toContain('a.alfredignored.txt');
     });
   });
 });

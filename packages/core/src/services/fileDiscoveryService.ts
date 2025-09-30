@@ -5,26 +5,26 @@
  */
 
 import type { GitIgnoreFilter } from '../utils/gitIgnoreParser.js';
-import type { GeminiIgnoreFilter } from '../utils/geminiIgnoreParser.js';
+import type { AlfredIgnoreFilter } from '../utils/alfredIgnoreParser.js';
 import { GitIgnoreParser } from '../utils/gitIgnoreParser.js';
-import { GeminiIgnoreParser } from '../utils/geminiIgnoreParser.js';
+import { AlfredIgnoreParser } from '../utils/alfredIgnoreParser.js';
 import { isGitRepository } from '../utils/gitUtils.js';
 import * as path from 'node:path';
 
 export interface FilterFilesOptions {
   respectGitIgnore?: boolean;
-  respectGeminiIgnore?: boolean;
+  respectAlfredIgnore?: boolean;
 }
 
 export interface FilterReport {
   filteredPaths: string[];
   gitIgnoredCount: number;
-  geminiIgnoredCount: number;
+  alfredIgnoredCount: number;
 }
 
 export class FileDiscoveryService {
   private gitIgnoreFilter: GitIgnoreFilter | null = null;
-  private geminiIgnoreFilter: GeminiIgnoreFilter | null = null;
+  private alfredIgnoreFilter: AlfredIgnoreFilter | null = null;
   private projectRoot: string;
 
   constructor(projectRoot: string) {
@@ -32,7 +32,7 @@ export class FileDiscoveryService {
     if (isGitRepository(this.projectRoot)) {
       this.gitIgnoreFilter = new GitIgnoreParser(this.projectRoot);
     }
-    this.geminiIgnoreFilter = new GeminiIgnoreParser(this.projectRoot);
+    this.alfredIgnoreFilter = new AlfredIgnoreParser(this.projectRoot);
   }
 
   /**
@@ -42,7 +42,7 @@ export class FileDiscoveryService {
     filePaths: string[],
     options: FilterFilesOptions = {
       respectGitIgnore: true,
-      respectGeminiIgnore: true,
+      respectAlfredIgnore: true,
     },
   ): string[] {
     return filePaths.filter((filePath) => {
@@ -50,8 +50,8 @@ export class FileDiscoveryService {
         return false;
       }
       if (
-        options.respectGeminiIgnore &&
-        this.shouldGeminiIgnoreFile(filePath)
+        options.respectAlfredIgnore &&
+        this.shouldAlfredIgnoreFile(filePath)
       ) {
         return false;
       }
@@ -67,12 +67,12 @@ export class FileDiscoveryService {
     filePaths: string[],
     opts: FilterFilesOptions = {
       respectGitIgnore: true,
-      respectGeminiIgnore: true,
+      respectAlfredIgnore: true,
     },
   ): FilterReport {
     const filteredPaths: string[] = [];
     let gitIgnoredCount = 0;
-    let geminiIgnoredCount = 0;
+    let alfredIgnoredCount = 0;
 
     for (const filePath of filePaths) {
       if (opts.respectGitIgnore && this.shouldGitIgnoreFile(filePath)) {
@@ -80,8 +80,8 @@ export class FileDiscoveryService {
         continue;
       }
 
-      if (opts.respectGeminiIgnore && this.shouldGeminiIgnoreFile(filePath)) {
-        geminiIgnoredCount++;
+      if (opts.respectAlfredIgnore && this.shouldAlfredIgnoreFile(filePath)) {
+        alfredIgnoredCount++;
         continue;
       }
 
@@ -91,7 +91,7 @@ export class FileDiscoveryService {
     return {
       filteredPaths,
       gitIgnoredCount,
-      geminiIgnoredCount,
+      alfredIgnoredCount,
     };
   }
 
@@ -106,11 +106,11 @@ export class FileDiscoveryService {
   }
 
   /**
-   * Checks if a single file should be gemini-ignored
+   * Checks if a single file should be alfred-ignored
    */
-  shouldGeminiIgnoreFile(filePath: string): boolean {
-    if (this.geminiIgnoreFilter) {
-      return this.geminiIgnoreFilter.isIgnored(filePath);
+  shouldAlfredIgnoreFile(filePath: string): boolean {
+    if (this.alfredIgnoreFilter) {
+      return this.alfredIgnoreFilter.isIgnored(filePath);
     }
     return false;
   }
@@ -122,21 +122,21 @@ export class FileDiscoveryService {
     filePath: string,
     options: FilterFilesOptions = {},
   ): boolean {
-    const { respectGitIgnore = true, respectGeminiIgnore = true } = options;
+    const { respectGitIgnore = true, respectAlfredIgnore = true } = options;
 
     if (respectGitIgnore && this.shouldGitIgnoreFile(filePath)) {
       return true;
     }
-    if (respectGeminiIgnore && this.shouldGeminiIgnoreFile(filePath)) {
+    if (respectAlfredIgnore && this.shouldAlfredIgnoreFile(filePath)) {
       return true;
     }
     return false;
   }
 
   /**
-   * Returns loaded patterns from .geminiignore
+   * Returns loaded patterns from .alfredignore
    */
-  getGeminiIgnorePatterns(): string[] {
-    return this.geminiIgnoreFilter?.getPatterns() ?? [];
+  getAlfredIgnorePatterns(): string[] {
+    return this.alfredIgnoreFilter?.getPatterns() ?? [];
   }
 }

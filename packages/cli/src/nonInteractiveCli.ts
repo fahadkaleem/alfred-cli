@@ -4,20 +4,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { Config, ToolCallRequestInfo } from '@google/gemini-cli-core';
+import type { Config, ToolCallRequestInfo } from '@alfred/alfred-cli-core';
 import { isSlashCommand } from './ui/utils/commandUtils.js';
 import type { LoadedSettings } from './config/settings.js';
 import {
   executeToolCall,
   shutdownTelemetry,
   isTelemetrySdkInitialized,
-  GeminiEventType,
+  AlfredEventType,
   FatalInputError,
   promptIdContext,
   OutputFormat,
   JsonFormatter,
   uiTelemetryService,
-} from '@google/gemini-cli-core';
+} from '@alfred/alfred-cli-core';
 
 import type { Content, Part } from '@google/genai';
 
@@ -53,7 +53,7 @@ export async function runNonInteractive(
         }
       });
 
-      const geminiClient = config.getGeminiClient();
+      const alfredClient = config.getGeminiClient();
 
       const abortController = new AbortController();
 
@@ -107,7 +107,7 @@ export async function runNonInteractive(
         }
         const toolCallRequests: ToolCallRequestInfo[] = [];
 
-        const responseStream = geminiClient.sendMessageStream(
+        const responseStream = alfredClient.sendMessageStream(
           currentMessages[0]?.parts || [],
           abortController.signal,
           prompt_id,
@@ -119,13 +119,13 @@ export async function runNonInteractive(
             handleCancellationError(config);
           }
 
-          if (event.type === GeminiEventType.Content) {
+          if (event.type === AlfredEventType.Content) {
             if (config.getOutputFormat() === OutputFormat.JSON) {
               responseText += event.value;
             } else {
               process.stdout.write(event.value);
             }
-          } else if (event.type === GeminiEventType.ToolCallRequest) {
+          } else if (event.type === AlfredEventType.ToolCallRequest) {
             toolCallRequests.push(event.value);
           }
         }

@@ -8,7 +8,7 @@ import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { listMcpServers } from './list.js';
 import { loadSettings } from '../../config/settings.js';
 import { ExtensionStorage, loadExtensions } from '../../config/extension.js';
-import { createTransport } from '@google/gemini-cli-core';
+import { createTransport } from '@alfred/alfred-cli-core';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 
 vi.mock('../../config/settings.js', () => ({
@@ -20,7 +20,7 @@ vi.mock('../../config/extension.js', () => ({
     getUserExtensionsDir: vi.fn(),
   },
 }));
-vi.mock('@google/gemini-cli-core', () => ({
+vi.mock('@alfred/alfred-cli-core', () => ({
   createTransport: vi.fn(),
   MCPServerStatus: {
     CONNECTED: 'CONNECTED',
@@ -30,9 +30,9 @@ vi.mock('@google/gemini-cli-core', () => ({
   Storage: vi.fn().mockImplementation((_cwd: string) => ({
     getGlobalSettingsPath: () => '/tmp/gemini/settings.json',
     getWorkspaceSettingsPath: () => '/tmp/gemini/workspace-settings.json',
-    getProjectTempDir: () => '/test/home/.gemini/tmp/mocked_hash',
+    getProjectTempDir: () => '/test/home/.alfred/tmp/mocked_hash',
   })),
-  GEMINI_CONFIG_DIR: '.gemini',
+  ALFRED_CONFIG_DIR: '.alfred',
   getErrorMessage: (e: unknown) => (e instanceof Error ? e.message : String(e)),
 }));
 vi.mock('@modelcontextprotocol/sdk/client/index.js');

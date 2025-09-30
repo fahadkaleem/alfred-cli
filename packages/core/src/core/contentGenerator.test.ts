@@ -125,12 +125,12 @@ describe('createContentGeneratorConfig', () => {
   });
 
   it('should configure for Gemini using GEMINI_API_KEY when set', async () => {
-    vi.stubEnv('GEMINI_API_KEY', 'env-gemini-key');
+    vi.stubEnv('GEMINI_API_KEY', 'env-alfred-key');
     const config = await createContentGeneratorConfig(
       mockConfig,
       AuthType.USE_GEMINI,
     );
-    expect(config.apiKey).toBe('env-gemini-key');
+    expect(config.apiKey).toBe('env-alfred-key');
     expect(config.vertexai).toBe(false);
   });
 

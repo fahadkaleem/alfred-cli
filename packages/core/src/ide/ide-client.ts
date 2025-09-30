@@ -140,7 +140,7 @@ export class IdeClient {
     if (!this.currentIde) {
       this.setState(
         IDEConnectionStatus.Disconnected,
-        `IDE integration is not supported in your current environment. To use this feature, run Gemini CLI in one of these supported IDEs: VS Code or VS Code forks`,
+        `IDE integration is not supported in your current environment. To use this feature, run Alfred CLI in one of these supported IDEs: VS Code or VS Code forks`,
         false,
       );
       return;
@@ -154,7 +154,7 @@ export class IdeClient {
     }
     const workspacePath =
       this.connectionConfig?.workspacePath ??
-      process.env['GEMINI_CLI_IDE_WORKSPACE_PATH'];
+      process.env['ALFRED_CLI_IDE_WORKSPACE_PATH'];
 
     const { isValid, error } = IdeClient.validateWorkspacePath(
       workspacePath,
@@ -526,7 +526,7 @@ export class IdeClient {
     if (!isWithinWorkspace) {
       return {
         isValid: false,
-        error: `Directory mismatch. Gemini CLI is running in a different location than the open workspace in the IDE. Please run the CLI from one of the following directories: ${ideWorkspacePaths.join(
+        error: `Directory mismatch. Alfred CLI is running in a different location than the open workspace in the IDE. Please run the CLI from one of the following directories: ${ideWorkspacePaths.join(
           ', ',
         )}`,
       };
@@ -535,7 +535,7 @@ export class IdeClient {
   }
 
   private getPortFromEnv(): string | undefined {
-    const port = process.env['GEMINI_CLI_IDE_SERVER_PORT'];
+    const port = process.env['ALFRED_CLI_IDE_SERVER_PORT'];
     if (!port) {
       return undefined;
     }
@@ -543,12 +543,12 @@ export class IdeClient {
   }
 
   private getStdioConfigFromEnv(): StdioConfig | undefined {
-    const command = process.env['GEMINI_CLI_IDE_SERVER_STDIO_COMMAND'];
+    const command = process.env['ALFRED_CLI_IDE_SERVER_STDIO_COMMAND'];
     if (!command) {
       return undefined;
     }
 
-    const argsStr = process.env['GEMINI_CLI_IDE_SERVER_STDIO_ARGS'];
+    const argsStr = process.env['ALFRED_CLI_IDE_SERVER_STDIO_ARGS'];
     let args: string[] = [];
     if (argsStr) {
       try {
@@ -557,11 +557,11 @@ export class IdeClient {
           args = parsedArgs;
         } else {
           logger.error(
-            'GEMINI_CLI_IDE_SERVER_STDIO_ARGS must be a JSON array string.',
+            'ALFRED_CLI_IDE_SERVER_STDIO_ARGS must be a JSON array string.',
           );
         }
       } catch (e) {
-        logger.error('Failed to parse GEMINI_CLI_IDE_SERVER_STDIO_ARGS:', e);
+        logger.error('Failed to parse ALFRED_CLI_IDE_SERVER_STDIO_ARGS:', e);
       }
     }
 
@@ -580,18 +580,18 @@ export class IdeClient {
     try {
       const portFile = path.join(
         os.tmpdir(),
-        `gemini-ide-server-${this.ideProcessInfo.pid}.json`,
+        `alfred-ide-server-${this.ideProcessInfo.pid}.json`,
       );
       const portFileContents = await fs.promises.readFile(portFile, 'utf8');
       return JSON.parse(portFileContents);
     } catch (_) {
       // For newer extension versions, the file name matches the pattern
-      // /^gemini-ide-server-${pid}-\d+\.json$/. If multiple IDE
+      // /^alfred-ide-server-${pid}-\d+\.json$/. If multiple IDE
       // windows are open, multiple files matching the pattern are expected to
       // exist.
     }
 
-    const portFileDir = path.join(os.tmpdir(), 'gemini', 'ide');
+    const portFileDir = path.join(os.tmpdir(), 'alfred', 'ide');
     let portFiles;
     try {
       portFiles = await fs.promises.readdir(portFileDir);
@@ -605,7 +605,7 @@ export class IdeClient {
     }
 
     const fileRegex = new RegExp(
-      `^gemini-ide-server-${this.ideProcessInfo.pid}-\\d+\\.json$`,
+      `^alfred-ide-server-${this.ideProcessInfo.pid}-\\d+\\.json$`,
     );
     const matchingFiles = portFiles
       .filter((file) => fileRegex.test(file))

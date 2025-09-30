@@ -10,13 +10,13 @@ import { act } from 'react';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useGitBranchName } from './useGitBranchName.js';
 import { fs, vol } from 'memfs'; // For mocking fs
-import { spawnAsync as mockSpawnAsync } from '@google/gemini-cli-core';
+import { spawnAsync as mockSpawnAsync } from '@alfred/alfred-cli-core';
 
-// Mock @google/gemini-cli-core
-vi.mock('@google/gemini-cli-core', async () => {
+// Mock @alfred/alfred-cli-core
+vi.mock('@alfred/alfred-cli-core', async () => {
   const original = await vi.importActual<
-    typeof import('@google/gemini-cli-core')
-  >('@google/gemini-cli-core');
+    typeof import('@alfred/alfred-cli-core')
+  >('@alfred/alfred-cli-core');
   return {
     ...original,
     spawnAsync: vi.fn(),

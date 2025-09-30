@@ -43,7 +43,7 @@ describe('ChatRecordingService', () => {
       storage: {
         getProjectTempDir: vi
           .fn()
-          .mockReturnValue('/test/project/root/.gemini/tmp'),
+          .mockReturnValue('/test/project/root/.alfred/tmp'),
       },
       getModel: vi.fn().mockReturnValue('gemini-pro'),
       getDebugMode: vi.fn().mockReturnValue(false),
@@ -80,7 +80,7 @@ describe('ChatRecordingService', () => {
       chatRecordingService.initialize();
 
       expect(mkdirSyncSpy).toHaveBeenCalledWith(
-        '/test/project/root/.gemini/tmp/chats',
+        '/test/project/root/.alfred/tmp/chats',
         { recursive: true },
       );
       expect(writeFileSyncSpy).not.toHaveBeenCalled();
@@ -99,7 +99,7 @@ describe('ChatRecordingService', () => {
         .mockImplementation(() => undefined);
 
       chatRecordingService.initialize({
-        filePath: '/test/project/root/.gemini/tmp/chats/session.json',
+        filePath: '/test/project/root/.alfred/tmp/chats/session.json',
         conversation: {
           sessionId: 'old-session-id',
         } as ConversationRecord,
@@ -212,7 +212,7 @@ describe('ChatRecordingService', () => {
         messages: [
           {
             id: '1',
-            type: 'gemini',
+            type: 'alfred',
             content: 'Response',
             timestamp: new Date().toISOString(),
           },
@@ -254,7 +254,7 @@ describe('ChatRecordingService', () => {
         messages: [
           {
             id: '1',
-            type: 'gemini',
+            type: 'alfred',
             content: 'Response',
             timestamp: new Date().toISOString(),
             tokens: { input: 1, output: 1, total: 2, cached: 0 },
@@ -299,7 +299,7 @@ describe('ChatRecordingService', () => {
         messages: [
           {
             id: '1',
-            type: 'gemini',
+            type: 'alfred',
             content: '',
             timestamp: new Date().toISOString(),
           },
@@ -375,7 +375,7 @@ describe('ChatRecordingService', () => {
         ...conversation.messages[1],
         id: 'this-is-a-test-uuid',
         model: 'gemini-pro',
-        type: 'gemini',
+        type: 'alfred',
         thoughts: [],
         content: '',
         toolCalls: [
@@ -397,7 +397,7 @@ describe('ChatRecordingService', () => {
         .mockImplementation(() => undefined);
       chatRecordingService.deleteSession('test-session-id');
       expect(unlinkSyncSpy).toHaveBeenCalledWith(
-        '/test/project/root/.gemini/tmp/chats/test-session-id.json',
+        '/test/project/root/.alfred/tmp/chats/test-session-id.json',
       );
     });
   });

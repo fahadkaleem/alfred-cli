@@ -5,8 +5,8 @@
  */
 
 import { useState, useEffect } from 'react';
-import type { Storage } from '@google/gemini-cli-core';
-import { sessionId, Logger } from '@google/gemini-cli-core';
+import type { Storage } from '@alfred/alfred-cli-core';
+import { sessionId, Logger } from '@alfred/alfred-cli-core';
 
 /**
  * Hook to manage the logger instance.

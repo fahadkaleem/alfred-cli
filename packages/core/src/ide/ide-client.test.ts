@@ -55,10 +55,10 @@ describe('IdeClient', () => {
       undefined;
 
     // Mock environment variables
-    process.env['GEMINI_CLI_IDE_WORKSPACE_PATH'] = '/test/workspace';
-    delete process.env['GEMINI_CLI_IDE_SERVER_PORT'];
-    delete process.env['GEMINI_CLI_IDE_SERVER_STDIO_COMMAND'];
-    delete process.env['GEMINI_CLI_IDE_SERVER_STDIO_ARGS'];
+    process.env['ALFRED_CLI_IDE_WORKSPACE_PATH'] = '/test/workspace';
+    delete process.env['ALFRED_CLI_IDE_SERVER_PORT'];
+    delete process.env['ALFRED_CLI_IDE_SERVER_STDIO_COMMAND'];
+    delete process.env['ALFRED_CLI_IDE_SERVER_STDIO_ARGS'];
 
     // Mock dependencies
     vi.spyOn(process, 'cwd').mockReturnValue('/test/workspace/sub-dir');
@@ -109,7 +109,7 @@ describe('IdeClient', () => {
       await ideClient.connect();
 
       expect(fs.promises.readFile).toHaveBeenCalledWith(
-        path.join('/tmp/', 'gemini-ide-server-12345.json'),
+        path.join('/tmp/', 'alfred-ide-server-12345.json'),
         'utf8',
       );
       expect(StreamableHTTPClientTransport).toHaveBeenCalledWith(
@@ -175,7 +175,7 @@ describe('IdeClient', () => {
           (path: fs.PathLike) => Promise<string[]>
         >
       ).mockResolvedValue([]);
-      process.env['GEMINI_CLI_IDE_SERVER_PORT'] = '9090';
+      process.env['ALFRED_CLI_IDE_SERVER_PORT'] = '9090';
 
       const ideClient = await IdeClient.getInstance();
       await ideClient.connect();
@@ -199,8 +199,8 @@ describe('IdeClient', () => {
           (path: fs.PathLike) => Promise<string[]>
         >
       ).mockResolvedValue([]);
-      process.env['GEMINI_CLI_IDE_SERVER_STDIO_COMMAND'] = 'env-cmd';
-      process.env['GEMINI_CLI_IDE_SERVER_STDIO_ARGS'] = '["--bar"]';
+      process.env['ALFRED_CLI_IDE_SERVER_STDIO_COMMAND'] = 'env-cmd';
+      process.env['ALFRED_CLI_IDE_SERVER_STDIO_ARGS'] = '["--bar"]';
 
       const ideClient = await IdeClient.getInstance();
       await ideClient.connect();
@@ -223,7 +223,7 @@ describe('IdeClient', () => {
           (path: fs.PathLike) => Promise<string[]>
         >
       ).mockResolvedValue([]);
-      process.env['GEMINI_CLI_IDE_SERVER_PORT'] = '9090';
+      process.env['ALFRED_CLI_IDE_SERVER_PORT'] = '9090';
 
       const ideClient = await IdeClient.getInstance();
       await ideClient.connect();
@@ -276,7 +276,7 @@ describe('IdeClient', () => {
 
       expect(result).toEqual(config);
       expect(fs.promises.readFile).toHaveBeenCalledWith(
-        path.join('/tmp', 'gemini-ide-server-12345.json'),
+        path.join('/tmp', 'alfred-ide-server-12345.json'),
         'utf8',
       );
     });
@@ -308,7 +308,7 @@ describe('IdeClient', () => {
         vi.mocked(fs.promises.readdir) as Mock<
           (path: fs.PathLike) => Promise<string[]>
         >
-      ).mockResolvedValue(['gemini-ide-server-12345-123.json']);
+      ).mockResolvedValue(['alfred-ide-server-12345-123.json']);
       vi.mocked(fs.promises.readFile).mockResolvedValue(JSON.stringify(config));
       vi.spyOn(IdeClient, 'validateWorkspacePath').mockReturnValue({
         isValid: true,
@@ -323,7 +323,7 @@ describe('IdeClient', () => {
 
       expect(result).toEqual(config);
       expect(fs.promises.readFile).toHaveBeenCalledWith(
-        path.join('/tmp/gemini/ide', 'gemini-ide-server-12345-123.json'),
+        path.join('/tmp/alfred/ide', 'alfred-ide-server-12345-123.json'),
         'utf8',
       );
     });
@@ -345,8 +345,8 @@ describe('IdeClient', () => {
           (path: fs.PathLike) => Promise<string[]>
         >
       ).mockResolvedValue([
-        'gemini-ide-server-12345-111.json',
-        'gemini-ide-server-12345-222.json',
+        'alfred-ide-server-12345-111.json',
+        'alfred-ide-server-12345-222.json',
       ]);
       vi.mocked(fs.promises.readFile)
         .mockResolvedValueOnce(JSON.stringify(invalidConfig))
@@ -386,8 +386,8 @@ describe('IdeClient', () => {
           (path: fs.PathLike) => Promise<string[]>
         >
       ).mockResolvedValue([
-        'gemini-ide-server-12345-111.json',
-        'gemini-ide-server-12345-222.json',
+        'alfred-ide-server-12345-111.json',
+        'alfred-ide-server-12345-222.json',
       ]);
       vi.mocked(fs.promises.readFile)
         .mockResolvedValueOnce(JSON.stringify(config1))
@@ -407,7 +407,7 @@ describe('IdeClient', () => {
     });
 
     it('should prioritize the config matching the port from the environment variable', async () => {
-      process.env['GEMINI_CLI_IDE_SERVER_PORT'] = '2222';
+      process.env['ALFRED_CLI_IDE_SERVER_PORT'] = '2222';
       const config1 = { port: '1111', workspacePath: '/test/workspace' };
       const config2 = { port: '2222', workspacePath: '/test/workspace2' };
       vi.mocked(fs.promises.readFile).mockRejectedValueOnce(
@@ -418,8 +418,8 @@ describe('IdeClient', () => {
           (path: fs.PathLike) => Promise<string[]>
         >
       ).mockResolvedValue([
-        'gemini-ide-server-12345-111.json',
-        'gemini-ide-server-12345-222.json',
+        'alfred-ide-server-12345-111.json',
+        'alfred-ide-server-12345-222.json',
       ]);
       vi.mocked(fs.promises.readFile)
         .mockResolvedValueOnce(JSON.stringify(config1))
@@ -448,8 +448,8 @@ describe('IdeClient', () => {
           (path: fs.PathLike) => Promise<string[]>
         >
       ).mockResolvedValue([
-        'gemini-ide-server-12345-111.json',
-        'gemini-ide-server-12345-222.json',
+        'alfred-ide-server-12345-111.json',
+        'alfred-ide-server-12345-222.json',
       ]);
       vi.mocked(fs.promises.readFile)
         .mockResolvedValueOnce('invalid json')
@@ -496,9 +496,9 @@ describe('IdeClient', () => {
           (path: fs.PathLike) => Promise<string[]>
         >
       ).mockResolvedValue([
-        'gemini-ide-server-12345-111.json', // valid
+        'alfred-ide-server-12345-111.json', // valid
         'not-a-config-file.txt', // invalid
-        'gemini-ide-server-asdf.json', // invalid
+        'alfred-ide-server-asdf.json', // invalid
       ]);
       vi.mocked(fs.promises.readFile).mockResolvedValueOnce(
         JSON.stringify(validConfig),
@@ -516,17 +516,17 @@ describe('IdeClient', () => {
 
       expect(result).toEqual(validConfig);
       expect(fs.promises.readFile).toHaveBeenCalledWith(
-        path.join('/tmp/gemini/ide', 'gemini-ide-server-12345-111.json'),
+        path.join('/tmp/alfred/ide', 'alfred-ide-server-12345-111.json'),
         'utf8',
       );
       expect(fs.promises.readFile).not.toHaveBeenCalledWith(
-        path.join('/tmp/gemini/ide', 'not-a-config-file.txt'),
+        path.join('/tmp/alfred/ide', 'not-a-config-file.txt'),
         'utf8',
       );
     });
 
     it('should match env port string to a number port in the config', async () => {
-      process.env['GEMINI_CLI_IDE_SERVER_PORT'] = '3333';
+      process.env['ALFRED_CLI_IDE_SERVER_PORT'] = '3333';
       const config1 = { port: 1111, workspacePath: '/test/workspace' };
       const config2 = { port: 3333, workspacePath: '/test/workspace2' };
       vi.mocked(fs.promises.readFile).mockRejectedValueOnce(
@@ -537,8 +537,8 @@ describe('IdeClient', () => {
           (path: fs.PathLike) => Promise<string[]>
         >
       ).mockResolvedValue([
-        'gemini-ide-server-12345-111.json',
-        'gemini-ide-server-12345-222.json',
+        'alfred-ide-server-12345-111.json',
+        'alfred-ide-server-12345-222.json',
       ]);
       vi.mocked(fs.promises.readFile)
         .mockResolvedValueOnce(JSON.stringify(config1))

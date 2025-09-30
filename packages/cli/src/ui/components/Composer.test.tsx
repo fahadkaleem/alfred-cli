@@ -22,7 +22,7 @@ vi.mock('../contexts/VimModeContext.js', () => ({
     vimMode: 'NORMAL',
   })),
 }));
-import { ApprovalMode } from '@google/gemini-cli-core';
+import { ApprovalMode } from '@alfred/alfred-cli-core';
 import { StreamingState } from '../types.js';
 
 // Mock child components
@@ -110,7 +110,7 @@ const createMockUIState = (overrides: Partial<UIState> = {}): UIState =>
     ctrlDPressedOnce: false,
     showEscapePrompt: false,
     ideContextState: null,
-    geminiMdFileCount: 0,
+    alfredMdFileCount: 0,
     showToolDescriptions: false,
     filteredConsoleMessages: [],
     sessionStats: {

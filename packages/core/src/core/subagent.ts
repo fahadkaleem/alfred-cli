@@ -19,7 +19,7 @@ import type {
   FunctionDeclaration,
 } from '@google/genai';
 import { Type } from '@google/genai';
-import { GeminiChat, StreamEventType } from './geminiChat.js';
+import { AlfredChat, StreamEventType } from './alfredChat.js';
 
 /**
  * @fileoverview Defines the configuration interfaces for a subagent.
@@ -646,7 +646,7 @@ export class SubAgentScope {
 
       this.runtimeContext.setModel(this.modelConfig.model);
 
-      return new GeminiChat(
+      return new AlfredChat(
         this.runtimeContext,
         generationConfig,
         start_history,

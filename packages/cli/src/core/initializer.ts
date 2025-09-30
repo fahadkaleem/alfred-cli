@@ -10,7 +10,7 @@ import {
   IdeConnectionType,
   logIdeConnection,
   type Config,
-} from '@google/gemini-cli-core';
+} from '@alfred/alfred-cli-core';
 import { type LoadedSettings } from '../config/settings.js';
 import { performInitialAuth } from './auth.js';
 import { validateTheme } from './theme.js';
@@ -19,7 +19,7 @@ export interface InitializationResult {
   authError: string | null;
   themeError: string | null;
   shouldOpenAuthDialog: boolean;
-  geminiMdFileCount: number;
+  alfredMdFileCount: number;
 }
 
 /**
@@ -52,6 +52,6 @@ export async function initializeApp(
     authError,
     themeError,
     shouldOpenAuthDialog,
-    geminiMdFileCount: config.getGeminiMdFileCount(),
+    alfredMdFileCount: config.getAlfredMdFileCount(),
   };
 }

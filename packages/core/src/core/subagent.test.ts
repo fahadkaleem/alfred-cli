@@ -21,7 +21,7 @@ import type {
 } from './subagent.js';
 import { Config } from '../config/config.js';
 import type { ConfigParameters } from '../config/config.js';
-import { GeminiChat, StreamEventType } from './geminiChat.js';
+import { AlfredChat, StreamEventType } from './alfredChat.js';
 import { createContentGenerator } from './contentGenerator.js';
 import { getEnvironmentContext } from '../utils/environmentContext.js';
 import { executeToolCall } from './nonInteractiveToolExecutor.js';
@@ -37,7 +37,7 @@ import type {
 } from '@google/genai';
 import { ToolErrorType } from '../tools/tool-error.js';
 
-vi.mock('./geminiChat.js');
+vi.mock('./alfredChat.js');
 vi.mock('./contentGenerator.js');
 vi.mock('../utils/environmentContext.js');
 vi.mock('./nonInteractiveToolExecutor.js');
@@ -149,11 +149,11 @@ describe('subagent.ts', () => {
 
       mockSendMessageStream = vi.fn();
       // We mock the implementation of the constructor.
-      vi.mocked(GeminiChat).mockImplementation(
+      vi.mocked(AlfredChat).mockImplementation(
         () =>
           ({
             sendMessageStream: mockSendMessageStream,
-          }) as unknown as GeminiChat,
+          }) as unknown as AlfredChat,
       );
     });
 
@@ -165,7 +165,7 @@ describe('subagent.ts', () => {
     const getGenerationConfigFromMock = (
       callIndex = 0,
     ): GenerateContentConfig => {
-      const callArgs = vi.mocked(GeminiChat).mock.calls[callIndex];
+      const callArgs = vi.mocked(AlfredChat).mock.calls[callIndex];
       const generationConfig = callArgs?.[1];
       // Ensure it's defined before proceeding
       expect(generationConfig).toBeDefined();
@@ -303,10 +303,10 @@ describe('subagent.ts', () => {
     });
 
     describe('runNonInteractive - Initialization and Prompting', () => {
-      it('should correctly template the system prompt and initialize GeminiChat', async () => {
+      it('should correctly template the system prompt and initialize AlfredChat', async () => {
         const { config } = await createMockConfig();
 
-        vi.mocked(GeminiChat).mockClear();
+        vi.mocked(AlfredChat).mockClear();
 
         const promptConfig: PromptConfig = {
           systemPrompt: 'Hello ${name}, your task is ${task}.',
@@ -328,9 +328,9 @@ describe('subagent.ts', () => {
 
         await scope.runNonInteractive(context);
 
-        // Check if GeminiChat was initialized correctly by the subagent
-        expect(GeminiChat).toHaveBeenCalledTimes(1);
-        const callArgs = vi.mocked(GeminiChat).mock.calls[0];
+        // Check if AlfredChat was initialized correctly by the subagent
+        expect(AlfredChat).toHaveBeenCalledTimes(1);
+        const callArgs = vi.mocked(AlfredChat).mock.calls[0];
 
         // Check Generation Config
         const generationConfig = getGenerationConfigFromMock();
@@ -357,7 +357,7 @@ describe('subagent.ts', () => {
 
       it('should include output instructions in the system prompt when outputs are defined', async () => {
         const { config } = await createMockConfig();
-        vi.mocked(GeminiChat).mockClear();
+        vi.mocked(AlfredChat).mockClear();
 
         const promptConfig: PromptConfig = { systemPrompt: 'Do the task.' };
         const outputConfig: OutputConfig = {
@@ -395,7 +395,7 @@ describe('subagent.ts', () => {
 
       it('should use initialMessages instead of systemPrompt if provided', async () => {
         const { config } = await createMockConfig();
-        vi.mocked(GeminiChat).mockClear();
+        vi.mocked(AlfredChat).mockClear();
 
         const initialMessages: Content[] = [
           { role: 'user', parts: [{ text: 'Hi' }] },
@@ -416,7 +416,7 @@ describe('subagent.ts', () => {
 
         await scope.runNonInteractive(context);
 
-        const callArgs = vi.mocked(GeminiChat).mock.calls[0];
+        const callArgs = vi.mocked(AlfredChat).mock.calls[0];
         const generationConfig = getGenerationConfigFromMock();
         const history = callArgs[2];
 

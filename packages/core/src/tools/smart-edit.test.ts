@@ -63,7 +63,7 @@ describe('SmartEditTool', () => {
   let tempDir: string;
   let rootDir: string;
   let mockConfig: Config;
-  let geminiClient: any;
+  let alfredClient: any;
   let baseLlmClient: BaseLlmClient;
 
   beforeEach(() => {
@@ -72,7 +72,7 @@ describe('SmartEditTool', () => {
     rootDir = path.join(tempDir, 'root');
     fs.mkdirSync(rootDir);
 
-    geminiClient = {
+    alfredClient = {
       generateJson: mockGenerateJson,
     };
 
@@ -81,7 +81,7 @@ describe('SmartEditTool', () => {
     } as unknown as BaseLlmClient;
 
     mockConfig = {
-      getGeminiClient: vi.fn().mockReturnValue(geminiClient),
+      getGeminiClient: vi.fn().mockReturnValue(alfredClient),
       getBaseLlmClient: vi.fn().mockReturnValue(baseLlmClient),
       getTargetDir: () => rootDir,
       getApprovalMode: vi.fn(),
@@ -102,8 +102,8 @@ describe('SmartEditTool', () => {
       getUserAgent: () => 'test-agent',
       getUserMemory: () => '',
       setUserMemory: vi.fn(),
-      getGeminiMdFileCount: () => 0,
-      setGeminiMdFileCount: vi.fn(),
+      getAlfredMdFileCount: () => 0,
+      setAlfredMdFileCount: vi.fn(),
       getToolRegistry: () => ({}) as any,
     } as unknown as Config;
 
