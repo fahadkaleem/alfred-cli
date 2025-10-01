@@ -702,3 +702,137 @@ export class ExtensionDisableEvent implements BaseTelemetryEvent {
     this.setting_scope = settingScope;
   }
 }
+
+export class ConversationRequestEvent implements BaseTelemetryEvent {
+  'event.name': 'conversation_request';
+  'event.timestamp': string;
+  provider: string;
+  conversation_id: string;
+  turn_number: number;
+  prompt_id: string;
+  content: unknown;
+  tools?: unknown;
+  tool_format: string;
+
+  constructor(
+    provider: string,
+    conversation_id: string,
+    turn_number: number,
+    prompt_id: string,
+    content: unknown,
+    tools?: unknown,
+    tool_format: string = 'default',
+  ) {
+    this['event.name'] = 'conversation_request';
+    this['event.timestamp'] = new Date().toISOString();
+    this.provider = provider;
+    this.conversation_id = conversation_id;
+    this.turn_number = turn_number;
+    this.prompt_id = prompt_id;
+    this.content = content;
+    this.tools = tools;
+    this.tool_format = tool_format;
+  }
+}
+
+export class ConversationResponseEvent implements BaseTelemetryEvent {
+  'event.name': 'conversation_response';
+  'event.timestamp': string;
+  provider: string;
+  conversation_id: string;
+  turn_number: number;
+  prompt_id: string;
+  content: string;
+  duration: number;
+  success: boolean;
+  error?: string;
+
+  constructor(
+    provider: string,
+    conversation_id: string,
+    turn_number: number,
+    prompt_id: string,
+    content: string,
+    duration: number,
+    success: boolean,
+    error?: string,
+  ) {
+    this['event.name'] = 'conversation_response';
+    this['event.timestamp'] = new Date().toISOString();
+    this.provider = provider;
+    this.conversation_id = conversation_id;
+    this.turn_number = turn_number;
+    this.prompt_id = prompt_id;
+    this.content = content;
+    this.duration = duration;
+    this.success = success;
+    this.error = error;
+  }
+}
+
+export class TokenUsageEvent implements BaseTelemetryEvent {
+  'event.name': 'token_usage';
+  'event.timestamp': string;
+  provider: string;
+  conversation_id: string;
+  input_tokens: number;
+  output_tokens: number;
+  cached_tokens: number;
+  tool_tokens: number;
+  thought_tokens: number;
+  total_tokens: number;
+
+  constructor(
+    provider: string,
+    conversation_id: string,
+    input_tokens: number,
+    output_tokens: number,
+    cached_tokens: number,
+    tool_tokens: number,
+    thought_tokens: number,
+    total_tokens: number,
+  ) {
+    this['event.name'] = 'token_usage';
+    this['event.timestamp'] = new Date().toISOString();
+    this.provider = provider;
+    this.conversation_id = conversation_id;
+    this.input_tokens = input_tokens;
+    this.output_tokens = output_tokens;
+    this.cached_tokens = cached_tokens;
+    this.tool_tokens = tool_tokens;
+    this.thought_tokens = thought_tokens;
+    this.total_tokens = total_tokens;
+  }
+}
+
+export class ProviderSwitchEvent implements BaseTelemetryEvent {
+  'event.name': 'provider_switch';
+  'event.timestamp': string;
+  from_provider: string;
+  to_provider: string;
+  reason?: string;
+
+  constructor(from_provider: string, to_provider: string, reason?: string) {
+    this['event.name'] = 'provider_switch';
+    this['event.timestamp'] = new Date().toISOString();
+    this.from_provider = from_provider;
+    this.to_provider = to_provider;
+    this.reason = reason;
+  }
+}
+
+export class ProviderCapabilityEvent implements BaseTelemetryEvent {
+  'event.name': 'provider_capability';
+  'event.timestamp': string;
+  provider: string;
+  capability: string;
+  supported: boolean;
+
+  constructor(provider: string, capability: string, supported: boolean) {
+    this['event.name'] = 'provider_capability';
+    this['event.timestamp'] = new Date().toISOString();
+    this.provider = provider;
+    this.capability = capability;
+    this.supported = supported;
+  }
+}

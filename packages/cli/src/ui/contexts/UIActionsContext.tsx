@@ -32,6 +32,8 @@ export interface UIActions {
   exitPrivacyNotice: () => void;
   closeSettingsDialog: () => void;
   closeModelDialog: () => void;
+  closeProviderDialog: () => void;
+  handleProviderSelect?: (providerName: string) => Promise<void>;
   closePermissionsDialog: () => void;
   setShellModeActive: (value: boolean) => void;
   vimHandleInput: (key: Key) => boolean;

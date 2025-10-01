@@ -1,0 +1,212 @@
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import type {
+  SlashCommand,
+  CommandContext,
+  OpenDialogActionReturn,
+  MessageActionReturn,
+} from './types.js';
+import { CommandKind } from './types.js';
+import { getProviderManager } from '../../providers/providerManagerInstance.js';
+import { MessageType } from '../types.js';
+import { AuthType } from '@alfred/alfred-cli-core';
+import type { SettingsService } from '@alfred/alfred-cli-core/src/settings/SettingsService.js';
+
+/**
+ * Get SettingsService instance for provider switching
+ */
+async function getSettingsServiceForProvider(): Promise<SettingsService> {
+  try {
+    const { getSettingsService } = await import('@alfred/alfred-cli-core');
+
+    return getSettingsService();
+  } catch (error) {
+    if (process.env['DEBUG']) {
+      console.warn(
+        'Failed to get SettingsService for provider switching:',
+        error,
+      );
+    }
+    throw error;
+  }
+}
+
+export const providerCommand: SlashCommand = {
+  name: 'provider',
+  description:
+    'switch between different AI providers (openai, anthropic, etc.)',
+  kind: CommandKind.BUILT_IN,
+  action: async (
+    context: CommandContext,
+    args: string,
+  ): Promise<OpenDialogActionReturn | MessageActionReturn | void> => {
+    const providerManager = getProviderManager();
+    const providerName = args?.trim();
+
+    if (!providerName) {
+      // Open interactive provider selection dialog
+      return {
+        type: 'dialog',
+        dialog: 'provider',
+      };
+    }
+
+    try {
+      const currentProvider = providerManager.getActiveProviderName();
+
+      // Handle switching to same provider
+      if (providerName === currentProvider) {
+        return {
+          type: 'message',
+          messageType: 'info',
+          content: `Already using provider: ${currentProvider}`,
+        };
+      }
+
+      const fromProvider = currentProvider || 'none';
+
+      // Use conversion context to track available models
+      // const conversionContextJSON = {
+      //   availableModels: await providerManager.getAllAvailableModels(),
+      // };
+
+      // Note: Ephemeral settings are managed by SettingsService, not Config
+      // Provider switching will clear any cached auth state via the provider itself
+
+      // Get the target provider to clear its caches before activating it
+      // This is important for providers like qwen that might have stale auth
+      // Access the providers Map directly since there's no getAllProviders method
+      const providersMap = (
+        providerManager as unknown as { providers?: Map<string, unknown> }
+      ).providers;
+      if (providersMap && providersMap instanceof Map) {
+        const targetProvider = providersMap.get(providerName) as
+          | { clearState?: () => void }
+          | undefined;
+        if (targetProvider && targetProvider.clearState) {
+          targetProvider.clearState();
+        }
+      }
+
+      // Switch provider (this will clear state from previous provider via ProviderManager)
+      providerManager.setActiveProvider(providerName);
+
+      // Also clear base URL on the new provider if it has the method
+      const newProvider = providerManager.getActiveProvider();
+      if (newProvider && newProvider.setBaseUrl) {
+        newProvider.setBaseUrl(undefined);
+      }
+
+      // Use SettingsService for provider switching
+      try {
+        const settingsService = await getSettingsServiceForProvider();
+        await settingsService.switchProvider(providerName);
+
+        // Also set the default model for this provider
+        const activeProvider = providerManager.getActiveProvider();
+        const defaultModel = activeProvider.getDefaultModel();
+        settingsService.setProviderSetting(providerName, 'model', defaultModel);
+
+        // Don't return early - continue with the rest of the setup
+      } catch (error) {
+        if (process.env['DEBUG']) {
+          console.warn(
+            'SettingsService provider switch failed, falling back to legacy method:',
+            error,
+          );
+        }
+      }
+
+      // Update config if available
+      if (context.services.config) {
+        // Clear model parameters on the new provider
+        const newProvider = providerManager.getActiveProvider();
+        if (newProvider.setModelParams) {
+          newProvider.setModelParams({});
+        }
+
+        // Get the active provider and ensure it uses a valid default model
+        const activeProvider = providerManager.getActiveProvider();
+
+        // Get the default model from the provider
+        const defaultModel = activeProvider.getDefaultModel();
+
+        // Set base URL for specific providers directly on the provider
+        if (providerName === 'qwen') {
+          const baseUrl = 'https://portal.qwen.ai/v1';
+          // Set it directly on the provider if it has the method
+          if (
+            'setBaseUrl' in activeProvider &&
+            typeof activeProvider.setBaseUrl === 'function'
+          ) {
+            const providerWithSetBaseUrl = activeProvider as {
+              setBaseUrl: (url: string) => void;
+            };
+            providerWithSetBaseUrl.setBaseUrl(baseUrl);
+          }
+        }
+
+        // Set the model on both the provider and config
+        if (defaultModel) {
+          if (activeProvider.setModel) {
+            activeProvider.setModel(defaultModel);
+          }
+          context.services.config.setModel(defaultModel);
+        }
+
+        // With HistoryService and ContentConverters, we can now keep conversation history
+        // when switching providers as the conversion handles format differences
+
+        // Keep the current auth type - auth only affects GeminiProvider internally
+        const currentAuthType =
+          context.services.config.getContentGeneratorConfig()?.authType ||
+          AuthType.LOGIN_WITH_GOOGLE;
+
+        // Refresh auth to ensure provider manager is attached
+        await context.services.config.refreshAuth(currentAuthType);
+
+        // Show info about API key if needed for non-Gemini providers
+        if (providerName !== 'gemini') {
+          context.ui.addItem(
+            {
+              type: MessageType.INFO,
+              text: `Switched to ${providerName}. Use /key to set API key if needed.`,
+            },
+            Date.now(),
+          );
+        }
+
+        // Note: We no longer clear UI history when switching providers
+        // The whole point of provider switching is to maintain conversation context
+        // Tool call ID conversion is handled by the content converters
+      }
+
+      // Trigger payment mode check if available
+      const extendedContext = context as CommandContext & {
+        checkPaymentModeChange?: (forcePreviousProvider?: string) => void;
+      };
+      if (extendedContext.checkPaymentModeChange) {
+        setTimeout(
+          () => extendedContext.checkPaymentModeChange!(fromProvider),
+          100,
+        );
+      }
+
+      return {
+        type: 'message',
+        messageType: 'info',
+        content: `Switched from ${fromProvider} to ${providerName}`,
+      };
+    } catch (error) {
+      return {
+        type: 'message',
+        messageType: 'error',
+        content: `Failed to switch provider: ${error instanceof Error ? error['message'] : String(error)}`,
+      };
+    }
+  },
+};

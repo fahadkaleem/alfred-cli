@@ -1,0 +1,137 @@
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import { useCallback, useState } from 'react';
+import { getProviderManager } from '../../providers/providerManagerInstance.js';
+import { MessageType } from '../types.js';
+import { useAppDispatch } from '../contexts/AppDispatchContext.js';
+import type { AppState } from '../reducers/appReducer.js';
+import { AuthType, type Config } from '@alfred/alfred-cli-core';
+
+interface UseProviderDialogParams {
+  addMessage: (msg: {
+    type: MessageType;
+    content: string;
+    timestamp: Date;
+  }) => void;
+  onProviderChange?: () => void;
+  appState: AppState;
+  config: Config;
+  onClear?: () => void;
+}
+
+export const useProviderDialog = ({
+  addMessage,
+  onProviderChange,
+  appState,
+  config,
+  onClear,
+}: UseProviderDialogParams) => {
+  const appDispatch = useAppDispatch();
+  const showDialog = appState.openDialogs.provider;
+  const [providers, setProviders] = useState<string[]>([]);
+  const [currentProvider, setCurrentProvider] = useState<string>('');
+
+  const openDialog = useCallback(() => {
+    try {
+      const providerManager = getProviderManager();
+      setProviders(providerManager.listProviders());
+      setCurrentProvider(providerManager.getActiveProviderName());
+      appDispatch({ type: 'OPEN_DIALOG', payload: 'provider' });
+    } catch (e) {
+      addMessage({
+        type: MessageType.ERROR,
+        content: `Failed to load providers: ${e instanceof Error ? e.message : String(e)}`,
+        timestamp: new Date(),
+      });
+    }
+  }, [addMessage, appDispatch]);
+
+  const closeDialog = useCallback(
+    () => appDispatch({ type: 'CLOSE_DIALOG', payload: 'provider' }),
+    [appDispatch],
+  );
+
+  const handleSelect = useCallback(
+    async (providerName: string) => {
+      try {
+        const providerManager = getProviderManager();
+        const prev = providerManager.getActiveProviderName();
+
+        // Switch provider first
+        providerManager.setActiveProvider(providerName);
+
+        // Update model to match the new provider's default
+        const newModel =
+          providerManager.getActiveProvider().getCurrentModel?.() || '';
+        config.setModel(newModel);
+
+        // With HistoryService and ContentConverters, we can now keep conversation history
+        // when switching providers as the conversion handles format differences
+
+        // Determine appropriate auth type
+        let authType: AuthType;
+
+        if (providerName === 'gemini') {
+          // When switching TO Gemini, determine appropriate auth
+          // Use appropriate Gemini auth
+          if (process.env['GOOGLE_APPLICATION_CREDENTIALS']) {
+            authType = AuthType.USE_VERTEX_AI;
+          } else if (process.env['GEMINI_API_KEY']) {
+            authType = AuthType.USE_GEMINI;
+          } else {
+            authType = AuthType.LOGIN_WITH_GOOGLE; // Default to OAuth
+          }
+        } else {
+          // When switching to non-Gemini provider, use Gemini auth
+          authType = AuthType.USE_GEMINI;
+        }
+
+        // Refresh auth with the appropriate type
+        await config.refreshAuth(authType);
+
+        // Clear UI history to prevent tool call ID mismatches
+        if (onClear) {
+          onClear();
+        }
+
+        addMessage({
+          type: MessageType.INFO,
+          content: `Switched from ${prev || 'none'} to ${providerName}`,
+          timestamp: new Date(),
+        });
+
+        // Show additional info for non-Gemini providers
+        if (providerName !== 'gemini') {
+          addMessage({
+            type: MessageType.INFO,
+            content: `Use /key to set API key if needed.`,
+            timestamp: new Date(),
+          });
+        }
+
+        onProviderChange?.();
+      } catch (e) {
+        addMessage({
+          type: MessageType.ERROR,
+          content: `Failed to switch provider: ${e instanceof Error ? e.message : String(e)}`,
+          timestamp: new Date(),
+        });
+      }
+      appDispatch({ type: 'CLOSE_DIALOG', payload: 'provider' });
+    },
+    [addMessage, onProviderChange, appDispatch, config, onClear],
+  );
+
+  return {
+    showDialog,
+    openDialog,
+    closeDialog,
+    providers,
+    currentProvider,
+    handleSelect,
+  };
+};

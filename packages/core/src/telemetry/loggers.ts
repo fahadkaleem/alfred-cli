@@ -816,3 +816,135 @@ export function logExtensionDisable(
   };
   logger.emit(logRecord);
 }
+
+export function logConversationRequest(
+  config: Config,
+  event: import('./types.js').ConversationRequestEvent,
+): void {
+  if (!config.getConversationLoggingEnabled()) return;
+
+  const attributes: LogAttributes = {
+    ...getCommonAttributes(config),
+    'event.name': 'conversation_request',
+    'event.timestamp': event['event.timestamp'],
+    provider: event.provider,
+    conversation_id: event.conversation_id,
+    turn_number: event.turn_number,
+    prompt_id: event.prompt_id,
+    tool_format: event.tool_format,
+  };
+
+  const logger = logs.getLogger(SERVICE_NAME);
+  const logRecord: LogRecord = {
+    body: `Conversation request to ${event.provider}`,
+    attributes,
+  };
+  logger.emit(logRecord);
+}
+
+export function logConversationResponse(
+  config: Config,
+  event: import('./types.js').ConversationResponseEvent,
+): void {
+  if (!config.getConversationLoggingEnabled()) return;
+
+  const attributes: LogAttributes = {
+    ...getCommonAttributes(config),
+    'event.name': 'conversation_response',
+    'event.timestamp': event['event.timestamp'],
+    provider: event.provider,
+    conversation_id: event.conversation_id,
+    turn_number: event.turn_number,
+    prompt_id: event.prompt_id,
+    duration: event.duration,
+    success: event.success,
+  };
+
+  if (event.error) {
+    attributes['error'] = event.error;
+  }
+
+  const logger = logs.getLogger(SERVICE_NAME);
+  const logRecord: LogRecord = {
+    body: `Conversation response from ${event.provider}. Success: ${event.success}. Duration: ${event.duration}ms`,
+    attributes,
+  };
+  logger.emit(logRecord);
+}
+
+export function logTokenUsage(
+  config: Config,
+  event: import('./types.js').TokenUsageEvent,
+): void {
+  if (!config.getConversationLoggingEnabled()) return;
+
+  const attributes: LogAttributes = {
+    ...getCommonAttributes(config),
+    'event.name': 'token_usage',
+    'event.timestamp': event['event.timestamp'],
+    provider: event.provider,
+    conversation_id: event.conversation_id,
+    input_tokens: event.input_tokens,
+    output_tokens: event.output_tokens,
+    cached_tokens: event.cached_tokens,
+    tool_tokens: event.tool_tokens,
+    thought_tokens: event.thought_tokens,
+    total_tokens: event.total_tokens,
+  };
+
+  const logger = logs.getLogger(SERVICE_NAME);
+  const logRecord: LogRecord = {
+    body: `Token usage for ${event.provider}. Total: ${event.total_tokens}`,
+    attributes,
+  };
+  logger.emit(logRecord);
+}
+
+export function logProviderSwitch(
+  config: Config,
+  event: import('./types.js').ProviderSwitchEvent,
+): void {
+  if (!isTelemetrySdkInitialized()) return;
+
+  const attributes: LogAttributes = {
+    ...getCommonAttributes(config),
+    'event.name': 'provider_switch',
+    'event.timestamp': event['event.timestamp'],
+    from_provider: event.from_provider,
+    to_provider: event.to_provider,
+  };
+
+  if (event.reason) {
+    attributes['reason'] = event.reason;
+  }
+
+  const logger = logs.getLogger(SERVICE_NAME);
+  const logRecord: LogRecord = {
+    body: `Provider switched from ${event.from_provider} to ${event.to_provider}`,
+    attributes,
+  };
+  logger.emit(logRecord);
+}
+
+export function logProviderCapability(
+  config: Config,
+  event: import('./types.js').ProviderCapabilityEvent,
+): void {
+  if (!isTelemetrySdkInitialized()) return;
+
+  const attributes: LogAttributes = {
+    ...getCommonAttributes(config),
+    'event.name': 'provider_capability',
+    'event.timestamp': event['event.timestamp'],
+    provider: event.provider,
+    capability: event.capability,
+    supported: event.supported,
+  };
+
+  const logger = logs.getLogger(SERVICE_NAME);
+  const logRecord: LogRecord = {
+    body: `Provider ${event.provider} capability ${event.capability}: ${event.supported ? 'supported' : 'not supported'}`,
+    attributes,
+  };
+  logger.emit(logRecord);
+}

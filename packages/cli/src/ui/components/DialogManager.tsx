@@ -20,6 +20,7 @@ import { WorkspaceMigrationDialog } from './WorkspaceMigrationDialog.js';
 import { ProQuotaDialog } from './ProQuotaDialog.js';
 import { PermissionsModifyTrustDialog } from './PermissionsModifyTrustDialog.js';
 import { ModelDialog } from './ModelDialog.js';
+import { ProviderDialog } from './ProviderDialog.js';
 import { theme } from '../semantic-colors.js';
 import { useUIState } from '../contexts/UIStateContext.js';
 import { useUIActions } from '../contexts/UIActionsContext.js';
@@ -149,6 +150,18 @@ export const DialogManager = ({
   }
   if (uiState.isModelDialogOpen) {
     return <ModelDialog onClose={uiActions.closeModelDialog} />;
+  }
+  if (uiState.isProviderDialogOpen) {
+    return (
+      <Box flexDirection="column">
+        <ProviderDialog
+          providers={uiState.providers || []}
+          currentProvider={uiState.currentProvider || ''}
+          onSelect={uiActions.handleProviderSelect || (() => {})}
+          onClose={uiActions.closeProviderDialog}
+        />
+      </Box>
+    );
   }
   if (uiState.isAuthenticating) {
     return (

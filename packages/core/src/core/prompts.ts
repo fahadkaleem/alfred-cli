@@ -340,6 +340,16 @@ Your core function is efficient and safe assistance. Balance extreme conciseness
 }
 
 /**
+ * Async wrapper for getCoreSystemPrompt.
+ * Returns the same result as the synchronous version.
+ */
+export async function getCoreSystemPromptAsync(
+  userMemory?: string,
+): Promise<string> {
+  return getCoreSystemPrompt(userMemory);
+}
+
+/**
  * Provides the system prompt for the history compression process.
  * This prompt instructs the model to act as a specialized state manager,
  * think in a scratchpad, and produce a structured XML summary.

@@ -73,6 +73,12 @@ export class FatalCancellationError extends FatalError {
 export class ForbiddenError extends Error {}
 export class UnauthorizedError extends Error {}
 export class BadRequestError extends Error {}
+export class NotYetImplemented extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'NotYetImplemented';
+  }
+}
 
 interface ResponseData {
   error?: {

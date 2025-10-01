@@ -11,6 +11,7 @@ import {
   useEffect,
   useRef,
   useLayoutEffect,
+  useReducer,
 } from 'react';
 import { type DOMElement, measureElement } from 'ink';
 import { App } from './App.js';
@@ -90,6 +91,13 @@ import { useSessionStats } from './contexts/SessionContext.js';
 import { useGitBranchName } from './hooks/useGitBranchName.js';
 import { useExtensionUpdates } from './hooks/useExtensionUpdates.js';
 import { ShellFocusContext } from './contexts/ShellFocusContext.js';
+import {
+  appReducer,
+  initialAppState,
+  type AppState,
+} from './reducers/appReducer.js';
+import { AppDispatchProvider } from './contexts/AppDispatchContext.js';
+import { useProviderDialog } from './hooks/useProviderDialog.js';
 
 const CTRL_EXIT_PROMPT_DURATION_MS = 1000;
 
@@ -124,8 +132,10 @@ const SHELL_WIDTH_FRACTION = 0.89;
  */
 const SHELL_HEIGHT_PADDING = 10;
 
-export const AppContainer = (props: AppContainerProps) => {
-  const { settings, config, initializationResult } = props;
+const AppContainerInner = (
+  props: AppContainerProps & { appState: AppState },
+) => {
+  const { settings, config, initializationResult, appState } = props;
   const historyManager = useHistory();
   useMemoryMonitor(historyManager);
   const [corgiMode, setCorgiMode] = useState(false);
@@ -433,6 +443,23 @@ Logging in with Google... Please restart Gemini CLI to continue.
     useModelCommand();
 
   const {
+    showDialog: isProviderDialogOpen,
+    openDialog: openProviderDialog,
+    handleSelect: handleProviderSelect,
+    closeDialog: closeProviderDialog,
+    providers,
+    currentProvider,
+  } = useProviderDialog({
+    addMessage: (msg) =>
+      historyManager.addItem(
+        { type: msg.type, text: msg.content },
+        msg.timestamp.getTime(),
+      ),
+    appState,
+    config,
+  });
+
+  const {
     showWorkspaceMigrationDialog,
     workspaceExtensions,
     onWorkspaceMigrationDialogOpen,
@@ -449,6 +476,7 @@ Logging in with Google... Please restart Gemini CLI to continue.
       openPrivacyNotice: () => setShowPrivacyNotice(true),
       openSettingsDialog,
       openModelDialog,
+      openProviderDialog,
       openPermissionsDialog,
       quit: (messages: HistoryItem[]) => {
         setQuittingMessages(messages);
@@ -468,6 +496,7 @@ Logging in with Google... Please restart Gemini CLI to continue.
       openEditorDialog,
       openSettingsDialog,
       openModelDialog,
+      openProviderDialog,
       setQuittingMessages,
       setDebugMessage,
       setShowPrivacyNotice,
@@ -1048,6 +1077,7 @@ Logging in with Google... Please restart Gemini CLI to continue.
     isThemeDialogOpen ||
     isSettingsDialogOpen ||
     isModelDialogOpen ||
+    isProviderDialogOpen ||
     isPermissionsDialogOpen ||
     isAuthenticating ||
     isAuthDialogOpen ||
@@ -1079,6 +1109,9 @@ Logging in with Google... Please restart Gemini CLI to continue.
       quittingMessages,
       isSettingsDialogOpen,
       isModelDialogOpen,
+      isProviderDialogOpen,
+      providers,
+      currentProvider,
       isPermissionsDialogOpen,
       slashCommands,
       pendingSlashCommandHistoryItems,
@@ -1158,6 +1191,9 @@ Logging in with Google... Please restart Gemini CLI to continue.
       quittingMessages,
       isSettingsDialogOpen,
       isModelDialogOpen,
+      isProviderDialogOpen,
+      providers,
+      currentProvider,
       isPermissionsDialogOpen,
       slashCommands,
       pendingSlashCommandHistoryItems,
@@ -1237,6 +1273,8 @@ Logging in with Google... Please restart Gemini CLI to continue.
       exitPrivacyNotice: () => setShowPrivacyNotice(false),
       closeSettingsDialog,
       closeModelDialog,
+      closeProviderDialog,
+      handleProviderSelect,
       closePermissionsDialog,
       setShellModeActive,
       vimHandleInput,
@@ -1261,6 +1299,8 @@ Logging in with Google... Please restart Gemini CLI to continue.
       exitEditorDialog,
       closeSettingsDialog,
       closeModelDialog,
+      closeProviderDialog,
+      handleProviderSelect,
       closePermissionsDialog,
       setShellModeActive,
       vimHandleInput,
@@ -1294,5 +1334,15 @@ Logging in with Google... Please restart Gemini CLI to continue.
         </ConfigContext.Provider>
       </UIActionsContext.Provider>
     </UIStateContext.Provider>
+  );
+};
+
+export const AppContainer = (props: AppContainerProps) => {
+  const [appState, appDispatch] = useReducer(appReducer, initialAppState);
+
+  return (
+    <AppDispatchProvider value={appDispatch}>
+      <AppContainerInner {...props} appState={appState} />
+    </AppDispatchProvider>
   );
 };

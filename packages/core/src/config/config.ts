@@ -109,6 +109,15 @@ export interface TelemetrySettings {
   useCollector?: boolean;
 }
 
+export interface RedactionConfig {
+  redactApiKeys: boolean;
+  redactCredentials: boolean;
+  redactFilePaths: boolean;
+  redactUrls: boolean;
+  redactEmails: boolean;
+  redactPersonalInfo: boolean;
+}
+
 export interface OutputSettings {
   format?: OutputFormat;
 }
@@ -1089,6 +1098,25 @@ export class Config {
 
     await registry.discoverAllTools();
     return registry;
+  }
+
+  getRedactionConfig(): RedactionConfig {
+    return {
+      redactApiKeys: true,
+      redactCredentials: true,
+      redactFilePaths: true,
+      redactUrls: false,
+      redactEmails: true,
+      redactPersonalInfo: true,
+    };
+  }
+
+  getConversationLoggingEnabled(): boolean {
+    return false; // Disabled by default
+  }
+
+  getConversationLogPath(): string {
+    return path.join(process.cwd(), '.alfred', 'conversations');
   }
 }
 // Export model constants for use in CLI

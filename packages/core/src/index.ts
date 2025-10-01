@@ -56,6 +56,8 @@ export * from './utils/ignorePatterns.js';
 export * from './utils/partUtils.js';
 export * from './utils/promptIdContext.js';
 export * from './utils/thoughtUtils.js';
+export * from './utils/sanitization.js';
+export * from './utils/secure-browser-launcher.js';
 
 // Export services
 export * from './services/fileDiscoveryService.js';
@@ -102,7 +104,7 @@ export * from './tools/write-todos.js';
 // MCP OAuth
 export { MCPOAuthProvider } from './mcp/oauth-provider.js';
 export type {
-  OAuthToken,
+  OAuthToken as MCPOAuthToken,
   OAuthCredentials,
 } from './mcp/token-storage/types.js';
 export { MCPOAuthTokenStorage } from './mcp/oauth-token-storage.js';
@@ -121,3 +123,27 @@ export { Storage } from './config/storage.js';
 
 // Export test utils
 export * from './test-utils/index.js';
+
+// Export auth modules
+export * from './auth/token-store.js';
+export * from './auth/anthropic-device-flow.js';
+export * from './auth/qwen-device-flow.js';
+export * from './auth/oauth-errors.js';
+export * from './auth/types.js';
+export * from './debug/DebugLogger.js';
+
+// Export settings modules
+export {
+  getSettingsService,
+  resetSettingsService,
+} from './settings/settingsServiceInstance.js';
+export type { SettingsService } from './settings/SettingsService.js';
+export type { ISettingsService } from './settings/types.js';
+
+// Export provider modules
+export * from './providers/ProviderManager.js';
+export * from './providers/openai/OpenAIProvider.js';
+export * from './providers/openai-responses/OpenAIResponsesProvider.js';
+export * from './providers/anthropic/AnthropicProvider.js';
+export * from './providers/gemini/GeminiProvider.js';
+export * from './providers/IProvider.js';
