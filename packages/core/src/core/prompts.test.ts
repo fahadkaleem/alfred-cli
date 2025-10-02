@@ -74,33 +74,6 @@ describe('Core System Prompt (prompts.ts)', () => {
     expect(prompt).toMatchSnapshot(); // Snapshot the combined prompt
   });
 
-  it('should include sandbox-specific instructions when SANDBOX env var is set', () => {
-    vi.stubEnv('SANDBOX', 'true'); // Generic sandbox value
-    const prompt = getCoreSystemPrompt();
-    expect(prompt).toContain('# Sandbox');
-    expect(prompt).not.toContain('# macOS Seatbelt');
-    expect(prompt).not.toContain('# Outside of Sandbox');
-    expect(prompt).toMatchSnapshot();
-  });
-
-  it('should include seatbelt-specific instructions when SANDBOX env var is "sandbox-exec"', () => {
-    vi.stubEnv('SANDBOX', 'sandbox-exec');
-    const prompt = getCoreSystemPrompt();
-    expect(prompt).toContain('# macOS Seatbelt');
-    expect(prompt).not.toContain('# Sandbox');
-    expect(prompt).not.toContain('# Outside of Sandbox');
-    expect(prompt).toMatchSnapshot();
-  });
-
-  it('should include non-sandbox instructions when SANDBOX env var is not set', () => {
-    vi.stubEnv('SANDBOX', undefined); // Ensure it's not set
-    const prompt = getCoreSystemPrompt();
-    expect(prompt).toContain('# Outside of Sandbox');
-    expect(prompt).not.toContain('# Sandbox');
-    expect(prompt).not.toContain('# macOS Seatbelt');
-    expect(prompt).toMatchSnapshot();
-  });
-
   it('should include git instructions when in a git repo', () => {
     vi.stubEnv('SANDBOX', undefined);
     vi.mocked(isGitRepository).mockReturnValue(true);

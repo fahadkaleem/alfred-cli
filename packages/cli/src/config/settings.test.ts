@@ -2055,7 +2055,6 @@ describe('Settings Loading and Merging', () => {
           includeDirectories: ['/src'],
         },
         tools: {
-          sandbox: true,
           exclude: ['toolA'],
         },
         mcp: {
@@ -2093,7 +2092,6 @@ describe('Settings Loading and Merging', () => {
         },
         contextFileName: 'CONTEXT.md',
         includeDirectories: ['/src'],
-        sandbox: true,
         excludeTools: ['toolA'],
         allowMCPServers: ['server1'],
         folderTrust: true,

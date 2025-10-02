@@ -57,18 +57,6 @@ In addition to a project settings file, a project's `.alfred` directory can cont
   - **Default:** `ALFRED.md`
   - **Example:** `"contextFileName": "AGENTS.md"`
 
-- **`bugCommand`** (object):
-  - **Description:** Overrides the default URL for the `/bug` command.
-  - **Default:** `"urlTemplate": "https://github.com/google-gemini/gemini-cli/issues/new?template=bug_report.yml&title={title}&info={info}"`
-  - **Properties:**
-    - **`urlTemplate`** (string): A URL that can contain `{title}` and `{info}` placeholders.
-  - **Example:**
-    ```json
-    "bugCommand": {
-      "urlTemplate": "https://bug.example.com/new?title={title}&info={info}"
-    }
-    ```
-
 - **`fileFiltering`** (object):
   - **Description:** Controls git-aware file filtering behavior for @ commands and file discovery tools.
   - **Default:** `"respectGitIgnore": true, "enableRecursiveFileSearch": true`

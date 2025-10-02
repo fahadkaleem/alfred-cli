@@ -30,17 +30,78 @@ import {
   ensureCorrectEdit,
   ensureCorrectFileContent,
 } from '../utils/editCorrector.js';
-import { DEFAULT_DIFF_OPTIONS, getDiffStat } from './diffOptions.js';
-import type {
-  ModifiableDeclarativeTool,
-  ModifyContext,
-} from './modifiable-tool.js';
-import { IdeClient } from '../ide/ide-client.js';
 import { logFileOperation } from '../telemetry/loggers.js';
 import { FileOperationEvent } from '../telemetry/types.js';
 import { FileOperation } from '../telemetry/metrics.js';
 import { getSpecificMimeType } from '../utils/fileUtils.js';
 import { getLanguageFromFilePath } from '../utils/language-detection.js';
+import type { DiffStat } from './tools.js';
+
+// Diff options (formerly from diffOptions.js)
+const DEFAULT_DIFF_OPTIONS: Diff.PatchOptions = {
+  context: 3,
+  ignoreWhitespace: true,
+};
+
+function getDiffStat(
+  fileName: string,
+  oldStr: string,
+  aiStr: string,
+  userStr: string,
+): DiffStat {
+  const getStats = (patch: Diff.ParsedDiff) => {
+    let addedLines = 0;
+    let removedLines = 0;
+    let addedChars = 0;
+    let removedChars = 0;
+
+    patch.hunks.forEach((hunk: Diff.Hunk) => {
+      hunk.lines.forEach((line: string) => {
+        if (line.startsWith('+')) {
+          addedLines++;
+          addedChars += line.length - 1;
+        } else if (line.startsWith('-')) {
+          removedLines++;
+          removedChars += line.length - 1;
+        }
+      });
+    });
+    return { addedLines, removedLines, addedChars, removedChars };
+  };
+
+  const modelPatch = Diff.structuredPatch(
+    fileName,
+    fileName,
+    oldStr,
+    aiStr,
+    'Current',
+    'Proposed',
+    DEFAULT_DIFF_OPTIONS,
+  );
+  const modelStats = getStats(modelPatch);
+
+  const userPatch = Diff.structuredPatch(
+    fileName,
+    fileName,
+    aiStr,
+    userStr,
+    'Proposed',
+    'User',
+    DEFAULT_DIFF_OPTIONS,
+  );
+  const userStats = getStats(userPatch);
+
+  return {
+    model_added_lines: modelStats.addedLines,
+    model_removed_lines: modelStats.removedLines,
+    model_added_chars: modelStats.addedChars,
+    model_removed_chars: modelStats.removedChars,
+    user_added_lines: userStats.addedLines,
+    user_removed_lines: userStats.removedLines,
+    user_added_chars: userStats.addedChars,
+    user_removed_chars: userStats.removedChars,
+  };
+}
 
 /**
  * Parameters for the WriteFile tool
@@ -194,12 +255,6 @@ class WriteFileToolInvocation extends BaseToolInvocation<
       DEFAULT_DIFF_OPTIONS,
     );
 
-    const ideClient = await IdeClient.getInstance();
-    const ideConfirmation =
-      this.config.getIdeMode() && ideClient.isDiffingEnabled()
-        ? ideClient.openDiff(this.params.file_path, correctedContent)
-        : undefined;
-
     const confirmationDetails: ToolEditConfirmationDetails = {
       type: 'edit',
       title: `Confirm Write: ${shortenPath(relativePath)}`,
@@ -212,15 +267,7 @@ class WriteFileToolInvocation extends BaseToolInvocation<
         if (outcome === ToolConfirmationOutcome.ProceedAlways) {
           this.config.setApprovalMode(ApprovalMode.AUTO_EDIT);
         }
-
-        if (ideConfirmation) {
-          const result = await ideConfirmation;
-          if (result.status === 'accepted' && result.content) {
-            this.params.content = result.content;
-          }
-        }
       },
-      ideConfirmation,
     };
     return confirmationDetails;
   }
@@ -385,10 +432,10 @@ class WriteFileToolInvocation extends BaseToolInvocation<
 /**
  * Implementation of the WriteFile tool logic
  */
-export class WriteFileTool
-  extends BaseDeclarativeTool<WriteFileToolParams, ToolResult>
-  implements ModifiableDeclarativeTool<WriteFileToolParams>
-{
+export class WriteFileTool extends BaseDeclarativeTool<
+  WriteFileToolParams,
+  ToolResult
+> {
   static readonly Name: string = 'write_file';
 
   constructor(private readonly config: Config) {
@@ -458,44 +505,5 @@ export class WriteFileTool
     params: WriteFileToolParams,
   ): ToolInvocation<WriteFileToolParams, ToolResult> {
     return new WriteFileToolInvocation(this.config, params);
-  }
-
-  getModifyContext(
-    abortSignal: AbortSignal,
-  ): ModifyContext<WriteFileToolParams> {
-    return {
-      getFilePath: (params: WriteFileToolParams) => params.file_path,
-      getCurrentContent: async (params: WriteFileToolParams) => {
-        const correctedContentResult = await getCorrectedFileContent(
-          this.config,
-          params.file_path,
-          params.content,
-          abortSignal,
-        );
-        return correctedContentResult.originalContent;
-      },
-      getProposedContent: async (params: WriteFileToolParams) => {
-        const correctedContentResult = await getCorrectedFileContent(
-          this.config,
-          params.file_path,
-          params.content,
-          abortSignal,
-        );
-        return correctedContentResult.correctedContent;
-      },
-      createUpdatedParams: (
-        _oldContent: string,
-        modifiedProposedContent: string,
-        originalParams: WriteFileToolParams,
-      ) => {
-        const content = originalParams.content;
-        return {
-          ...originalParams,
-          ai_proposed_content: content,
-          content: modifiedProposedContent,
-          modified_by_user: true,
-        };
-      },
-    };
   }
 }

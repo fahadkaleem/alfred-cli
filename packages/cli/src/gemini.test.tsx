@@ -136,8 +136,6 @@ describe('gemini.tsx main function', () => {
     const { relaunchAppInChildProcess } = await import('./utils/relaunch.js');
     const { loadCliConfig } = await import('./config/config.js');
     const { loadSettings } = await import('./config/settings.js');
-    const { loadSandboxConfig } = await import('./config/sandboxConfig.js');
-    vi.mocked(loadSandboxConfig).mockResolvedValue(undefined);
 
     const callOrder: string[] = [];
     vi.mocked(relaunchAppInChildProcess).mockImplementation(async () => {
@@ -302,8 +300,6 @@ describe('gemini.tsx main function kitty protocol', () => {
     } as never);
     vi.mocked(parseArguments).mockResolvedValue({
       model: undefined,
-      sandbox: undefined,
-      sandboxImage: undefined,
       debug: undefined,
       prompt: undefined,
       promptInteractive: undefined,

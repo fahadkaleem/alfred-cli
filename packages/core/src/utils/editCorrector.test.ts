@@ -164,7 +164,6 @@ describe('editCorrector', () => {
       const configParams = {
         apiKey: 'test-api-key',
         model: 'test-model',
-        sandbox: false as boolean | string,
         targetDir: '/test',
         debugMode: false,
         question: undefined as string | undefined,
@@ -183,7 +182,6 @@ describe('editCorrector', () => {
         ...configParams,
         getApiKey: vi.fn(() => configParams.apiKey),
         getModel: vi.fn(() => configParams.model),
-        getSandbox: vi.fn(() => configParams.sandbox),
         getTargetDir: vi.fn(() => configParams.targetDir),
         getToolRegistry: vi.fn(() => mockToolRegistry),
         getDebugMode: vi.fn(() => configParams.debugMode),

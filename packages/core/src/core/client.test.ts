@@ -39,10 +39,16 @@ import { DEFAULT_GEMINI_FLASH_MODEL } from '../config/models.js';
 import { FileDiscoveryService } from '../services/fileDiscoveryService.js';
 import { setSimulate429 } from '../utils/testUtils.js';
 import { tokenLimit } from './tokenLimits.js';
-import { ideContextStore } from '../ide/ideContext.js';
 import { ClearcutLogger } from '../telemetry/clearcut-logger/clearcut-logger.js';
 import type { ModelRouterService } from '../routing/modelRouterService.js';
 import { uiTelemetryService } from '../telemetry/uiTelemetry.js';
+
+// Mock ideContextStore (IDE integration removed)
+const ideContextStore = {
+  get: vi.fn(),
+  set: vi.fn(),
+  clear: vi.fn(),
+};
 
 // Mock fs module to prevent actual file system operations during tests
 const mockFileSystem = new Map<string, string>();
@@ -299,8 +305,6 @@ describe('Gemini Client (client.ts)', () => {
       setQuotaErrorOccurred: vi.fn(),
       getNoBrowser: vi.fn().mockReturnValue(false),
       getUsageStatisticsEnabled: vi.fn().mockReturnValue(true),
-      getIdeModeFeature: vi.fn().mockReturnValue(false),
-      getIdeMode: vi.fn().mockReturnValue(true),
       getDebugMode: vi.fn().mockReturnValue(false),
       getWorkspaceContext: vi.fn().mockReturnValue({
         getDirectories: vi.fn().mockReturnValue(['/test/dir']),
@@ -978,7 +982,7 @@ describe('Gemini Client (client.ts)', () => {
       },
     );
 
-    it('should include editor context when ideMode is enabled', async () => {
+    it.skip('should include editor context when ideMode is enabled', async () => {
       // Arrange
       vi.mocked(ideContextStore.get).mockReturnValue({
         workspaceState: {
@@ -1001,8 +1005,6 @@ describe('Gemini Client (client.ts)', () => {
           ],
         },
       });
-
-      vi.mocked(mockConfig.getIdeMode).mockReturnValue(true);
 
       vi.spyOn(client, 'tryCompressChat').mockResolvedValue({
         originalTokenCount: 0,
@@ -1063,15 +1065,13 @@ ${JSON.stringify(
       });
     });
 
-    it('should not add context if ideMode is enabled but no open files', async () => {
+    it.skip('should not add context if ideMode is enabled but no open files', async () => {
       // Arrange
       vi.mocked(ideContextStore.get).mockReturnValue({
         workspaceState: {
           openFiles: [],
         },
       });
-
-      vi.spyOn(client['config'], 'getIdeMode').mockReturnValue(true);
 
       const mockStream = (async function* () {
         yield { type: 'content', value: 'Hello' };
@@ -1109,7 +1109,7 @@ ${JSON.stringify(
       );
     });
 
-    it('should add context if ideMode is enabled and there is one active file', async () => {
+    it.skip('should add context if ideMode is enabled and there is one active file', async () => {
       // Arrange
       vi.mocked(ideContextStore.get).mockReturnValue({
         workspaceState: {
@@ -1124,8 +1124,6 @@ ${JSON.stringify(
           ],
         },
       });
-
-      vi.spyOn(client['config'], 'getIdeMode').mockReturnValue(true);
 
       vi.spyOn(client, 'tryCompressChat').mockResolvedValue({
         originalTokenCount: 0,
@@ -1184,7 +1182,7 @@ ${JSON.stringify(
       });
     });
 
-    it('should add context if ideMode is enabled and there are open files but no active file', async () => {
+    it.skip('should add context if ideMode is enabled and there are open files but no active file', async () => {
       // Arrange
       vi.mocked(ideContextStore.get).mockReturnValue({
         workspaceState: {
@@ -1200,8 +1198,6 @@ ${JSON.stringify(
           ],
         },
       });
-
-      vi.spyOn(client['config'], 'getIdeMode').mockReturnValue(true);
 
       vi.spyOn(client, 'tryCompressChat').mockResolvedValue({
         originalTokenCount: 0,
@@ -1677,19 +1673,18 @@ ${JSON.stringify(
       });
     });
 
-    describe('Editor context delta', () => {
+    describe.skip('Editor context delta', () => {
       const mockStream = (async function* () {
         yield { type: 'content', value: 'Hello' };
       })();
 
       beforeEach(() => {
-        client['forceFullIdeContext'] = false; // Reset before each delta test
+        // IDE context functionality removed
         vi.spyOn(client, 'tryCompressChat').mockResolvedValue({
           originalTokenCount: 0,
           newTokenCount: 0,
           compressionStatus: CompressionStatus.COMPRESSED,
         });
-        vi.spyOn(client['config'], 'getIdeMode').mockReturnValue(true);
         mockTurnRunFn.mockReturnValue(mockStream);
 
         const mockChat: Partial<AlfredChat> = {
@@ -1812,7 +1807,9 @@ ${JSON.stringify(
           shouldSendContext,
         }) => {
           // Setup previous context
-          client['lastSentIdeContext'] = {
+          // IDE context removed: client['lastSentIdeContext'] = {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (client as any)['lastSentIdeContext'] = {
             workspaceState: {
               openFiles: [
                 {
@@ -1874,7 +1871,9 @@ ${JSON.stringify(
         };
 
         // Setup previous context
-        client['lastSentIdeContext'] = {
+        // IDE context removed: client['lastSentIdeContext'] = {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (client as any)['lastSentIdeContext'] = {
           workspaceState: {
             openFiles: [
               {
@@ -1936,7 +1935,7 @@ ${JSON.stringify(
       });
     });
 
-    describe('IDE context with pending tool calls', () => {
+    describe.skip('IDE context with pending tool calls', () => {
       let mockChat: Partial<AlfredChat>;
 
       beforeEach(() => {
@@ -1958,7 +1957,6 @@ ${JSON.stringify(
         };
         client['chat'] = mockChat as AlfredChat;
 
-        vi.spyOn(client['config'], 'getIdeMode').mockReturnValue(true);
         vi.mocked(ideContextStore.get).mockReturnValue({
           workspaceState: {
             openFiles: [{ path: '/path/to/file.ts', timestamp: Date.now() }],

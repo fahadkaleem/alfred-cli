@@ -63,13 +63,6 @@ export * from './services/gitService.js';
 export * from './services/chatRecordingService.js';
 export * from './services/fileSystemService.js';
 
-// Export IDE specific logic
-export * from './ide/ide-client.js';
-export * from './ide/ideContext.js';
-export { IDE_DEFINITIONS, type IdeInfo } from './ide/detect-ide.js';
-export * from './ide/constants.js';
-export * from './ide/types.js';
-
 // Export Shell Execution Service
 export * from './services/shellExecutionService.js';
 

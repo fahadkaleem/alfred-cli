@@ -18,10 +18,8 @@ import type {
 import type { CommandContext, SlashCommand } from '../commands/types.js';
 import type { TextBuffer } from '../components/shared/text-buffer.js';
 import type {
-  IdeContext,
   ApprovalMode,
   UserTierId,
-  IdeInfo,
   FallbackIntent,
 } from '@alfred/alfred-cli-core';
 import type { DOMElement } from 'ink';
@@ -36,7 +34,6 @@ export interface ProQuotaDialogRequest {
 }
 
 import { type UseHistoryManagerReturn } from '../hooks/useHistoryManager.js';
-import { type RestartReason } from '../hooks/useIdeTrustListener.js';
 
 export interface UIState {
   history: HistoryItem[];
@@ -47,15 +44,12 @@ export interface UIState {
   isConfigInitialized: boolean;
   authError: string | null;
   isAuthDialogOpen: boolean;
-  editorError: string | null;
-  isEditorDialogOpen: boolean;
   showPrivacyNotice: boolean;
   corgiMode: boolean;
   debugMessage: string;
   quittingMessages: HistoryItem[] | null;
   isSettingsDialogOpen: boolean;
   isModelDialogOpen: boolean;
-  isPermissionsDialogOpen: boolean;
   slashCommands: readonly SlashCommand[];
   pendingSlashCommandHistoryItems: HistoryItemWithoutId[];
   commandContext: CommandContext;
@@ -74,13 +68,11 @@ export interface UIState {
   inputWidth: number;
   suggestionsWidth: number;
   isInputActive: boolean;
-  shouldShowIdePrompt: boolean;
   isFolderTrustDialogOpen: boolean;
   isTrustedFolder: boolean | undefined;
   constrainHeight: boolean;
   showErrorDetails: boolean;
   filteredConsoleMessages: ConsoleMessageItem[];
-  ideContextState: IdeContext | undefined;
   showToolDescriptions: boolean;
   ctrlCPressedOnce: boolean;
   ctrlDPressedOnce: boolean;
@@ -111,10 +103,7 @@ export interface UIState {
   terminalWidth: number;
   terminalHeight: number;
   mainControlsRef: React.MutableRefObject<DOMElement | null>;
-  currentIDE: IdeInfo | null;
   updateInfo: UpdateObject | null;
-  showIdeRestartPrompt: boolean;
-  ideTrustRestartReason: RestartReason;
   isRestarting: boolean;
   extensionsUpdateState: Map<string, ExtensionUpdateState>;
   activePtyId: number | undefined;

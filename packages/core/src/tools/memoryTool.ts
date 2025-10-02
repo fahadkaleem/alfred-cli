@@ -15,14 +15,12 @@ import type { FunctionDeclaration } from '@google/genai';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { Storage } from '../config/storage.js';
-import * as Diff from 'diff';
-import { DEFAULT_DIFF_OPTIONS } from './diffOptions.js';
 import { tildeifyPath } from '../utils/paths.js';
-import type {
-  ModifiableDeclarativeTool,
-  ModifyContext,
-} from './modifiable-tool.js';
 import { ToolErrorType } from './tool-error.js';
+import * as Diff from 'diff';
+
+// Diff options (formerly from diffOptions.js)
+const DEFAULT_DIFF_OPTIONS = { context: 3 };
 
 const memoryToolSchemaData: FunctionDeclaration = {
   name: 'save_memory',
@@ -285,10 +283,10 @@ class MemoryToolInvocation extends BaseToolInvocation<
   }
 }
 
-export class MemoryTool
-  extends BaseDeclarativeTool<SaveMemoryParams, ToolResult>
-  implements ModifiableDeclarativeTool<SaveMemoryParams>
-{
+export class MemoryTool extends BaseDeclarativeTool<
+  SaveMemoryParams,
+  ToolResult
+> {
   static readonly Name: string = memoryToolSchemaData.name!;
   constructor() {
     super(
@@ -351,26 +349,5 @@ export class MemoryTool
         `[MemoryTool] Failed to add memory entry: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
-  }
-
-  getModifyContext(_abortSignal: AbortSignal): ModifyContext<SaveMemoryParams> {
-    return {
-      getFilePath: (_params: SaveMemoryParams) => getGlobalMemoryFilePath(),
-      getCurrentContent: async (_params: SaveMemoryParams): Promise<string> =>
-        readMemoryFileContent(),
-      getProposedContent: async (params: SaveMemoryParams): Promise<string> => {
-        const currentContent = await readMemoryFileContent();
-        return computeNewContent(currentContent, params.fact);
-      },
-      createUpdatedParams: (
-        _oldContent: string,
-        modifiedProposedContent: string,
-        originalParams: SaveMemoryParams,
-      ): SaveMemoryParams => ({
-        ...originalParams,
-        modified_by_user: true,
-        modified_content: modifiedProposedContent,
-      }),
-    };
   }
 }

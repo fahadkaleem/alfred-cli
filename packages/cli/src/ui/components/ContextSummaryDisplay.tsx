@@ -7,7 +7,7 @@
 import type React from 'react';
 import { Box, Text } from 'ink';
 import { theme } from '../semantic-colors.js';
-import { type IdeContext, type MCPServerConfig } from '@alfred/alfred-cli-core';
+import { type MCPServerConfig } from '@alfred/alfred-cli-core';
 import { useTerminalSize } from '../hooks/useTerminalSize.js';
 import { isNarrowWidth } from '../utils/isNarrowWidth.js';
 
@@ -17,7 +17,6 @@ interface ContextSummaryDisplayProps {
   mcpServers?: Record<string, MCPServerConfig>;
   blockedMcpServers?: Array<{ name: string; extensionName: string }>;
   showToolDescriptions?: boolean;
-  ideContext?: IdeContext;
 }
 
 export const ContextSummaryDisplay: React.FC<ContextSummaryDisplayProps> = ({
@@ -26,13 +25,12 @@ export const ContextSummaryDisplay: React.FC<ContextSummaryDisplayProps> = ({
   mcpServers,
   blockedMcpServers,
   showToolDescriptions,
-  ideContext,
 }) => {
   const { columns: terminalWidth } = useTerminalSize();
   const isNarrow = isNarrowWidth(terminalWidth);
   const mcpServerCount = Object.keys(mcpServers || {}).length;
   const blockedMcpServerCount = blockedMcpServers?.length || 0;
-  const openFileCount = ideContext?.workspaceState?.openFiles?.length ?? 0;
+  const openFileCount = 0; // IDE integration removed
 
   if (
     alfredMdFileCount === 0 &&

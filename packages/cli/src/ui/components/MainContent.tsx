@@ -60,7 +60,7 @@ export const MainContent = () => {
               terminalWidth={mainAreaWidth}
               item={{ ...item, id: 0 }}
               isPending={true}
-              isFocused={!uiState.isEditorDialogOpen}
+              isFocused={true}
               activeShellPtyId={uiState.activePtyId}
               embeddedShellFocused={uiState.embeddedShellFocused}
             />

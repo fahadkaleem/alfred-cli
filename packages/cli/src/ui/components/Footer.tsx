@@ -9,7 +9,6 @@ import { Box, Text } from 'ink';
 import { theme } from '../semantic-colors.js';
 import { shortenPath, tildeifyPath } from '@alfred/alfred-cli-core';
 import { ConsoleSummaryDisplay } from './ConsoleSummaryDisplay.js';
-import process from 'node:process';
 import Gradient from 'ink-gradient';
 import { MemoryUsageDisplay } from './MemoryUsageDisplay.js';
 import { ContextUsageDisplay } from './ContextUsageDisplay.js';
@@ -56,8 +55,6 @@ export const Footer: React.FC = () => {
   const showMemoryUsage =
     config.getDebugMode() || settings.merged.ui?.showMemoryUsage || false;
   const hideCWD = settings.merged.ui?.footer?.hideCWD || false;
-  const hideSandboxStatus =
-    settings.merged.ui?.footer?.hideSandboxStatus || false;
   const hideModelInfo = settings.merged.ui?.footer?.hideModelInfo || false;
 
   const { columns: terminalWidth } = useTerminalSize();
@@ -105,36 +102,15 @@ export const Footer: React.FC = () => {
         </Box>
       )}
 
-      {/* Middle Section: Centered Trust/Sandbox Info */}
-      {!hideSandboxStatus && (
+      {/* Middle Section: Centered Trust Info */}
+      {isTrustedFolder === false && (
         <Box
           flexGrow={1}
           alignItems="center"
           justifyContent="center"
           display="flex"
         >
-          {isTrustedFolder === false ? (
-            <Text color={theme.status.warning}>untrusted</Text>
-          ) : process.env['SANDBOX'] &&
-            process.env['SANDBOX'] !== 'sandbox-exec' ? (
-            <Text color="green">
-              {process.env['SANDBOX'].replace(/^gemini-(?:cli-)?/, '')}
-            </Text>
-          ) : process.env['SANDBOX'] === 'sandbox-exec' ? (
-            <Text color={theme.status.warning}>
-              macOS Seatbelt{' '}
-              <Text color={theme.text.secondary}>
-                ({process.env['SEATBELT_PROFILE']})
-              </Text>
-            </Text>
-          ) : (
-            <Text color={theme.status.error}>
-              no sandbox
-              {terminalWidth >= 100 && (
-                <Text color={theme.text.secondary}> (see /docs)</Text>
-              )}
-            </Text>
-          )}
+          <Text color={theme.status.warning}>untrusted</Text>
         </Box>
       )}
 

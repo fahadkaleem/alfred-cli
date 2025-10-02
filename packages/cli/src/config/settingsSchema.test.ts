@@ -19,7 +19,6 @@ describe('SettingsSchema', () => {
         'mcpServers',
         'general',
         'ui',
-        'ide',
         'privacy',
         'telemetry',
         'model',
@@ -53,7 +52,6 @@ describe('SettingsSchema', () => {
       const nestedSettings: Array<keyof Settings> = [
         'general',
         'ui',
-        'ide',
         'privacy',
         'model',
         'context',
@@ -160,9 +158,6 @@ describe('SettingsSchema', () => {
         getSettingsSchema().ui.properties.showMemoryUsage.showInDialog,
       ).toBe(true);
       expect(getSettingsSchema().general.properties.vimMode.showInDialog).toBe(
-        true,
-      );
-      expect(getSettingsSchema().ide.properties.enabled.showInDialog).toBe(
         true,
       );
       expect(

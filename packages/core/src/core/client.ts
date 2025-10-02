@@ -37,7 +37,6 @@ import {
   getEffectiveModel,
 } from '../config/models.js';
 import { LoopDetectionService } from '../services/loopDetectionService.js';
-import { ideContextStore } from '../ide/ideContext.js';
 import {
   logChatCompression,
   logNextSpeakerCheck,
@@ -46,7 +45,6 @@ import {
   makeChatCompressionEvent,
   NextSpeakerCheckEvent,
 } from '../telemetry/types.js';
-import type { IdeContext, File } from '../ide/types.js';
 import { handleFallback } from '../fallback/handler.js';
 import type { RoutingContext } from '../routing/routingStrategy.js';
 import { uiTelemetryService } from '../telemetry/uiTelemetry.js';
@@ -135,8 +133,6 @@ export class GeminiClient {
   private readonly loopDetector: LoopDetectionService;
   private lastPromptId: string;
   private currentSequenceModel: string | null = null;
-  private lastSentIdeContext: IdeContext | undefined;
-  private forceFullIdeContext = true;
 
   /**
    * At any point in this conversation, was compression triggered without
@@ -185,7 +181,6 @@ export class GeminiClient {
 
   setHistory(history: Content[]) {
     this.getChat().setHistory(history);
-    this.forceFullIdeContext = true;
   }
 
   async setTools(): Promise<void> {
@@ -219,7 +214,6 @@ export class GeminiClient {
   }
 
   async startChat(extraHistory?: Content[]): Promise<AlfredChat> {
-    this.forceFullIdeContext = true;
     this.hasFailedCompressionAttempt = false;
     const envParts = await getEnvironmentContext(this.config);
 
@@ -272,174 +266,6 @@ export class GeminiClient {
     }
   }
 
-  private getIdeContextParts(forceFullContext: boolean): {
-    contextParts: string[];
-    newIdeContext: IdeContext | undefined;
-  } {
-    const currentIdeContext = ideContextStore.get();
-    if (!currentIdeContext) {
-      return { contextParts: [], newIdeContext: undefined };
-    }
-
-    if (forceFullContext || !this.lastSentIdeContext) {
-      // Send full context as JSON
-      const openFiles = currentIdeContext.workspaceState?.openFiles || [];
-      const activeFile = openFiles.find((f) => f.isActive);
-      const otherOpenFiles = openFiles
-        .filter((f) => !f.isActive)
-        .map((f) => f.path);
-
-      const contextData: Record<string, unknown> = {};
-
-      if (activeFile) {
-        contextData['activeFile'] = {
-          path: activeFile.path,
-          cursor: activeFile.cursor
-            ? {
-                line: activeFile.cursor.line,
-                character: activeFile.cursor.character,
-              }
-            : undefined,
-          selectedText: activeFile.selectedText || undefined,
-        };
-      }
-
-      if (otherOpenFiles.length > 0) {
-        contextData['otherOpenFiles'] = otherOpenFiles;
-      }
-
-      if (Object.keys(contextData).length === 0) {
-        return { contextParts: [], newIdeContext: currentIdeContext };
-      }
-
-      const jsonString = JSON.stringify(contextData, null, 2);
-      const contextParts = [
-        "Here is the user's editor context as a JSON object. This is for your information only.",
-        '```json',
-        jsonString,
-        '```',
-      ];
-
-      if (this.config.getDebugMode()) {
-        console.log(contextParts.join('\n'));
-      }
-      return {
-        contextParts,
-        newIdeContext: currentIdeContext,
-      };
-    } else {
-      // Calculate and send delta as JSON
-      const delta: Record<string, unknown> = {};
-      const changes: Record<string, unknown> = {};
-
-      const lastFiles = new Map(
-        (this.lastSentIdeContext.workspaceState?.openFiles || []).map(
-          (f: File) => [f.path, f],
-        ),
-      );
-      const currentFiles = new Map(
-        (currentIdeContext.workspaceState?.openFiles || []).map((f: File) => [
-          f.path,
-          f,
-        ]),
-      );
-
-      const openedFiles: string[] = [];
-      for (const [path] of currentFiles.entries()) {
-        if (!lastFiles.has(path)) {
-          openedFiles.push(path);
-        }
-      }
-      if (openedFiles.length > 0) {
-        changes['filesOpened'] = openedFiles;
-      }
-
-      const closedFiles: string[] = [];
-      for (const [path] of lastFiles.entries()) {
-        if (!currentFiles.has(path)) {
-          closedFiles.push(path);
-        }
-      }
-      if (closedFiles.length > 0) {
-        changes['filesClosed'] = closedFiles;
-      }
-
-      const lastActiveFile = (
-        this.lastSentIdeContext.workspaceState?.openFiles || []
-      ).find((f: File) => f.isActive);
-      const currentActiveFile = (
-        currentIdeContext.workspaceState?.openFiles || []
-      ).find((f: File) => f.isActive);
-
-      if (currentActiveFile) {
-        if (!lastActiveFile || lastActiveFile.path !== currentActiveFile.path) {
-          changes['activeFileChanged'] = {
-            path: currentActiveFile.path,
-            cursor: currentActiveFile.cursor
-              ? {
-                  line: currentActiveFile.cursor.line,
-                  character: currentActiveFile.cursor.character,
-                }
-              : undefined,
-            selectedText: currentActiveFile.selectedText || undefined,
-          };
-        } else {
-          const lastCursor = lastActiveFile.cursor;
-          const currentCursor = currentActiveFile.cursor;
-          if (
-            currentCursor &&
-            (!lastCursor ||
-              lastCursor.line !== currentCursor.line ||
-              lastCursor.character !== currentCursor.character)
-          ) {
-            changes['cursorMoved'] = {
-              path: currentActiveFile.path,
-              cursor: {
-                line: currentCursor.line,
-                character: currentCursor.character,
-              },
-            };
-          }
-
-          const lastSelectedText = lastActiveFile.selectedText || '';
-          const currentSelectedText = currentActiveFile.selectedText || '';
-          if (lastSelectedText !== currentSelectedText) {
-            changes['selectionChanged'] = {
-              path: currentActiveFile.path,
-              selectedText: currentSelectedText,
-            };
-          }
-        }
-      } else if (lastActiveFile) {
-        changes['activeFileChanged'] = {
-          path: null,
-          previousPath: lastActiveFile.path,
-        };
-      }
-
-      if (Object.keys(changes).length === 0) {
-        return { contextParts: [], newIdeContext: currentIdeContext };
-      }
-
-      delta['changes'] = changes;
-      const jsonString = JSON.stringify(delta, null, 2);
-      const contextParts = [
-        "Here is a summary of changes in the user's editor context, in JSON format. This is for your information only.",
-        '```json',
-        jsonString,
-        '```',
-      ];
-
-      if (this.config.getDebugMode()) {
-        console.log(contextParts.join('\n'));
-      }
-      return {
-        contextParts,
-        newIdeContext: currentIdeContext,
-      };
-    }
-  }
-
   async *sendMessageStream(
     request: PartListUnion,
     signal: AbortSignal,
@@ -469,33 +295,6 @@ export class GeminiClient {
 
     if (compressed.compressionStatus === CompressionStatus.COMPRESSED) {
       yield { type: AlfredEventType.ChatCompressed, value: compressed };
-    }
-
-    // Prevent context updates from being sent while a tool call is
-    // waiting for a response. The Gemini API requires that a functionResponse
-    // part from the user immediately follows a functionCall part from the model
-    // in the conversation history . The IDE context is not discarded; it will
-    // be included in the next regular message sent to the model.
-    const history = this.getHistory();
-    const lastMessage =
-      history.length > 0 ? history[history.length - 1] : undefined;
-    const hasPendingToolCall =
-      !!lastMessage &&
-      lastMessage.role === 'model' &&
-      (lastMessage.parts?.some((p) => 'functionCall' in p) || false);
-
-    if (this.config.getIdeMode() && !hasPendingToolCall) {
-      const { contextParts, newIdeContext } = this.getIdeContextParts(
-        this.forceFullIdeContext || history.length === 0,
-      );
-      if (contextParts.length > 0) {
-        this.getChat().addHistory({
-          role: 'user',
-          parts: [{ text: contextParts.join('\n') }],
-        });
-      }
-      this.lastSentIdeContext = newIdeContext;
-      this.forceFullIdeContext = false;
     }
 
     const turn = new Turn(this.getChat(), prompt_id);
@@ -740,7 +539,6 @@ export class GeminiClient {
       },
       ...historyToKeep,
     ]);
-    this.forceFullIdeContext = true;
 
     // Estimate token count 1 token ≈ 4 characters
     const newTokenCount = Math.floor(

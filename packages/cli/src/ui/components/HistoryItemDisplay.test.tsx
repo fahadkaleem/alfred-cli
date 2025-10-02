@@ -75,7 +75,6 @@ describe('<HistoryItemDisplay />', () => {
       type: MessageType.ABOUT,
       cliVersion: '1.0.0',
       osVersion: 'test-os',
-      sandboxEnv: 'test-env',
       modelVersion: 'test-model',
       selectedAuthType: 'test-auth',
       gcpProject: 'test-project',

@@ -97,7 +97,6 @@ export const Composer = () => {
           ) : (
             !settings.merged.ui?.hideContextSummary && (
               <ContextSummaryDisplay
-                ideContext={uiState.ideContextState}
                 alfredMdFileCount={uiState.alfredMdFileCount}
                 contextFileNames={contextFileNames}
                 mcpServers={config.getMcpServers()}

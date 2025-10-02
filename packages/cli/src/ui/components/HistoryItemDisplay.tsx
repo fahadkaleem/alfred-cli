@@ -97,7 +97,6 @@ export const HistoryItemDisplay: React.FC<HistoryItemDisplayProps> = ({
         <AboutBox
           cliVersion={itemForDisplay.cliVersion}
           osVersion={itemForDisplay.osVersion}
-          sandboxEnv={itemForDisplay.sandboxEnv}
           modelVersion={itemForDisplay.modelVersion}
           selectedAuthType={itemForDisplay.selectedAuthType}
           gcpProject={itemForDisplay.gcpProject}

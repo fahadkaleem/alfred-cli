@@ -31,12 +31,8 @@ import { MessageType, StreamingState } from './types.js';
 import {
   type EditorType,
   type Config,
-  type IdeInfo,
-  type IdeContext,
   type UserTierId,
   DEFAULT_GEMINI_FLASH_MODEL,
-  IdeClient,
-  ideContextStore,
   getErrorMessage,
   getAllAlfredMdFilenames,
   AuthType,
@@ -68,7 +64,7 @@ import { useTextBuffer } from './components/shared/text-buffer.js';
 import { useLogger } from './hooks/useLogger.js';
 import { useGeminiStream } from './hooks/useGeminiStream.js';
 import { useVim } from './hooks/vim.js';
-import { type LoadedSettings, SettingScope } from '../config/settings.js';
+import type { SettingScope , type LoadedSettings } from '../config/settings.js';
 import { type InitializationResult } from '../core/initializer.js';
 import { useFocus } from './hooks/useFocus.js';
 import { useBracketedPaste } from './hooks/useBracketedPaste.js';
@@ -76,8 +72,6 @@ import { useKeypress, type Key } from './hooks/useKeypress.js';
 import { keyMatchers, Command } from './keyMatchers.js';
 import { useLoadingIndicator } from './hooks/useLoadingIndicator.js';
 import { useFolderTrust } from './hooks/useFolderTrust.js';
-import { useIdeTrustListener } from './hooks/useIdeTrustListener.js';
-import { type IdeIntegrationNudgeResult } from './IdeIntegrationNudge.js';
 import { appEvents, AppEvent } from '../utils/events.js';
 import { type UpdateObject } from './utils/updateCheck.js';
 import { setUpdateHandler } from '../utils/handleAutoUpdate.js';
@@ -215,10 +209,6 @@ export const AppContainer = (props: AppContainerProps) => {
       await config.initialize();
       setConfigInitialized(true);
     })();
-    registerCleanup(async () => {
-      const ideClient = await IdeClient.getInstance();
-      await ideClient.disconnect();
-    });
   }, [config]);
 
   useEffect(
@@ -750,24 +740,6 @@ Logging in with Google... Please restart Gemini CLI to continue.
     alfredClient,
   ]);
 
-  const [idePromptAnswered, setIdePromptAnswered] = useState(false);
-  const [currentIDE, setCurrentIDE] = useState<IdeInfo | null>(null);
-
-  useEffect(() => {
-    const getIde = async () => {
-      const ideClient = await IdeClient.getInstance();
-      const currentIde = ideClient.getCurrentIde();
-      setCurrentIDE(currentIde || null);
-    };
-    getIde();
-  }, []);
-  const shouldShowIdePrompt = Boolean(
-    currentIDE &&
-      !config.getIdeMode() &&
-      !settings.merged.ide?.hasSeenNudge &&
-      !idePromptAnswered,
-  );
-
   const [showErrorDetails, setShowErrorDetails] = useState<boolean>(false);
   const [showToolDescriptions, setShowToolDescriptions] =
     useState<boolean>(false);
@@ -777,26 +749,11 @@ Logging in with Google... Please restart Gemini CLI to continue.
   const [ctrlDPressedOnce, setCtrlDPressedOnce] = useState(false);
   const ctrlDTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [constrainHeight, setConstrainHeight] = useState<boolean>(true);
-  const [ideContextState, setIdeContextState] = useState<
-    IdeContext | undefined
-  >();
   const [showEscapePrompt, setShowEscapePrompt] = useState(false);
-  const [showIdeRestartPrompt, setShowIdeRestartPrompt] = useState(false);
 
   const { isFolderTrustDialogOpen, handleFolderTrustSelect, isRestarting } =
     useFolderTrust(settings, setIsTrustedFolder);
-  const {
-    needsRestart: ideNeedsRestart,
-    restartReason: ideTrustRestartReason,
-  } = useIdeTrustListener();
   const isInitialMount = useRef(true);
-
-  useEffect(() => {
-    if (ideNeedsRestart) {
-      // IDE trust changed, force a restart.
-      setShowIdeRestartPrompt(true);
-    }
-  }, [ideNeedsRestart]);
 
   useEffect(() => {
     if (isInitialMount.current) {
@@ -812,12 +769,6 @@ Logging in with Google... Please restart Gemini CLI to continue.
       clearTimeout(handler);
     };
   }, [terminalWidth, refreshStatic]);
-
-  useEffect(() => {
-    const unsubscribe = ideContextStore.subscribe(setIdeContextState);
-    setIdeContextState(ideContextStore.get());
-    return unsubscribe;
-  }, []);
 
   useEffect(() => {
     const openDebugConsole = () => {
@@ -844,27 +795,6 @@ Logging in with Google... Please restart Gemini CLI to continue.
   const handleEscapePromptChange = useCallback((showPrompt: boolean) => {
     setShowEscapePrompt(showPrompt);
   }, []);
-
-  const handleIdePromptComplete = useCallback(
-    (result: IdeIntegrationNudgeResult) => {
-      if (result.userSelection === 'yes') {
-        handleSlashCommand('/ide install');
-        settings.setValue(
-          SettingScope.User,
-          'hasSeenIdeIntegrationNudge',
-          true,
-        );
-      } else if (result.userSelection === 'dismiss') {
-        settings.setValue(
-          SettingScope.User,
-          'hasSeenIdeIntegrationNudge',
-          true,
-        );
-      }
-      setIdePromptAnswered(true);
-    },
-    [handleSlashCommand, settings],
-  );
 
   const { elapsedTime, currentLoadingPhrase } = useLoadingIndicator(
     streamingState,
@@ -941,12 +871,6 @@ Logging in with Google... Please restart Gemini CLI to continue.
           handleSlashCommand(newValue ? '/mcp desc' : '/mcp nodesc');
         }
       } else if (
-        keyMatchers[Command.TOGGLE_IDE_CONTEXT_DETAIL](key) &&
-        config.getIdeMode() &&
-        ideContextState
-      ) {
-        handleSlashCommand('/ide status');
-      } else if (
         keyMatchers[Command.SHOW_MORE_LINES](key) &&
         !enteringConstrainHeightMode
       ) {
@@ -964,7 +888,6 @@ Logging in with Google... Please restart Gemini CLI to continue.
       showToolDescriptions,
       setShowToolDescriptions,
       config,
-      ideContextState,
       handleExit,
       ctrlCPressedOnce,
       setCtrlCPressedOnce,
@@ -1039,7 +962,6 @@ Logging in with Google... Please restart Gemini CLI to continue.
 
   const dialogsVisible =
     showWorkspaceMigrationDialog ||
-    shouldShowIdePrompt ||
     isFolderTrustDialogOpen ||
     !!shellConfirmationRequest ||
     !!confirmationRequest ||
@@ -1053,7 +975,6 @@ Logging in with Google... Please restart Gemini CLI to continue.
     isAuthDialogOpen ||
     isEditorDialogOpen ||
     showPrivacyNotice ||
-    showIdeRestartPrompt ||
     !!proQuotaRequest;
 
   const pendingHistoryItems = useMemo(
@@ -1098,13 +1019,11 @@ Logging in with Google... Please restart Gemini CLI to continue.
       inputWidth,
       suggestionsWidth,
       isInputActive,
-      shouldShowIdePrompt,
       isFolderTrustDialogOpen: isFolderTrustDialogOpen ?? false,
       isTrustedFolder,
       constrainHeight,
       showErrorDetails,
       filteredConsoleMessages,
-      ideContextState,
       showToolDescriptions,
       ctrlCPressedOnce,
       ctrlDPressedOnce,
@@ -1134,10 +1053,7 @@ Logging in with Google... Please restart Gemini CLI to continue.
       terminalWidth,
       terminalHeight,
       mainControlsRef,
-      currentIDE,
       updateInfo,
-      showIdeRestartPrompt,
-      ideTrustRestartReason,
       isRestarting,
       extensionsUpdateState,
       activePtyId,
@@ -1177,13 +1093,11 @@ Logging in with Google... Please restart Gemini CLI to continue.
       inputWidth,
       suggestionsWidth,
       isInputActive,
-      shouldShowIdePrompt,
       isFolderTrustDialogOpen,
       isTrustedFolder,
       constrainHeight,
       showErrorDetails,
       filteredConsoleMessages,
-      ideContextState,
       showToolDescriptions,
       ctrlCPressedOnce,
       ctrlDPressedOnce,
@@ -1212,10 +1126,7 @@ Logging in with Google... Please restart Gemini CLI to continue.
       terminalWidth,
       terminalHeight,
       mainControlsRef,
-      currentIDE,
       updateInfo,
-      showIdeRestartPrompt,
-      ideTrustRestartReason,
       isRestarting,
       currentModel,
       extensionsUpdateState,
@@ -1240,7 +1151,6 @@ Logging in with Google... Please restart Gemini CLI to continue.
       closePermissionsDialog,
       setShellModeActive,
       vimHandleInput,
-      handleIdePromptComplete,
       handleFolderTrustSelect,
       setConstrainHeight,
       onEscapePromptChange: handleEscapePromptChange,
@@ -1264,7 +1174,6 @@ Logging in with Google... Please restart Gemini CLI to continue.
       closePermissionsDialog,
       setShellModeActive,
       vimHandleInput,
-      handleIdePromptComplete,
       handleFolderTrustSelect,
       setConstrainHeight,
       handleEscapePromptChange,

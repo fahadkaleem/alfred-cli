@@ -24,7 +24,6 @@ import {
   SlashCommandStatus,
   ToolConfirmationOutcome,
   Storage,
-  IdeClient,
 } from '@alfred/alfred-cli-core';
 import { useSessionStats } from '../contexts/SessionContext.js';
 import type {
@@ -139,7 +138,6 @@ export const useSlashCommandProcessor = (
           type: 'about',
           cliVersion: message.cliVersion,
           osVersion: message.osVersion,
-          sandboxEnv: message.sandboxEnv,
           modelVersion: message.modelVersion,
           selectedAuthType: message.selectedAuthType,
           gcpProject: message.gcpProject,
@@ -236,28 +234,6 @@ export const useSlashCommandProcessor = (
       extensionsUpdateState,
     ],
   );
-
-  useEffect(() => {
-    if (!config) {
-      return;
-    }
-
-    const listener = () => {
-      reloadCommands();
-    };
-
-    (async () => {
-      const ideClient = await IdeClient.getInstance();
-      ideClient.addStatusChangeListener(listener);
-    })();
-
-    return () => {
-      (async () => {
-        const ideClient = await IdeClient.getInstance();
-        ideClient.removeStatusChangeListener(listener);
-      })();
-    };
-  }, [config, reloadCommands]);
 
   useEffect(() => {
     const controller = new AbortController();

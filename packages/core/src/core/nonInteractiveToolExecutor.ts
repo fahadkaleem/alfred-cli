@@ -22,8 +22,6 @@ export async function executeToolCall(
   return new Promise<ToolCallResponseInfo>((resolve, reject) => {
     new CoreToolScheduler({
       config,
-      getPreferredEditor: () => undefined,
-      onEditorClose: () => {},
       onAllToolCallsComplete: async (completedToolCalls) => {
         resolve(completedToolCalls[0].response);
       },

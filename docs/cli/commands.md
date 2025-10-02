@@ -8,9 +8,6 @@ Slash commands provide meta-level control over the CLI itself.
 
 ### Built-in Commands
 
-- **`/bug`**
-  - **Description:** File an issue about Alfred CLI. By default, the issue is filed within the GitHub repository for Alfred CLI. The string you enter after `/bug` will become the headline for the bug being filed. The default `/bug` behavior can be modified using the `advanced.bugCommand` setting in your `.alfred/settings.json` files.
-
 - **`/chat`**
   - **Description:** Save and resume conversation history for branching conversation state interactively, or resuming a previous state from a later session.
   - **Sub-commands:**

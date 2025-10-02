@@ -5,7 +5,6 @@
  */
 
 import { Box, Text } from 'ink';
-import { IdeIntegrationNudge } from '../IdeIntegrationNudge.js';
 import { LoopDetectionConfirmation } from './LoopDetectionConfirmation.js';
 import { FolderTrustDialog } from './FolderTrustDialog.js';
 import { ShellConfirmationDialog } from './ShellConfirmationDialog.js';
@@ -14,11 +13,9 @@ import { ThemeDialog } from './ThemeDialog.js';
 import { SettingsDialog } from './SettingsDialog.js';
 import { AuthInProgress } from '../auth/AuthInProgress.js';
 import { AuthDialog } from '../auth/AuthDialog.js';
-import { EditorSettingsDialog } from './EditorSettingsDialog.js';
 import { PrivacyNotice } from '../privacy/PrivacyNotice.js';
 import { WorkspaceMigrationDialog } from './WorkspaceMigrationDialog.js';
 import { ProQuotaDialog } from './ProQuotaDialog.js';
-import { PermissionsModifyTrustDialog } from './PermissionsModifyTrustDialog.js';
 import { ModelDialog } from './ModelDialog.js';
 import { theme } from '../semantic-colors.js';
 import { useUIState } from '../contexts/UIStateContext.js';
@@ -27,7 +24,6 @@ import { useConfig } from '../contexts/ConfigContext.js';
 import { useSettings } from '../contexts/SettingsContext.js';
 import process from 'node:process';
 import { type UseHistoryManagerReturn } from '../hooks/useHistoryManager.js';
-import { IdeTrustChangeDialog } from './IdeTrustChangeDialog.js';
 
 interface DialogManagerProps {
   addItem: UseHistoryManagerReturn['addItem'];
@@ -36,7 +32,7 @@ interface DialogManagerProps {
 
 // Props for DialogManager
 export const DialogManager = ({
-  addItem,
+  addItem: _addItem,
   terminalWidth,
 }: DialogManagerProps) => {
   const config = useConfig();
@@ -47,9 +43,6 @@ export const DialogManager = ({
   const { constrainHeight, terminalHeight, staticExtraHeight, mainAreaWidth } =
     uiState;
 
-  if (uiState.showIdeRestartPrompt) {
-    return <IdeTrustChangeDialog reason={uiState.ideTrustRestartReason} />;
-  }
   if (uiState.showWorkspaceMigrationDialog) {
     return (
       <WorkspaceMigrationDialog
@@ -65,14 +58,6 @@ export const DialogManager = ({
         failedModel={uiState.proQuotaRequest.failedModel}
         fallbackModel={uiState.proQuotaRequest.fallbackModel}
         onChoice={uiActions.handleProQuotaChoice}
-      />
-    );
-  }
-  if (uiState.shouldShowIdePrompt) {
-    return (
-      <IdeIntegrationNudge
-        ide={uiState.currentIDE!}
-        onComplete={uiActions.handleIdePromptComplete}
       />
     );
   }
@@ -172,36 +157,11 @@ export const DialogManager = ({
       </Box>
     );
   }
-  if (uiState.isEditorDialogOpen) {
-    return (
-      <Box flexDirection="column">
-        {uiState.editorError && (
-          <Box marginBottom={1}>
-            <Text color={theme.status.error}>{uiState.editorError}</Text>
-          </Box>
-        )}
-        <EditorSettingsDialog
-          onSelect={uiActions.handleEditorSelect}
-          settings={settings}
-          onExit={uiActions.exitEditorDialog}
-        />
-      </Box>
-    );
-  }
   if (uiState.showPrivacyNotice) {
     return (
       <PrivacyNotice
         onExit={() => uiActions.exitPrivacyNotice()}
         config={config}
-      />
-    );
-  }
-
-  if (uiState.isPermissionsDialogOpen) {
-    return (
-      <PermissionsModifyTrustDialog
-        onExit={uiActions.closePermissionsDialog}
-        addItem={addItem}
       />
     );
   }

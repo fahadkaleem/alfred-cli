@@ -10,20 +10,6 @@ import { type CommandContext } from './types.js';
 import { createMockCommandContext } from '../../test-utils/mockCommandContext.js';
 import * as versionUtils from '../../utils/version.js';
 import { MessageType } from '../types.js';
-import { IdeClient } from '@alfred/alfred-cli-core';
-
-vi.mock('@alfred/alfred-cli-core', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@alfred/alfred-cli-core')>();
-  return {
-    ...actual,
-    IdeClient: {
-      getInstance: vi.fn().mockResolvedValue({
-        getDetectedIdeDisplayName: vi.fn().mockReturnValue('test-ide'),
-      }),
-    },
-  };
-});
 
 vi.mock('../../utils/version.js', () => ({
   getCliVersion: vi.fn(),
@@ -39,7 +25,6 @@ describe('aboutCommand', () => {
       services: {
         config: {
           getModel: vi.fn(),
-          getIdeMode: vi.fn().mockReturnValue(true),
         },
         settings: {
           merged: {
@@ -93,72 +78,11 @@ describe('aboutCommand', () => {
         type: MessageType.ABOUT,
         cliVersion: 'test-version',
         osVersion: 'test-os',
-        sandboxEnv: 'no sandbox',
-        modelVersion: 'test-model',
-        selectedAuthType: 'test-auth',
-        gcpProject: 'test-gcp-project',
-        ideClient: 'test-ide',
-      },
-      expect.any(Number),
-    );
-  });
-
-  it('should show the correct sandbox environment variable', async () => {
-    process.env['SANDBOX'] = 'gemini-sandbox';
-    if (!aboutCommand.action) {
-      throw new Error('The about command must have an action.');
-    }
-
-    await aboutCommand.action(mockContext, '');
-
-    expect(mockContext.ui.addItem).toHaveBeenCalledWith(
-      expect.objectContaining({
-        sandboxEnv: 'gemini-sandbox',
-      }),
-      expect.any(Number),
-    );
-  });
-
-  it('should show sandbox-exec profile when applicable', async () => {
-    process.env['SANDBOX'] = 'sandbox-exec';
-    process.env['SEATBELT_PROFILE'] = 'test-profile';
-    if (!aboutCommand.action) {
-      throw new Error('The about command must have an action.');
-    }
-
-    await aboutCommand.action(mockContext, '');
-
-    expect(mockContext.ui.addItem).toHaveBeenCalledWith(
-      expect.objectContaining({
-        sandboxEnv: 'sandbox-exec (test-profile)',
-      }),
-      expect.any(Number),
-    );
-  });
-
-  it('should not show ide client when it is not detected', async () => {
-    vi.mocked(IdeClient.getInstance).mockResolvedValue({
-      getDetectedIdeDisplayName: vi.fn().mockReturnValue(undefined),
-    } as unknown as IdeClient);
-
-    process.env['SANDBOX'] = '';
-    if (!aboutCommand.action) {
-      throw new Error('The about command must have an action.');
-    }
-
-    await aboutCommand.action(mockContext, '');
-
-    expect(mockContext.ui.addItem).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: MessageType.ABOUT,
-        cliVersion: 'test-version',
-        osVersion: 'test-os',
-        sandboxEnv: 'no sandbox',
         modelVersion: 'test-model',
         selectedAuthType: 'test-auth',
         gcpProject: 'test-gcp-project',
         ideClient: '',
-      }),
+      },
       expect.any(Number),
     );
   });

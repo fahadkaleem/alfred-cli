@@ -21,19 +21,80 @@ import { isNodeError } from '../utils/errors.js';
 import type { Config } from '../config/config.js';
 import { ApprovalMode } from '../config/config.js';
 import { ensureCorrectEdit } from '../utils/editCorrector.js';
-import { DEFAULT_DIFF_OPTIONS, getDiffStat } from './diffOptions.js';
 import { ReadFileTool } from './read-file.js';
 import { logFileOperation } from '../telemetry/loggers.js';
 import { FileOperationEvent } from '../telemetry/types.js';
 import { FileOperation } from '../telemetry/metrics.js';
 import { getSpecificMimeType } from '../utils/fileUtils.js';
 import { getLanguageFromFilePath } from '../utils/language-detection.js';
-import type {
-  ModifiableDeclarativeTool,
-  ModifyContext,
-} from './modifiable-tool.js';
-import { IdeClient } from '../ide/ide-client.js';
 import { safeLiteralReplace } from '../utils/textUtils.js';
+import type { DiffStat } from './tools.js';
+
+// Diff options (formerly from diffOptions.js)
+const DEFAULT_DIFF_OPTIONS: Diff.PatchOptions = {
+  context: 3,
+  ignoreWhitespace: true,
+};
+
+function getDiffStat(
+  fileName: string,
+  oldStr: string,
+  aiStr: string,
+  userStr: string,
+): DiffStat {
+  const getStats = (patch: Diff.ParsedDiff) => {
+    let addedLines = 0;
+    let removedLines = 0;
+    let addedChars = 0;
+    let removedChars = 0;
+
+    patch.hunks.forEach((hunk: Diff.Hunk) => {
+      hunk.lines.forEach((line: string) => {
+        if (line.startsWith('+')) {
+          addedLines++;
+          addedChars += line.length - 1;
+        } else if (line.startsWith('-')) {
+          removedLines++;
+          removedChars += line.length - 1;
+        }
+      });
+    });
+    return { addedLines, removedLines, addedChars, removedChars };
+  };
+
+  const modelPatch = Diff.structuredPatch(
+    fileName,
+    fileName,
+    oldStr,
+    aiStr,
+    'Current',
+    'Proposed',
+    DEFAULT_DIFF_OPTIONS,
+  );
+  const modelStats = getStats(modelPatch);
+
+  const userPatch = Diff.structuredPatch(
+    fileName,
+    fileName,
+    aiStr,
+    userStr,
+    'Proposed',
+    'User',
+    DEFAULT_DIFF_OPTIONS,
+  );
+  const userStats = getStats(userPatch);
+
+  return {
+    model_added_lines: modelStats.addedLines,
+    model_removed_lines: modelStats.removedLines,
+    model_added_chars: modelStats.addedChars,
+    model_removed_chars: modelStats.removedChars,
+    user_added_lines: userStats.addedLines,
+    user_removed_lines: userStats.removedLines,
+    user_added_chars: userStats.addedChars,
+    user_removed_chars: userStats.removedChars,
+  };
+}
 
 export function applyReplacement(
   currentContent: string | null,
@@ -273,11 +334,6 @@ class EditToolInvocation implements ToolInvocation<EditToolParams, ToolResult> {
       'Proposed',
       DEFAULT_DIFF_OPTIONS,
     );
-    const ideClient = await IdeClient.getInstance();
-    const ideConfirmation =
-      this.config.getIdeMode() && ideClient.isDiffingEnabled()
-        ? ideClient.openDiff(this.params.file_path, editData.newContent)
-        : undefined;
 
     const confirmationDetails: ToolEditConfirmationDetails = {
       type: 'edit',
@@ -291,18 +347,7 @@ class EditToolInvocation implements ToolInvocation<EditToolParams, ToolResult> {
         if (outcome === ToolConfirmationOutcome.ProceedAlways) {
           this.config.setApprovalMode(ApprovalMode.AUTO_EDIT);
         }
-
-        if (ideConfirmation) {
-          const result = await ideConfirmation;
-          if (result.status === 'accepted' && result.content) {
-            // TODO(chrstn): See https://github.com/google-gemini/gemini-cli/pull/5618#discussion_r2255413084
-            // for info on a possible race condition where the file is modified on disk while being edited.
-            this.params.old_string = editData.currentContent ?? '';
-            this.params.new_string = result.content;
-          }
-        }
       },
-      ideConfirmation,
     };
     return confirmationDetails;
   }
@@ -460,10 +505,7 @@ class EditToolInvocation implements ToolInvocation<EditToolParams, ToolResult> {
 /**
  * Implementation of the Edit tool logic
  */
-export class EditTool
-  extends BaseDeclarativeTool<EditToolParams, ToolResult>
-  implements ModifiableDeclarativeTool<EditToolParams>
-{
+export class EditTool extends BaseDeclarativeTool<EditToolParams, ToolResult> {
   static readonly Name = 'replace';
   constructor(private readonly config: Config) {
     super(
@@ -540,48 +582,5 @@ Expectation for required parameters:
     params: EditToolParams,
   ): ToolInvocation<EditToolParams, ToolResult> {
     return new EditToolInvocation(this.config, params);
-  }
-
-  getModifyContext(_: AbortSignal): ModifyContext<EditToolParams> {
-    return {
-      getFilePath: (params: EditToolParams) => params.file_path,
-      getCurrentContent: async (params: EditToolParams): Promise<string> => {
-        try {
-          return this.config
-            .getFileSystemService()
-            .readTextFile(params.file_path);
-        } catch (err) {
-          if (!isNodeError(err) || err.code !== 'ENOENT') throw err;
-          return '';
-        }
-      },
-      getProposedContent: async (params: EditToolParams): Promise<string> => {
-        try {
-          const currentContent = await this.config
-            .getFileSystemService()
-            .readTextFile(params.file_path);
-          return applyReplacement(
-            currentContent,
-            params.old_string,
-            params.new_string,
-            params.old_string === '' && currentContent === '',
-          );
-        } catch (err) {
-          if (!isNodeError(err) || err.code !== 'ENOENT') throw err;
-          return '';
-        }
-      },
-      createUpdatedParams: (
-        oldContent: string,
-        modifiedProposedContent: string,
-        originalParams: EditToolParams,
-      ): EditToolParams => ({
-        ...originalParams,
-        ai_proposed_content: oldContent,
-        old_string: oldContent,
-        new_string: modifiedProposedContent,
-        modified_by_user: true,
-      }),
-    };
   }
 }

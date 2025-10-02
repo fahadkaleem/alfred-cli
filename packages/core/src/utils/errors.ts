@@ -44,11 +44,6 @@ export class FatalInputError extends FatalError {
     super(message, 42);
   }
 }
-export class FatalSandboxError extends FatalError {
-  constructor(message: string) {
-    super(message, 44);
-  }
-}
 export class FatalConfigError extends FatalError {
   constructor(message: string) {
     super(message, 52);

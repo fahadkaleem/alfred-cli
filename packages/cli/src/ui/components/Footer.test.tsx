@@ -59,7 +59,6 @@ const createDefaultSettings = (
   options: {
     showMemoryUsage?: boolean;
     hideCWD?: boolean;
-    hideSandboxStatus?: boolean;
     hideModelInfo?: boolean;
   } = {},
 ): LoadedSettings =>
@@ -69,7 +68,6 @@ const createDefaultSettings = (
         showMemoryUsage: options.showMemoryUsage,
         footer: {
           hideCWD: options.hideCWD,
-          hideSandboxStatus: options.hideSandboxStatus,
           hideModelInfo: options.hideModelInfo,
         },
       },
@@ -157,57 +155,6 @@ describe('<Footer />', () => {
       );
       expect(lastFrame()).toContain('untrusted');
     });
-
-    it('should display custom sandbox info when SANDBOX env is set', () => {
-      vi.stubEnv('SANDBOX', 'alfred-cli-test-sandbox');
-      const { lastFrame } = renderWithWidth(
-        120,
-        createMockUIState({
-          isTrustedFolder: undefined,
-        }),
-      );
-      expect(lastFrame()).toContain('test');
-      vi.unstubAllEnvs();
-    });
-
-    it('should display macOS Seatbelt info when SANDBOX is sandbox-exec', () => {
-      vi.stubEnv('SANDBOX', 'sandbox-exec');
-      vi.stubEnv('SEATBELT_PROFILE', 'test-profile');
-      const { lastFrame } = renderWithWidth(
-        120,
-        createMockUIState({
-          isTrustedFolder: true,
-        }),
-      );
-      expect(lastFrame()).toMatch(/macOS Seatbelt.*\(test-profile\)/s);
-      vi.unstubAllEnvs();
-    });
-
-    it('should display "no sandbox" when SANDBOX is not set and folder is trusted', () => {
-      // Clear any SANDBOX env var that might be set.
-      vi.stubEnv('SANDBOX', '');
-      const { lastFrame } = renderWithWidth(
-        120,
-        createMockUIState({
-          isTrustedFolder: true,
-        }),
-      );
-      expect(lastFrame()).toContain('no sandbox');
-      vi.unstubAllEnvs();
-    });
-
-    it('should prioritize untrusted message over sandbox info', () => {
-      vi.stubEnv('SANDBOX', 'alfred-cli-test-sandbox');
-      const { lastFrame } = renderWithWidth(
-        120,
-        createMockUIState({
-          isTrustedFolder: false,
-        }),
-      );
-      expect(lastFrame()).toContain('untrusted');
-      expect(lastFrame()).not.toMatch(/test-sandbox/s);
-      vi.unstubAllEnvs();
-    });
   });
 
   describe('footer configuration filtering (golden snapshots)', () => {
@@ -222,7 +169,6 @@ describe('<Footer />', () => {
         createMockUIState(),
         createDefaultSettings({
           hideCWD: true,
-          hideSandboxStatus: true,
           hideModelInfo: true,
         }),
       );
@@ -235,24 +181,24 @@ describe('<Footer />', () => {
         createMockUIState(),
         createDefaultSettings({
           hideCWD: false,
-          hideSandboxStatus: false,
           hideModelInfo: true,
         }),
       );
       expect(lastFrame()).toMatchSnapshot('footer-no-model');
     });
 
-    it('renders footer with CWD and model info hidden to test alignment (only sandbox visible)', () => {
+    it('renders footer with untrusted folder warning (trust status visible)', () => {
       const { lastFrame } = renderWithWidth(
         120,
-        createMockUIState(),
+        createMockUIState({
+          isTrustedFolder: false,
+        }),
         createDefaultSettings({
           hideCWD: true,
-          hideSandboxStatus: false,
           hideModelInfo: true,
         }),
       );
-      expect(lastFrame()).toMatchSnapshot('footer-only-sandbox');
+      expect(lastFrame()).toMatchSnapshot('footer-untrusted');
     });
 
     it('renders complete footer in narrow terminal (baseline narrow)', () => {
