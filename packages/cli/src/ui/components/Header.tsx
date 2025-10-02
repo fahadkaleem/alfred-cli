@@ -7,64 +7,61 @@
 import type React from 'react';
 import { Box, Text } from 'ink';
 import Gradient from 'ink-gradient';
+import BigText from 'ink-big-text';
 import { theme } from '../semantic-colors.js';
-import { shortAsciiLogo, longAsciiLogo, tinyAsciiLogo } from './AsciiArt.js';
-import { getAsciiArtWidth } from '../utils/textUtils.js';
+import { shortenPath, tildeifyPath } from '@alfred/alfred-cli-core';
 import { useTerminalSize } from '../hooks/useTerminalSize.js';
 
 interface HeaderProps {
-  customAsciiArt?: string; // For user-defined ASCII art
   version: string;
+  model: string;
+  targetDir: string;
   nightly: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
-  customAsciiArt,
   version,
-  nightly,
+  model,
+  targetDir,
 }) => {
   const { columns: terminalWidth } = useTerminalSize();
-  let displayTitle;
-  const widthOfLongLogo = getAsciiArtWidth(longAsciiLogo);
-  const widthOfShortLogo = getAsciiArtWidth(shortAsciiLogo);
-
-  if (customAsciiArt) {
-    displayTitle = customAsciiArt;
-  } else if (terminalWidth >= widthOfLongLogo) {
-    displayTitle = longAsciiLogo;
-  } else if (terminalWidth >= widthOfShortLogo) {
-    displayTitle = shortAsciiLogo;
-  } else {
-    displayTitle = tinyAsciiLogo;
-  }
-
-  const artWidth = getAsciiArtWidth(displayTitle);
+  const pathLength = Math.max(20, Math.floor(terminalWidth * 0.25));
+  const displayPath = shortenPath(tildeifyPath(targetDir), pathLength);
 
   return (
-    <Box
-      alignItems="flex-start"
-      width={artWidth}
-      flexShrink={0}
-      flexDirection="column"
-    >
-      {theme.ui.gradient ? (
-        <Gradient colors={theme.ui.gradient}>
-          <Text>{displayTitle}</Text>
-        </Gradient>
-      ) : (
-        <Text>{displayTitle}</Text>
-      )}
-      {nightly && (
-        <Box width="100%" flexDirection="row" justifyContent="flex-end">
-          {theme.ui.gradient ? (
-            <Gradient colors={theme.ui.gradient}>
-              <Text>v{version}</Text>
-            </Gradient>
-          ) : (
-            <Text>v{version}</Text>
-          )}
-        </Box>
-      )}
+    <Box flexDirection="row" gap={2} alignItems="center">
+      {/* Left: Alfred BigText */}
+      <Box>
+        {theme.ui.gradient ? (
+          <Gradient colors={theme.ui.gradient}>
+            <BigText text="Alfred" font="tiny" />
+          </Gradient>
+        ) : (
+          <BigText text="Alfred" font="tiny" />
+        )}
+      </Box>
+
+      {/* Right: Version, Model, CWD */}
+      <Box flexDirection="column" justifyContent="flex-start">
+        {theme.ui.gradient ? (
+          <Gradient colors={theme.ui.gradient}>
+            <Text>
+              v{version} · {model}
+            </Text>
+          </Gradient>
+        ) : (
+          <Text color={theme.text.link}>
+            v{version} · {model}
+          </Text>
+        )}
+        {theme.ui.gradient ? (
+          <Gradient colors={theme.ui.gradient}>
+            <Text>{displayPath}</Text>
+          </Gradient>
+        ) : (
+          <Text color={theme.text.link}>{displayPath}</Text>
+        )}
+      </Box>
     </Box>
   );
 };

@@ -380,7 +380,7 @@ describe('validateNonInterActiveAuth', () => {
         expect(payload.error.type).toBe('Error');
         expect(payload.error.code).toBe(1);
         expect(payload.error.message).toContain(
-          'The configured auth type is alfred-api-key, but the current auth type is oauth-personal.',
+          'The configured auth type is gemini-api-key, but the current auth type is oauth-personal.',
         );
       }
     });

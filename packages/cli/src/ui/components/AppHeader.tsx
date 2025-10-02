@@ -19,11 +19,18 @@ export const AppHeader = ({ version }: AppHeaderProps) => {
   const settings = useSettings();
   const config = useConfig();
   const { nightly } = useUIState();
+  const model = config.getModel();
+  const targetDir = config.getTargetDir();
 
   return (
     <Box flexDirection="column">
       {!(settings.merged.ui?.hideBanner || config.getScreenReader()) && (
-        <Header version={version} nightly={nightly} />
+        <Header
+          version={version}
+          model={model}
+          targetDir={targetDir}
+          nightly={nightly}
+        />
       )}
       {!(settings.merged.ui?.hideTips || config.getScreenReader()) && (
         <Tips config={config} />

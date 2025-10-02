@@ -18,11 +18,6 @@
       { "label": "Enterprise", "slug": "docs/cli/enterprise" },
       { "label": "Extensions", "slug": "docs/extension" },
       { "label": "Headless Mode", "slug": "docs/headless" },
-      { "label": "IDE Integration", "slug": "docs/ide-integration" },
-      {
-        "label": "IDE Companion Spec",
-        "slug": "docs/ide-companion-spec"
-      },
       { "label": "Telemetry", "slug": "docs/telemetry" },
       { "label": "Themes", "slug": "docs/cli/themes" },
       { "label": "Token Caching", "slug": "docs/cli/token-caching" },

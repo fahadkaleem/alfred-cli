@@ -229,7 +229,7 @@ describe('ClearcutLogger', () => {
       const event = logger?.createLogEvent(EventNames.CHAT_COMPRESSION, []);
 
       expect(event?.event_metadata[0]).toContainEqual({
-        gemini_cli_key: EventMetadataKey.ALFRED_CLI_SURFACE,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_SURFACE,
         value: 'cloudshell',
       });
     });
@@ -242,7 +242,7 @@ describe('ClearcutLogger', () => {
       const event = logger?.createLogEvent(EventNames.CHAT_COMPRESSION, []);
 
       expect(event?.event_metadata[0]).toContainEqual({
-        gemini_cli_key: EventMetadataKey.ALFRED_CLI_SURFACE,
+        alfred_cli_key: EventMetadataKey.ALFRED_CLI_SURFACE,
         value: 'cloudshell',
       });
     });

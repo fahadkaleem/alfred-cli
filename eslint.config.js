@@ -213,23 +213,9 @@ export default tseslint.config(
       ],
     },
   },
-  {
-    files: ['packages/vscode-ide-companion/esbuild.js'],
-    languageOptions: {
-      globals: {
-        ...globals.node,
-        process: 'readonly',
-        console: 'readonly',
-      },
-    },
-    rules: {
-      'no-restricted-syntax': 'off',
-      '@typescript-eslint/no-require-imports': 'off',
-    },
-  },
   // extra settings for scripts that we run directly with node
   {
-    files: ['packages/vscode-ide-companion/scripts/**/*.js'],
+    files: ['scripts/**/*.js'],
     languageOptions: {
       globals: {
         ...globals.node,
