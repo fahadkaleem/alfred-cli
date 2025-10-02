@@ -46,8 +46,6 @@ import type { ExtensionUpdateState } from '../state/extensions.js';
 interface SlashCommandProcessorActions {
   openAuthDialog: () => void;
   openThemeDialog: () => void;
-  openEditorDialog: () => void;
-  openPrivacyNotice: () => void;
   openSettingsDialog: () => void;
   openModelDialog: () => void;
   openPermissionsDialog: () => void;
@@ -345,12 +343,6 @@ export const useSlashCommandProcessor = (
                       return { type: 'handled' };
                     case 'theme':
                       actions.openThemeDialog();
-                      return { type: 'handled' };
-                    case 'editor':
-                      actions.openEditorDialog();
-                      return { type: 'handled' };
-                    case 'privacy':
-                      actions.openPrivacyNotice();
                       return { type: 'handled' };
                     case 'settings':
                       actions.openSettingsDialog();

@@ -51,7 +51,6 @@ vi.mock('../ui/commands/chatCommand.js', () => ({ chatCommand: {} }));
 vi.mock('../ui/commands/clearCommand.js', () => ({ clearCommand: {} }));
 vi.mock('../ui/commands/compressCommand.js', () => ({ compressCommand: {} }));
 vi.mock('../ui/commands/corgiCommand.js', () => ({ corgiCommand: {} }));
-vi.mock('../ui/commands/editorCommand.js', () => ({ editorCommand: {} }));
 vi.mock('../ui/commands/extensionsCommand.js', () => ({
   extensionsCommand: {},
 }));
@@ -60,7 +59,6 @@ vi.mock('../ui/commands/memoryCommand.js', () => ({ memoryCommand: {} }));
 vi.mock('../ui/commands/modelCommand.js', () => ({
   modelCommand: { name: 'model' },
 }));
-vi.mock('../ui/commands/privacyCommand.js', () => ({ privacyCommand: {} }));
 vi.mock('../ui/commands/quitCommand.js', () => ({ quitCommand: {} }));
 vi.mock('../ui/commands/statsCommand.js', () => ({ statsCommand: {} }));
 vi.mock('../ui/commands/themeCommand.js', () => ({ themeCommand: {} }));

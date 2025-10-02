@@ -44,7 +44,6 @@ export interface UIState {
   isConfigInitialized: boolean;
   authError: string | null;
   isAuthDialogOpen: boolean;
-  showPrivacyNotice: boolean;
   corgiMode: boolean;
   debugMessage: string;
   quittingMessages: HistoryItem[] | null;

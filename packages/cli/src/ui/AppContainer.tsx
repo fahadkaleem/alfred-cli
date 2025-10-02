@@ -47,7 +47,6 @@ import { useMemoryMonitor } from './hooks/useMemoryMonitor.js';
 import { useThemeCommand } from './hooks/useThemeCommand.js';
 import { useAuthCommand } from './auth/useAuth.js';
 import { useQuotaAndFallback } from './hooks/useQuotaAndFallback.js';
-import { useEditorSettings } from './hooks/useEditorSettings.js';
 import { useSettingsCommand } from './hooks/useSettingsCommand.js';
 import { useModelCommand } from './hooks/useModelCommand.js';
 import { useSlashCommandProcessor } from './hooks/slashCommandProcessor.js';
@@ -127,7 +126,6 @@ export const AppContainer = (props: AppContainerProps) => {
   const [quittingMessages, setQuittingMessages] = useState<
     HistoryItem[] | null
   >(null);
-  const [showPrivacyNotice, setShowPrivacyNotice] = useState<boolean>(false);
   const [themeError, setThemeError] = useState<string | null>(
     initializationResult.themeError,
   );
@@ -408,14 +406,6 @@ Logging in with Google... Please restart Gemini CLI to continue.
     onAuthError,
   ]);
 
-  const [editorError, setEditorError] = useState<string | null>(null);
-  const {
-    isEditorDialogOpen,
-    openEditorDialog,
-    handleEditorSelect,
-    exitEditorDialog,
-  } = useEditorSettings(settings, setEditorError, historyManager.addItem);
-
   const { isSettingsDialogOpen, openSettingsDialog, closeSettingsDialog } =
     useSettingsCommand();
 
@@ -435,8 +425,6 @@ Logging in with Google... Please restart Gemini CLI to continue.
     () => ({
       openAuthDialog: () => setAuthState(AuthState.Updating),
       openThemeDialog,
-      openEditorDialog,
-      openPrivacyNotice: () => setShowPrivacyNotice(true),
       openSettingsDialog,
       openModelDialog,
       openPermissionsDialog,
@@ -455,12 +443,10 @@ Logging in with Google... Please restart Gemini CLI to continue.
     [
       setAuthState,
       openThemeDialog,
-      openEditorDialog,
       openSettingsDialog,
       openModelDialog,
       setQuittingMessages,
       setDebugMessage,
-      setShowPrivacyNotice,
       setCorgiMode,
       setExtensionsUpdateState,
       openPermissionsDialog,
@@ -721,8 +707,6 @@ Logging in with Google... Please restart Gemini CLI to continue.
       !isAuthenticating &&
       !isAuthDialogOpen &&
       !isThemeDialogOpen &&
-      !isEditorDialogOpen &&
-      !showPrivacyNotice &&
       alfredClient?.isInitialized?.()
     ) {
       handleFinalSubmit(initialPrompt);
@@ -735,8 +719,6 @@ Logging in with Google... Please restart Gemini CLI to continue.
     isAuthenticating,
     isAuthDialogOpen,
     isThemeDialogOpen,
-    isEditorDialogOpen,
-    showPrivacyNotice,
     alfredClient,
   ]);
 
@@ -973,8 +955,6 @@ Logging in with Google... Please restart Gemini CLI to continue.
     isPermissionsDialogOpen ||
     isAuthenticating ||
     isAuthDialogOpen ||
-    isEditorDialogOpen ||
-    showPrivacyNotice ||
     !!proQuotaRequest;
 
   const pendingHistoryItems = useMemo(
@@ -992,9 +972,6 @@ Logging in with Google... Please restart Gemini CLI to continue.
       isConfigInitialized,
       authError,
       isAuthDialogOpen,
-      editorError,
-      isEditorDialogOpen,
-      showPrivacyNotice,
       corgiMode,
       debugMessage,
       quittingMessages,
@@ -1066,9 +1043,6 @@ Logging in with Google... Please restart Gemini CLI to continue.
       isConfigInitialized,
       authError,
       isAuthDialogOpen,
-      editorError,
-      isEditorDialogOpen,
-      showPrivacyNotice,
       corgiMode,
       debugMessage,
       quittingMessages,
@@ -1143,9 +1117,6 @@ Logging in with Google... Please restart Gemini CLI to continue.
       handleAuthSelect,
       setAuthState,
       onAuthError,
-      handleEditorSelect,
-      exitEditorDialog,
-      exitPrivacyNotice: () => setShowPrivacyNotice(false),
       closeSettingsDialog,
       closeModelDialog,
       closePermissionsDialog,
@@ -1167,8 +1138,6 @@ Logging in with Google... Please restart Gemini CLI to continue.
       handleAuthSelect,
       setAuthState,
       onAuthError,
-      handleEditorSelect,
-      exitEditorDialog,
       closeSettingsDialog,
       closeModelDialog,
       closePermissionsDialog,

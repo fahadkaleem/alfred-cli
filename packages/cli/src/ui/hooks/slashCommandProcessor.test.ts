@@ -145,8 +145,6 @@ describe('useSlashCommandProcessor', () => {
         {
           openAuthDialog: mockOpenAuthDialog,
           openThemeDialog: mockOpenThemeDialog,
-          openEditorDialog: vi.fn(),
-          openPrivacyNotice: vi.fn(),
           openSettingsDialog: vi.fn(),
           openModelDialog: mockOpenModelDialog,
           quit: mockSetQuittingMessages,
@@ -902,11 +900,8 @@ describe('useSlashCommandProcessor', () => {
           vi.fn(), // onDebugMessage
           vi.fn(), // openThemeDialog
           mockOpenAuthDialog,
-          vi.fn(), // openEditorDialog
           vi.fn(), // toggleCorgiMode
           mockSetQuittingMessages,
-          vi.fn(), // openPrivacyNotice
-
           vi.fn(), // openSettingsDialog
           vi.fn(), // toggleVimEnabled
           vi.fn().mockResolvedValue(false), // toggleVimEnabled

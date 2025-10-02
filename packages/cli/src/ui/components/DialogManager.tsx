@@ -13,7 +13,6 @@ import { ThemeDialog } from './ThemeDialog.js';
 import { SettingsDialog } from './SettingsDialog.js';
 import { AuthInProgress } from '../auth/AuthInProgress.js';
 import { AuthDialog } from '../auth/AuthDialog.js';
-import { PrivacyNotice } from '../privacy/PrivacyNotice.js';
 import { WorkspaceMigrationDialog } from './WorkspaceMigrationDialog.js';
 import { ProQuotaDialog } from './ProQuotaDialog.js';
 import { ModelDialog } from './ModelDialog.js';
@@ -155,14 +154,6 @@ export const DialogManager = ({
           onAuthError={uiActions.onAuthError}
         />
       </Box>
-    );
-  }
-  if (uiState.showPrivacyNotice) {
-    return (
-      <PrivacyNotice
-        onExit={() => uiActions.exitPrivacyNotice()}
-        config={config}
-      />
     );
   }
 

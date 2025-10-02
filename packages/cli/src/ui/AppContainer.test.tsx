@@ -55,7 +55,6 @@ vi.mock('./hooks/useQuotaAndFallback.js');
 vi.mock('./hooks/useHistoryManager.js');
 vi.mock('./hooks/useThemeCommand.js');
 vi.mock('./auth/useAuth.js');
-vi.mock('./hooks/useEditorSettings.js');
 vi.mock('./hooks/useSettingsCommand.js');
 vi.mock('./hooks/useModelCommand.js');
 vi.mock('./hooks/slashCommandProcessor.js');
@@ -88,7 +87,6 @@ vi.mock('../utils/cleanup.js');
 import { useHistory } from './hooks/useHistoryManager.js';
 import { useThemeCommand } from './hooks/useThemeCommand.js';
 import { useAuthCommand } from './auth/useAuth.js';
-import { useEditorSettings } from './hooks/useEditorSettings.js';
 import { useSettingsCommand } from './hooks/useSettingsCommand.js';
 import { useModelCommand } from './hooks/useModelCommand.js';
 import { useSlashCommandProcessor } from './hooks/slashCommandProcessor.js';
@@ -119,7 +117,6 @@ describe('AppContainer State Management', () => {
   const mockedUseHistory = useHistory as Mock;
   const mockedUseThemeCommand = useThemeCommand as Mock;
   const mockedUseAuthCommand = useAuthCommand as Mock;
-  const mockedUseEditorSettings = useEditorSettings as Mock;
   const mockedUseSettingsCommand = useSettingsCommand as Mock;
   const mockedUseModelCommand = useModelCommand as Mock;
   const mockedUseSlashCommandProcessor = useSlashCommandProcessor as Mock;
@@ -178,12 +175,6 @@ describe('AppContainer State Management', () => {
       setAuthState: vi.fn(),
       authError: null,
       onAuthError: vi.fn(),
-    });
-    mockedUseEditorSettings.mockReturnValue({
-      isEditorDialogOpen: false,
-      openEditorDialog: vi.fn(),
-      handleEditorSelect: vi.fn(),
-      exitEditorDialog: vi.fn(),
     });
     mockedUseSettingsCommand.mockReturnValue({
       isSettingsDialogOpen: false,

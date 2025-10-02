@@ -23,7 +23,6 @@ export interface UIActions {
   ) => void;
   setAuthState: (state: AuthState) => void;
   onAuthError: (error: string) => void;
-  exitPrivacyNotice: () => void;
   closeSettingsDialog: () => void;
   closeModelDialog: () => void;
   setShellModeActive: (value: boolean) => void;
