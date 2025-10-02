@@ -66,7 +66,6 @@ export * from './services/fileSystemService.js';
 // Export IDE specific logic
 export * from './ide/ide-client.js';
 export * from './ide/ideContext.js';
-export * from './ide/ide-installer.js';
 export { IDE_DEFINITIONS, type IdeInfo } from './ide/detect-ide.js';
 export * from './ide/constants.js';
 export * from './ide/types.js';

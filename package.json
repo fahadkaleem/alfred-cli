@@ -18,7 +18,6 @@
   },
   "scripts": {
     "start": "cross-env node scripts/start.js",
-    "start:a2a-server": "CODER_AGENT_PORT=41242 npm run start --workspace @alfred/alfred-cli-a2a-server",
     "debug": "cross-env DEBUG=1 node --inspect-brk scripts/start.js",
     "auth:npm": "npx google-artifactregistry-auth",
     "auth:docker": "gcloud auth configure-docker us-west1-docker.pkg.dev",
@@ -26,8 +25,7 @@
     "generate": "node scripts/generate-git-commit-info.js",
     "build": "node scripts/build.js",
     "build-and-start": "npm run build && npm run start",
-    "build:vscode": "node scripts/build_vscode_companion.js",
-    "build:all": "npm run build && npm run build:sandbox && npm run build:vscode",
+    "build:all": "npm run build && npm run build:sandbox",
     "build:packages": "npm run build --workspaces",
     "build:sandbox": "node scripts/build_sandbox.js",
     "bundle": "npm run generate && node esbuild.config.js && node scripts/copy_bundle_assets.js",

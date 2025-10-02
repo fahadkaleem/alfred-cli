@@ -16,7 +16,7 @@ interface TipsProps {
 export const Tips: React.FC<TipsProps> = ({ config }) => {
   const alfredMdFileCount = config.getAlfredMdFileCount();
   return (
-    <Box flexDirection="column">
+    <Box flexDirection="column" paddingLeft={1}>
       <Text color={theme.text.primary}>
         Welcome to Alfred, your AI project planning buddy...
       </Text>
