@@ -17,12 +17,18 @@ export const Tips: React.FC<TipsProps> = ({ config }) => {
   const alfredMdFileCount = config.getAlfredMdFileCount();
   return (
     <Box flexDirection="column">
-      <Text color={theme.text.primary}>Tips for getting started:</Text>
       <Text color={theme.text.primary}>
-        1. Ask questions, edit files, or run commands.
+        Welcome to Alfred, your AI project planning buddy...
       </Text>
       <Text color={theme.text.primary}>
-        2. Be specific for the best results.
+        1. Break down projects into tasks with natural language.
+      </Text>
+      <Text color={theme.text.primary}>
+        2. Get help with file analysis, code reviews, and planning. This is a
+        work in progress.
+      </Text>
+      <Text color={theme.text.primary}>
+        3. Track progress and manage your development workflow.
       </Text>
       {alfredMdFileCount === 0 && (
         <Text color={theme.text.primary}>
@@ -30,7 +36,7 @@ export const Tips: React.FC<TipsProps> = ({ config }) => {
           <Text bold color={theme.text.accent}>
             ALFRED.md
           </Text>{' '}
-          files to customize your interactions with Gemini.
+          files to customize your interactions with Alfred.
         </Text>
       )}
       <Text color={theme.text.primary}>

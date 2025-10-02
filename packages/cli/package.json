@@ -1,6 +1,6 @@
 {
   "name": "@alfred/alfred-cli",
-  "version": "0.8.0-nightly.20250925.b1da8c21",
+  "version": "1.0.0",
   "description": "Alfred CLI",
   "repository": {
     "type": "git",
@@ -42,6 +42,7 @@
     "glob": "^10.4.5",
     "highlight.js": "^11.11.1",
     "ink": "^6.2.3",
+    "ink-big-text": "^2.0.0",
     "ink-gradient": "^3.0.0",
     "ink-spinner": "^5.0.0",
     "lowlight": "^3.3.0",
@@ -60,8 +61,8 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@babel/runtime": "^7.27.6",
     "@alfred/alfred-cli-test-utils": "file:../test-utils",
+    "@babel/runtime": "^7.27.6",
     "@testing-library/react": "^16.3.0",
     "@types/command-exists": "^1.2.3",
     "@types/diff": "^7.0.2",
