@@ -20,9 +20,6 @@ export enum EventMetadataKey {
   // Logs the embedding model id used in the session.
   ALFRED_CLI_START_SESSION_EMBEDDING_MODEL = 2,
 
-  // Logs the sandbox that was used in the session.
-  ALFRED_CLI_START_SESSION_SANDBOX = 3,
-
   // Logs the core tools that were enabled in the session.
   ALFRED_CLI_START_SESSION_CORE_TOOLS = 4,
 

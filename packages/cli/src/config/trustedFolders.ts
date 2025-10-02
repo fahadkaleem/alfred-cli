@@ -11,7 +11,6 @@ import {
   FatalConfigError,
   getErrorMessage,
   isWithinRoot,
-  ideContextStore,
 } from '@alfred/alfred-cli-core';
 import type { Settings } from './settings.js';
 import stripJsonComments from 'strip-json-comments';
@@ -50,7 +49,7 @@ export interface TrustedFoldersFile {
 
 export interface TrustResult {
   isTrusted: boolean | undefined;
-  source: 'ide' | 'file' | undefined;
+  source: 'file' | undefined;
 }
 
 export class LoadedTrustedFolders {
@@ -227,11 +226,6 @@ export function isWorkspaceTrusted(
     return { isTrusted: true, source: undefined };
   }
 
-  const ideTrust = ideContextStore.get()?.workspaceState?.isTrusted;
-  if (ideTrust !== undefined) {
-    return { isTrusted: ideTrust, source: 'ide' };
-  }
-
-  // Fall back to the local user configuration
+  // Use local user configuration
   return getWorkspaceTrustFromLocalConfig(trustConfig);
 }

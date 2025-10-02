@@ -6,7 +6,6 @@
 
 import type {
   MCPServerConfig,
-  BugCommandSettings,
   TelemetrySettings,
   AuthType,
   ChatCompressionSettings,
@@ -305,15 +304,6 @@ const SETTINGS_SCHEMA = {
               'Hide the current working directory path in the footer.',
             showInDialog: true,
           },
-          hideSandboxStatus: {
-            type: 'boolean',
-            label: 'Hide Sandbox Status',
-            category: 'UI',
-            requiresRestart: false,
-            default: false,
-            description: 'Hide the sandbox status indicator in the footer.',
-            showInDialog: true,
-          },
           hideModelInfo: {
             type: 'boolean',
             label: 'Hide Model Info',
@@ -399,36 +389,6 @@ const SETTINGS_SCHEMA = {
             showInDialog: true,
           },
         },
-      },
-    },
-  },
-
-  ide: {
-    type: 'object',
-    label: 'IDE',
-    category: 'IDE',
-    requiresRestart: true,
-    default: {},
-    description: 'IDE integration settings.',
-    showInDialog: false,
-    properties: {
-      enabled: {
-        type: 'boolean',
-        label: 'IDE Mode',
-        category: 'IDE',
-        requiresRestart: true,
-        default: false,
-        description: 'Enable IDE integration mode',
-        showInDialog: true,
-      },
-      hasSeenNudge: {
-        type: 'boolean',
-        label: 'Has Seen IDE Integration Nudge',
-        category: 'IDE',
-        requiresRestart: false,
-        default: false,
-        description: 'Whether the user has seen the IDE integration nudge.',
-        showInDialog: false,
       },
     },
   },
@@ -639,16 +599,6 @@ const SETTINGS_SCHEMA = {
     description: 'Settings for built-in and custom tools.',
     showInDialog: false,
     properties: {
-      sandbox: {
-        type: 'object',
-        label: 'Sandbox',
-        category: 'Tools',
-        requiresRestart: true,
-        default: undefined as boolean | string | undefined,
-        description:
-          'Sandbox execution environment (can be a boolean or a path string).',
-        showInDialog: false,
-      },
       shell: {
         type: 'object',
         label: 'Shell',
@@ -961,15 +911,6 @@ const SETTINGS_SCHEMA = {
         showInDialog: false,
         mergeStrategy: MergeStrategy.UNION,
       },
-      bugCommand: {
-        type: 'object',
-        label: 'Bug Command',
-        category: 'Advanced',
-        requiresRestart: false,
-        default: undefined as BugCommandSettings | undefined,
-        description: 'Configuration for the bug report command.',
-        showInDialog: false,
-      },
     },
   },
 
@@ -1056,6 +997,5 @@ export type Settings = InferSettings<SettingsSchemaType>;
 
 export interface FooterSettings {
   hideCWD?: boolean;
-  hideSandboxStatus?: boolean;
   hideModelInfo?: boolean;
 }

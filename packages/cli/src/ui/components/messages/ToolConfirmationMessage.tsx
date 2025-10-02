@@ -5,7 +5,6 @@
  */
 
 import type React from 'react';
-import { useEffect, useState } from 'react';
 import { Box, Text } from 'ink';
 import { DiffRenderer } from './DiffRenderer.js';
 import { RenderInline } from '../../utils/InlineMarkdownRenderer.js';
@@ -15,7 +14,7 @@ import type {
   ToolMcpConfirmationDetails,
   Config,
 } from '@alfred/alfred-cli-core';
-import { IdeClient, ToolConfirmationOutcome } from '@alfred/alfred-cli-core';
+import { ToolConfirmationOutcome } from '@alfred/alfred-cli-core';
 import type { RadioSelectItem } from '../shared/RadioButtonSelect.js';
 import { RadioButtonSelect } from '../shared/RadioButtonSelect.js';
 import { MaxSizedBox } from '../shared/MaxSizedBox.js';
@@ -42,37 +41,7 @@ export const ToolConfirmationMessage: React.FC<
   const { onConfirm } = confirmationDetails;
   const childWidth = terminalWidth - 2; // 2 for padding
 
-  const [ideClient, setIdeClient] = useState<IdeClient | null>(null);
-  const [isDiffingEnabled, setIsDiffingEnabled] = useState(false);
-
-  useEffect(() => {
-    let isMounted = true;
-    if (config.getIdeMode()) {
-      const getIdeClient = async () => {
-        const client = await IdeClient.getInstance();
-        if (isMounted) {
-          setIdeClient(client);
-          setIsDiffingEnabled(client?.isDiffingEnabled() ?? false);
-        }
-      };
-      getIdeClient();
-    }
-    return () => {
-      isMounted = false;
-    };
-  }, [config]);
-
   const handleConfirm = async (outcome: ToolConfirmationOutcome) => {
-    if (confirmationDetails.type === 'edit') {
-      if (config.getIdeMode() && isDiffingEnabled) {
-        const cliOutcome =
-          outcome === ToolConfirmationOutcome.Cancel ? 'rejected' : 'accepted';
-        await ideClient?.resolveDiffFromCli(
-          confirmationDetails.filePath,
-          cliOutcome,
-        );
-      }
-    }
     onConfirm(outcome);
   };
 
@@ -159,13 +128,11 @@ export const ToolConfirmationMessage: React.FC<
         key: 'Yes, allow always',
       });
     }
-    if (!config.getIdeMode() || !isDiffingEnabled) {
-      options.push({
-        label: 'Modify with external editor',
-        value: ToolConfirmationOutcome.ModifyWithEditor,
-        key: 'Modify with external editor',
-      });
-    }
+    options.push({
+      label: 'Modify with external editor',
+      value: ToolConfirmationOutcome.ModifyWithEditor,
+      key: 'Modify with external editor',
+    });
 
     options.push({
       label: 'No, suggest changes (esc)',

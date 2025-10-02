@@ -5,7 +5,7 @@
  */
 
 import * as osActual from 'node:os';
-import { FatalConfigError, ideContextStore } from '@alfred/alfred-cli-core';
+import { FatalConfigError } from '@alfred/alfred-cli-core';
 import {
   describe,
   it,
@@ -328,77 +328,13 @@ describe('isWorkspaceTrusted', () => {
   });
 });
 
-describe('isWorkspaceTrusted with IDE override', () => {
-  afterEach(() => {
-    vi.clearAllMocks();
-    ideContextStore.clear();
-    resetTrustedFoldersForTesting();
-  });
-
-  const mockSettings: Settings = {
-    security: {
-      folderTrust: {
-        enabled: true,
-      },
-    },
-  };
-
-  it('should return true when ideTrust is true, ignoring config', () => {
-    ideContextStore.set({ workspaceState: { isTrusted: true } });
-    // Even if config says don't trust, ideTrust should win.
-    vi.spyOn(fs, 'readFileSync').mockReturnValue(
-      JSON.stringify({ [process.cwd()]: TrustLevel.DO_NOT_TRUST }),
-    );
-    expect(isWorkspaceTrusted(mockSettings)).toEqual({
-      isTrusted: true,
-      source: 'ide',
-    });
-  });
-
-  it('should return false when ideTrust is false, ignoring config', () => {
-    ideContextStore.set({ workspaceState: { isTrusted: false } });
-    // Even if config says trust, ideTrust should win.
-    vi.spyOn(fs, 'readFileSync').mockReturnValue(
-      JSON.stringify({ [process.cwd()]: TrustLevel.TRUST_FOLDER }),
-    );
-    expect(isWorkspaceTrusted(mockSettings)).toEqual({
-      isTrusted: false,
-      source: 'ide',
-    });
-  });
-
-  it('should fall back to config when ideTrust is undefined', () => {
-    vi.spyOn(fs, 'existsSync').mockReturnValue(true);
-    vi.spyOn(fs, 'readFileSync').mockReturnValue(
-      JSON.stringify({ [process.cwd()]: TrustLevel.TRUST_FOLDER }),
-    );
-    expect(isWorkspaceTrusted(mockSettings)).toEqual({
-      isTrusted: true,
-      source: 'file',
-    });
-  });
-
-  it('should always return true if folderTrust setting is disabled', () => {
-    const settings: Settings = {
-      security: {
-        folderTrust: {
-          enabled: false,
-        },
-      },
-    };
-    ideContextStore.set({ workspaceState: { isTrusted: false } });
-    expect(isWorkspaceTrusted(settings)).toEqual({
-      isTrusted: true,
-      source: undefined,
-    });
-  });
-});
+// IDE trust override tests removed - IDE integration has been removed
 
 describe('Trusted Folders Caching', () => {
   beforeEach(() => {
     resetTrustedFoldersForTesting();
-    vi.mocked(fs.existsSync).mockReturnValue(true);
-    vi.mocked(fs.readFileSync).mockReturnValue('{}');
+    vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+    vi.spyOn(fs, 'readFileSync').mockReturnValue('{}' as never);
   });
 
   afterEach(() => {

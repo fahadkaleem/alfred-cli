@@ -362,11 +362,6 @@ Here is an example of a system `settings.json` file that combines several of the
     "otlpEndpoint": "https://telemetry-prod.example.com:4317",
     "logPrompts": false
   },
-  "advanced": {
-    "bugCommand": {
-      "urlTemplate": "https://servicedesk.example.com/new-ticket?title={title}&details={info}"
-    }
-  },
   "privacy": {
     "usageStatisticsEnabled": false
   }
@@ -379,5 +374,4 @@ This configuration:
 - Strictly uses an allowlist for a small set of safe shell commands and file tools.
 - Defines and allows a single corporate MCP server for custom tools.
 - Enables telemetry for auditing, without logging prompt content.
-- Redirects the `/bug` command to an internal ticketing system.
 - Disables general usage statistics collection.

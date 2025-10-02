@@ -71,18 +71,14 @@ export function checkHasEditorType(editor: EditorType): boolean {
   return commands.some((cmd) => commandExists(cmd));
 }
 
-export function allowEditorTypeInSandbox(editor: EditorType): boolean {
-  const notUsingSandbox = !process.env['SANDBOX'];
-  if (['vscode', 'vscodium', 'windsurf', 'cursor', 'zed'].includes(editor)) {
-    return notUsingSandbox;
-  }
-  // For terminal-based editors like vim and emacs, allow in sandbox.
+export function allowEditorTypeInSandbox(_editor: EditorType): boolean {
+  // Sandbox removed - all editors allowed
   return true;
 }
 
 /**
  * Check if the editor is valid and can be used.
- * Returns false if preferred editor is not set / invalid / not available / not allowed in sandbox.
+ * Returns false if preferred editor is not set / invalid / not available.
  */
 export function isEditorAvailable(editor: string | undefined): boolean {
   if (editor && isValidEditorType(editor)) {

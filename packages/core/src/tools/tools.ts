@@ -6,8 +6,14 @@
 
 import type { FunctionDeclaration, PartListUnion } from '@google/genai';
 import { ToolErrorType } from './tool-error.js';
-import type { DiffUpdateResult } from '../ide/ide-client.js';
 import type { ShellExecutionConfig } from '../services/shellExecutionService.js';
+
+// Diff update result type (IDE removed)
+export interface DiffUpdateResult {
+  originalContent: string;
+  modifiedContent: string;
+  diff: string;
+}
 import { SchemaValidator } from '../utils/schemaValidator.js';
 import type { AnsiOutput } from '../utils/terminalSerializer.js';
 import type { MessageBus } from '../confirmation-bus/message-bus.js';

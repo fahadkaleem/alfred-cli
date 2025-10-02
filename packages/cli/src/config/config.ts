@@ -39,7 +39,6 @@ import type { Settings } from './settings.js';
 import type { Extension } from './extension.js';
 import { annotateActiveExtensions } from './extension.js';
 import { getCliVersion } from '../utils/version.js';
-import { loadSandboxConfig } from './sandboxConfig.js';
 import { resolvePath } from '../utils/resolvePath.js';
 import { appEvents } from '../utils/events.js';
 
@@ -60,8 +59,6 @@ const logger = {
 export interface CliArgs {
   query: string | undefined;
   model: string | undefined;
-  sandbox: boolean | string | undefined;
-  sandboxImage: string | undefined;
   debug: boolean | undefined;
   prompt: string | undefined;
   promptInteractive: string | undefined;
@@ -189,15 +186,6 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
           description:
             'Execute the provided prompt and continue in interactive mode',
         })
-        .option('sandbox', {
-          alias: 's',
-          type: 'boolean',
-          description: 'Run in sandbox?',
-        })
-        .option('sandbox-image', {
-          type: 'string',
-          description: 'Sandbox image URI.',
-        })
         .option('all-files', {
           alias: ['a'],
           type: 'boolean',
@@ -289,10 +277,6 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
         .deprecateOption(
           'show-memory-usage',
           'Use the "ui.showMemoryUsage" setting in settings.json instead. This flag will be removed in a future version.',
-        )
-        .deprecateOption(
-          'sandbox-image',
-          'Use the "tools.sandbox" setting in settings.json instead. This flag will be removed in a future version.',
         )
         .deprecateOption(
           'checkpointing',
@@ -450,8 +434,6 @@ export async function loadCliConfig(
   const debugMode = isDebugMode(argv);
 
   const memoryImportFormat = settings.context?.importFormat || 'tree';
-
-  const ideMode = settings.ide?.enabled ?? false;
 
   const folderTrust = settings.security?.folderTrust?.enabled ?? false;
   const trustedFolder = isWorkspaceTrusted(settings)?.isTrusted ?? true;
@@ -631,7 +613,6 @@ export async function loadCliConfig(
     settings.model?.name ||
     defaultModel;
 
-  const sandboxConfig = await loadSandboxConfig(settings, argv);
   const screenReader =
     argv.screenReader !== undefined
       ? argv.screenReader
@@ -639,7 +620,6 @@ export async function loadCliConfig(
   return new Config({
     sessionId,
     embeddingModel: DEFAULT_GEMINI_EMBEDDING_MODEL,
-    sandbox: sandboxConfig,
     targetDir: cwd,
     includeDirectories,
     loadMemoryFromIncludeDirectories:
@@ -677,7 +657,6 @@ export async function loadCliConfig(
       process.env['http_proxy'],
     cwd,
     fileDiscoveryService: fileService,
-    bugCommand: settings.advanced?.bugCommand,
     model: resolvedModel,
     extensionContextFilePaths,
     maxSessionTurns: settings.model?.maxSessionTurns ?? -1,
@@ -687,7 +666,6 @@ export async function loadCliConfig(
     blockedMcpServers,
     noBrowser: !!process.env['NO_BROWSER'],
     summarizeToolOutput: settings.model?.summarizeToolOutput,
-    ideMode,
     chatCompression: settings.model?.chatCompression,
     folderTrust,
     interactive,

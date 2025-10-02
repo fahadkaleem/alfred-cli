@@ -221,32 +221,6 @@ describe('ClearcutLogger', () => {
       });
     });
 
-    it('logs the current surface from Cloud Shell via EDITOR_IN_CLOUD_SHELL', () => {
-      const { logger } = setup({});
-
-      vi.stubEnv('EDITOR_IN_CLOUD_SHELL', 'true');
-
-      const event = logger?.createLogEvent(EventNames.CHAT_COMPRESSION, []);
-
-      expect(event?.event_metadata[0]).toContainEqual({
-        alfred_cli_key: EventMetadataKey.ALFRED_CLI_SURFACE,
-        value: 'cloudshell',
-      });
-    });
-
-    it('logs the current surface from Cloud Shell via CLOUD_SHELL', () => {
-      const { logger } = setup({});
-
-      vi.stubEnv('CLOUD_SHELL', 'true');
-
-      const event = logger?.createLogEvent(EventNames.CHAT_COMPRESSION, []);
-
-      expect(event?.event_metadata[0]).toContainEqual({
-        alfred_cli_key: EventMetadataKey.ALFRED_CLI_SURFACE,
-        value: 'cloudshell',
-      });
-    });
-
     it('logs default metadata', () => {
       // Define expected values
       const session_id = 'my-session-id';
@@ -365,46 +339,28 @@ describe('ClearcutLogger', () => {
     it.each([
       {
         env: {
-          CURSOR_TRACE_ID: 'abc123',
-          GITHUB_SHA: undefined,
-          TERM_PROGRAM: 'vscode',
+          SURFACE: 'custom-surface',
         },
-        expectedValue: 'cursor',
+        expectedValue: 'custom-surface',
+      },
+      {
+        env: {
+          GITHUB_SHA: 'abc123',
+        },
+        expectedValue: 'GitHub',
       },
       {
         env: {
           TERM_PROGRAM: 'vscode',
-          GITHUB_SHA: undefined,
-          MONOSPACE_ENV: '',
         },
-        expectedValue: 'vscode',
+        expectedValue: 'VSCode',
       },
       {
-        env: {
-          MONOSPACE_ENV: 'true',
-          GITHUB_SHA: undefined,
-          TERM_PROGRAM: 'vscode',
-        },
-        expectedValue: 'firebasestudio',
-      },
-      {
-        env: {
-          __COG_BASHRC_SOURCED: 'true',
-          GITHUB_SHA: undefined,
-          TERM_PROGRAM: 'vscode',
-        },
-        expectedValue: 'devin',
-      },
-      {
-        env: {
-          CLOUD_SHELL: 'true',
-          GITHUB_SHA: undefined,
-          TERM_PROGRAM: 'vscode',
-        },
-        expectedValue: 'cloudshell',
+        env: {},
+        expectedValue: 'SURFACE_NOT_SET',
       },
     ])(
-      'logs the current surface as $expectedValue, preempting vscode detection',
+      'logs the current surface as $expectedValue',
       ({ env, expectedValue }) => {
         const { logger } = setup({});
         for (const [key, value] of Object.entries(env)) {

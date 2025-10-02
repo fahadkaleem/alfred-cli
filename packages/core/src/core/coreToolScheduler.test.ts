@@ -14,7 +14,6 @@ import {
 } from './coreToolScheduler.js';
 import type {
   ToolCallConfirmationDetails,
-  ToolConfirmationPayload,
   ToolInvocation,
   ToolResult,
   Config,
@@ -31,7 +30,6 @@ import {
 } from '../index.js';
 import type { Part, PartListUnion } from '@google/genai';
 import {
-  MockModifiableTool,
   MockTool,
   MOCK_TOOL_SHOULD_CONFIRM_EXECUTE,
 } from '../test-utils/mock-tool.js';
@@ -261,8 +259,6 @@ describe('CoreToolScheduler', () => {
       config: mockConfig,
       onAllToolCallsComplete,
       onToolCallsUpdate,
-      getPreferredEditor: () => 'vscode',
-      onEditorClose: vi.fn(),
     });
 
     const abortController = new AbortController();
@@ -338,8 +334,6 @@ describe('CoreToolScheduler', () => {
       config: mockConfig,
       onAllToolCallsComplete,
       onToolCallsUpdate,
-      getPreferredEditor: () => 'vscode',
-      onEditorClose: vi.fn(),
     });
 
     const request = {
@@ -378,8 +372,6 @@ describe('CoreToolScheduler', () => {
       // Create scheduler
       const scheduler = new CoreToolScheduler({
         config: mockConfig,
-        getPreferredEditor: () => 'vscode',
-        onEditorClose: vi.fn(),
       });
 
       // Test that the right tool is selected, with only 1 result, for typos
@@ -402,100 +394,7 @@ describe('CoreToolScheduler', () => {
   });
 });
 
-describe('CoreToolScheduler with payload', () => {
-  it('should update args and diff and execute tool when payload is provided', async () => {
-    const mockTool = new MockModifiableTool();
-    mockTool.executeFn = vi.fn();
-    const declarativeTool = mockTool;
-    const mockToolRegistry = {
-      getTool: () => declarativeTool,
-      getFunctionDeclarations: () => [],
-      tools: new Map(),
-      discovery: {},
-      registerTool: () => {},
-      getToolByName: () => declarativeTool,
-      getToolByDisplayName: () => declarativeTool,
-      getTools: () => [],
-      discoverTools: async () => {},
-      getAllTools: () => [],
-      getToolsByServer: () => [],
-    } as unknown as ToolRegistry;
-
-    const onAllToolCallsComplete = vi.fn();
-    const onToolCallsUpdate = vi.fn();
-
-    const mockConfig = {
-      getSessionId: () => 'test-session-id',
-      getUsageStatisticsEnabled: () => true,
-      getDebugMode: () => false,
-      getApprovalMode: () => ApprovalMode.DEFAULT,
-      getAllowedTools: () => [],
-      getContentGeneratorConfig: () => ({
-        model: 'test-model',
-        authType: 'oauth-personal',
-      }),
-      getShellExecutionConfig: () => ({
-        terminalWidth: 90,
-        terminalHeight: 30,
-      }),
-      storage: {
-        getProjectTempDir: () => '/tmp',
-      },
-      getTruncateToolOutputThreshold: () =>
-        DEFAULT_TRUNCATE_TOOL_OUTPUT_THRESHOLD,
-      getTruncateToolOutputLines: () => DEFAULT_TRUNCATE_TOOL_OUTPUT_LINES,
-      getToolRegistry: () => mockToolRegistry,
-      getUseSmartEdit: () => false,
-      getUseModelRouter: () => false,
-      getGeminiClient: () => null, // No client needed for these tests
-    } as unknown as Config;
-
-    const scheduler = new CoreToolScheduler({
-      config: mockConfig,
-      onAllToolCallsComplete,
-      onToolCallsUpdate,
-      getPreferredEditor: () => 'vscode',
-      onEditorClose: vi.fn(),
-    });
-
-    const abortController = new AbortController();
-    const request = {
-      callId: '1',
-      name: 'mockModifiableTool',
-      args: {},
-      isClientInitiated: false,
-      prompt_id: 'prompt-id-2',
-    };
-
-    await scheduler.schedule([request], abortController.signal);
-
-    const awaitingCall = (await waitForStatus(
-      onToolCallsUpdate,
-      'awaiting_approval',
-    )) as WaitingToolCall;
-    const confirmationDetails = awaitingCall.confirmationDetails;
-
-    if (confirmationDetails) {
-      const payload: ToolConfirmationPayload = { newContent: 'final version' };
-      await confirmationDetails.onConfirm(
-        ToolConfirmationOutcome.ProceedOnce,
-        payload,
-      );
-    }
-
-    // Wait for the tool execution to complete
-    await vi.waitFor(() => {
-      expect(onAllToolCallsComplete).toHaveBeenCalled();
-    });
-
-    const completedCalls = onAllToolCallsComplete.mock
-      .calls[0][0] as ToolCall[];
-    expect(completedCalls[0].status).toBe('success');
-    expect(mockTool.executeFn).toHaveBeenCalledWith({
-      newContent: 'final version',
-    });
-  });
-});
+// CoreToolScheduler with payload tests removed - ModifiableTool and IDE integration has been removed from the codebase
 
 describe('convertToFunctionResponse', () => {
   const toolName = 'testTool';
@@ -774,8 +673,6 @@ describe('CoreToolScheduler edit cancellation', () => {
       config: mockConfig,
       onAllToolCallsComplete,
       onToolCallsUpdate,
-      getPreferredEditor: () => 'vscode',
-      onEditorClose: vi.fn(),
     });
 
     const abortController = new AbortController();
@@ -880,8 +777,6 @@ describe('CoreToolScheduler YOLO mode', () => {
       config: mockConfig,
       onAllToolCallsComplete,
       onToolCallsUpdate,
-      getPreferredEditor: () => 'vscode',
-      onEditorClose: vi.fn(),
     });
 
     const abortController = new AbortController();
@@ -987,8 +882,6 @@ describe('CoreToolScheduler request queueing', () => {
       config: mockConfig,
       onAllToolCallsComplete,
       onToolCallsUpdate,
-      getPreferredEditor: () => 'vscode',
-      onEditorClose: vi.fn(),
     });
 
     const abortController = new AbortController();
@@ -1119,8 +1012,6 @@ describe('CoreToolScheduler request queueing', () => {
       config: mockConfig,
       onAllToolCallsComplete,
       onToolCallsUpdate,
-      getPreferredEditor: () => 'vscode',
-      onEditorClose: vi.fn(),
     });
 
     const abortController = new AbortController();
@@ -1221,8 +1112,6 @@ describe('CoreToolScheduler request queueing', () => {
       config: mockConfig,
       onAllToolCallsComplete,
       onToolCallsUpdate,
-      getPreferredEditor: () => 'vscode',
-      onEditorClose: vi.fn(),
     });
 
     const abortController = new AbortController();
@@ -1341,8 +1230,6 @@ describe('CoreToolScheduler request queueing', () => {
           }
         });
       },
-      getPreferredEditor: () => 'vscode',
-      onEditorClose: vi.fn(),
     });
 
     const abortController = new AbortController();

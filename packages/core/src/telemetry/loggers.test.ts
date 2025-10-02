@@ -194,7 +194,6 @@ describe('loggers', () => {
           'event.timestamp': '2025-01-01T00:00:00.000Z',
           model: 'test-model',
           embedding_model: 'test-embedding-model',
-          sandbox_enabled: true,
           core_tools_enabled: 'ls,read-file',
           approval_mode: 'default',
           api_key_enabled: true,

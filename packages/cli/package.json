@@ -24,9 +24,6 @@
   "files": [
     "dist"
   ],
-  "config": {
-    "sandboxImageUri": "us-docker.pkg.dev/alfred-code-dev/alfred-cli/sandbox:0.8.0-nightly.20250925.b1da8c21"
-  },
   "dependencies": {
     "@alfred/alfred-cli-core": "file:../core",
     "@google/genai": "1.16.0",

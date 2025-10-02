@@ -23,7 +23,6 @@ import { GrepTool } from '../tools/grep.js';
 import { canUseRipgrep, RipGrepTool } from '../tools/ripGrep.js';
 import { GlobTool } from '../tools/glob.js';
 import { EditTool } from '../tools/edit.js';
-import { SmartEditTool } from '../tools/smart-edit.js';
 import { ShellTool } from '../tools/shell.js';
 import { WriteFileTool } from '../tools/write-file.js';
 import { WebFetchTool } from '../tools/web-fetch.js';
@@ -49,7 +48,6 @@ import {
 } from './models.js';
 import { shouldAttemptBrowserLaunch } from '../utils/browser.js';
 import type { MCPOAuthConfig } from '../mcp/oauth-provider.js';
-import { ideContextStore } from '../ide/ideContext.js';
 import { WriteTodosTool } from '../tools/write-todos.js';
 import type { FileSystemService } from '../services/fileSystemService.js';
 import { StandardFileSystemService } from '../services/fileSystemService.js';
@@ -85,10 +83,6 @@ export enum ApprovalMode {
 export interface AccessibilitySettings {
   disableLoadingPhrases?: boolean;
   screenReader?: boolean;
-}
-
-export interface BugCommandSettings {
-  urlTemplate: string;
 }
 
 export interface ChatCompressionSettings {
@@ -183,15 +177,9 @@ export enum AuthProviderType {
   SERVICE_ACCOUNT_IMPERSONATION = 'service_account_impersonation',
 }
 
-export interface SandboxConfig {
-  command: 'docker' | 'podman' | 'sandbox-exec';
-  image: string;
-}
-
 export interface ConfigParameters {
   sessionId: string;
   embeddingModel?: string;
-  sandbox?: SandboxConfig;
   targetDir: string;
   debugMode: boolean;
   question?: string;
@@ -222,7 +210,6 @@ export interface ConfigParameters {
   cwd: string;
   fileDiscoveryService?: FileDiscoveryService;
   includeDirectories?: string[];
-  bugCommand?: BugCommandSettings;
   model: string;
   extensionContextFilePaths?: string[];
   maxSessionTurns?: number;
@@ -234,7 +221,6 @@ export interface ConfigParameters {
   summarizeToolOutput?: Record<string, SummarizeToolOutputSettings>;
   folderTrustFeature?: boolean;
   folderTrust?: boolean;
-  ideMode?: boolean;
   loadMemoryFromIncludeDirectories?: boolean;
   chatCompression?: ChatCompressionSettings;
   interactive?: boolean;
@@ -265,7 +251,6 @@ export class Config {
   private contentGeneratorConfig!: ContentGeneratorConfig;
   private contentGenerator!: ContentGenerator;
   private readonly embeddingModel: string;
-  private readonly sandbox: SandboxConfig | undefined;
   private readonly targetDir: string;
   private workspaceContext: WorkspaceContext;
   private readonly debugMode: boolean;
@@ -299,13 +284,11 @@ export class Config {
   private readonly checkpointing: boolean;
   private readonly proxy: string | undefined;
   private readonly cwd: string;
-  private readonly bugCommand: BugCommandSettings | undefined;
   private model: string;
   private readonly extensionContextFilePaths: string[];
   private readonly noBrowser: boolean;
   private readonly folderTrustFeature: boolean;
   private readonly folderTrust: boolean;
-  private ideMode: boolean;
 
   private inFallbackMode = false;
   private readonly maxSessionTurns: number;
@@ -351,7 +334,6 @@ export class Config {
     this.embeddingModel =
       params.embeddingModel ?? DEFAULT_GEMINI_EMBEDDING_MODEL;
     this.fileSystemService = new StandardFileSystemService();
-    this.sandbox = params.sandbox;
     this.targetDir = path.resolve(params.targetDir);
     this.workspaceContext = new WorkspaceContext(
       this.targetDir,
@@ -394,7 +376,6 @@ export class Config {
     this.proxy = params.proxy;
     this.cwd = params.cwd ?? process.cwd();
     this.fileDiscoveryService = params.fileDiscoveryService ?? null;
-    this.bugCommand = params.bugCommand;
     this.model = params.model;
     this.extensionContextFilePaths = params.extensionContextFilePaths ?? [];
     this.maxSessionTurns = params.maxSessionTurns ?? -1;
@@ -407,7 +388,6 @@ export class Config {
     this.summarizeToolOutput = params.summarizeToolOutput;
     this.folderTrustFeature = params.folderTrustFeature ?? false;
     this.folderTrust = params.folderTrust ?? false;
-    this.ideMode = params.ideMode ?? false;
     this.loadMemoryFromIncludeDirectories =
       params.loadMemoryFromIncludeDirectories ?? false;
     this.chatCompression = params.chatCompression;
@@ -593,21 +573,6 @@ export class Config {
     return this.embeddingModel;
   }
 
-  getSandbox(): SandboxConfig | undefined {
-    return this.sandbox;
-  }
-
-  isRestrictiveSandbox(): boolean {
-    const sandboxConfig = this.getSandbox();
-    const seatbeltProfile = process.env['SEATBELT_PROFILE'];
-    return (
-      !!sandboxConfig &&
-      sandboxConfig.command === 'sandbox-exec' &&
-      !!seatbeltProfile &&
-      seatbeltProfile.startsWith('restrictive-')
-    );
-  }
-
   getTargetDir(): string {
     return this.targetDir;
   }
@@ -789,10 +754,6 @@ export class Config {
     return this.cwd;
   }
 
-  getBugCommand(): BugCommandSettings | undefined {
-    return this.bugCommand;
-  }
-
   getFileService(): FileDiscoveryService {
     if (!this.fileDiscoveryService) {
       this.fileDiscoveryService = new FileDiscoveryService(this.targetDir);
@@ -842,10 +803,6 @@ export class Config {
     return this.summarizeToolOutput;
   }
 
-  getIdeMode(): boolean {
-    return this.ideMode;
-  }
-
   getFolderTrustFeature(): boolean {
     return this.folderTrustFeature;
   }
@@ -859,26 +816,11 @@ export class Config {
   }
 
   isTrustedFolder(): boolean {
-    // isWorkspaceTrusted in cli/src/config/trustedFolder.js returns undefined
-    // when the file based trust value is unavailable, since it is mainly used
-    // in the initialization for trust dialogs, etc. Here we return true since
-    // config.isTrustedFolder() is used for the main business logic of blocking
-    // tool calls etc in the rest of the application.
-    //
     // Default value is true since we load with trusted settings to avoid
     // restarts in the more common path. If the user chooses to mark the folder
     // as untrusted, the CLI will restart and we will have the trust value
     // reloaded.
-    const context = ideContextStore.get();
-    if (context?.workspaceState?.isTrusted !== undefined) {
-      return context.workspaceState.isTrusted;
-    }
-
     return this.trustedFolder ?? true;
-  }
-
-  setIdeMode(value: boolean): void {
-    this.ideMode = value;
   }
 
   /**
@@ -1072,11 +1014,7 @@ export class Config {
     }
 
     registerCoreTool(GlobTool, this);
-    if (this.getUseSmartEdit()) {
-      registerCoreTool(SmartEditTool, this);
-    } else {
-      registerCoreTool(EditTool, this);
-    }
+    registerCoreTool(EditTool, this);
     registerCoreTool(WriteFileTool, this);
     registerCoreTool(WebFetchTool, this);
     registerCoreTool(ReadManyFilesTool, this);

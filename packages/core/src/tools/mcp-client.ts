@@ -1158,10 +1158,6 @@ export async function connectToMcpServer(
         conciseError = `Connection failed for '${mcpServerName}': ${errorMessage}`;
       }
 
-      if (process.env['SANDBOX']) {
-        conciseError += ` (check sandbox availability)`;
-      }
-
       throw new Error(conciseError);
     }
   }

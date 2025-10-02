@@ -14,7 +14,6 @@ import { basename } from 'node:path';
 import v8 from 'node:v8';
 import os from 'node:os';
 import dns from 'node:dns';
-import { start_sandbox } from './utils/sandbox.js';
 import type { DnsResolutionOrder, LoadedSettings } from './config/settings.js';
 import {
   loadSettings,
@@ -44,7 +43,6 @@ import {
   initializeApp,
   type InitializationResult,
 } from './core/initializer.js';
-import { validateAuthMethod } from './config/auth.js';
 import { setMaxSizedBoxDebugging } from './ui/components/shared/MaxSizedBox.js';
 import { validateNonInteractiveAuth } from './validateNonInterActiveAuth.js';
 import { detectAndEnableKittyProtocol } from './ui/utils/kittyProtocolDetector.js';
@@ -58,10 +56,7 @@ import { SessionStatsProvider } from './ui/contexts/SessionContext.js';
 import { VimModeProvider } from './ui/contexts/VimModeContext.js';
 import { KeypressProvider } from './ui/contexts/KeypressContext.js';
 import { useKittyKeyboardProtocol } from './ui/hooks/useKittyKeyboardProtocol.js';
-import {
-  relaunchAppInChildProcess,
-  relaunchOnExitCode,
-} from './utils/relaunch.js';
+import { relaunchAppInChildProcess } from './utils/relaunch.js';
 
 export function validateDnsResolutionOrder(
   order: string | undefined,
@@ -111,8 +106,6 @@ function getNodeMemoryArgs(isDebugMode: boolean): string[] {
   return [];
 }
 
-import { runZedIntegration } from './zed-integration/zedIntegration.js';
-import { loadSandboxConfig } from './config/sandboxConfig.js';
 import { ExtensionEnablementManager } from './config/extensions/extensionEnablement.js';
 
 export function setupUnhandledRejectionHandler() {
@@ -251,87 +244,15 @@ export async function main() {
     }
   }
 
-  // hop into sandbox if we are outside and sandboxing is enabled
-  if (!process.env['SANDBOX']) {
-    const memoryArgs = settings.merged.advanced?.autoConfigureMemory
-      ? getNodeMemoryArgs(isDebugMode)
-      : [];
-    const sandboxConfig = await loadSandboxConfig(settings.merged, argv);
-    // We intentially omit the list of extensions here because extensions
-    // should not impact auth or setting up the sandbox.
-    // TODO(jacobr): refactor loadCliConfig so there is a minimal version
-    // that only initializes enough config to enable refreshAuth or find
-    // another way to decouple refreshAuth from requiring a config.
+  // Relaunch app with configured memory settings if needed
+  const memoryArgs = settings.merged.advanced?.autoConfigureMemory
+    ? getNodeMemoryArgs(isDebugMode)
+    : [];
 
-    if (sandboxConfig) {
-      const partialConfig = await loadCliConfig(
-        settings.merged,
-        [],
-        new ExtensionEnablementManager(ExtensionStorage.getUserExtensionsDir()),
-        sessionId,
-        argv,
-      );
-
-      if (
-        settings.merged.security?.auth?.selectedType &&
-        !settings.merged.security?.auth?.useExternal
-      ) {
-        // Validate authentication here because the sandbox will interfere with the Oauth2 web redirect.
-        try {
-          const err = validateAuthMethod(
-            settings.merged.security.auth.selectedType,
-          );
-          if (err) {
-            throw new Error(err);
-          }
-
-          await partialConfig.refreshAuth(
-            settings.merged.security.auth.selectedType,
-          );
-        } catch (err) {
-          console.error('Error authenticating:', err);
-          process.exit(1);
-        }
-      }
-      let stdinData = '';
-      if (!process.stdin.isTTY) {
-        stdinData = await readStdin();
-      }
-
-      // This function is a copy of the one from sandbox.ts
-      // It is moved here to decouple sandbox.ts from the CLI's argument structure.
-      const injectStdinIntoArgs = (
-        args: string[],
-        stdinData?: string,
-      ): string[] => {
-        const finalArgs = [...args];
-        if (stdinData) {
-          const promptIndex = finalArgs.findIndex(
-            (arg) => arg === '--prompt' || arg === '-p',
-          );
-          if (promptIndex > -1 && finalArgs.length > promptIndex + 1) {
-            // If there's a prompt argument, prepend stdin to it
-            finalArgs[promptIndex + 1] =
-              `${stdinData}\n\n${finalArgs[promptIndex + 1]}`;
-          } else {
-            // If there's no prompt argument, add stdin as the prompt
-            finalArgs.push('--prompt', stdinData);
-          }
-        }
-        return finalArgs;
-      };
-
-      const sandboxArgs = injectStdinIntoArgs(process.argv, stdinData);
-
-      await relaunchOnExitCode(() =>
-        start_sandbox(sandboxConfig, memoryArgs, partialConfig, sandboxArgs),
-      );
-      process.exit(0);
-    } else {
-      // Relaunch app so we always have a child process that can be internally
-      // restarted if needed.
-      await relaunchAppInChildProcess(memoryArgs, []);
-    }
+  if (memoryArgs.length > 0) {
+    // Relaunch app so we always have a child process that can be internally
+    // restarted if needed.
+    await relaunchAppInChildProcess(memoryArgs, []);
   }
 
   // We are now past the logic handling potentially launching a child process
@@ -389,10 +310,6 @@ export async function main() {
     ) {
       // Do oauth before app renders to make copying the link possible.
       await getOauthClient(settings.merged.security.auth.selectedType, config);
-    }
-
-    if (config.getExperimentalZedIntegration()) {
-      return runZedIntegration(config, settings, extensions, argv);
     }
 
     let input = config.getQuestion();

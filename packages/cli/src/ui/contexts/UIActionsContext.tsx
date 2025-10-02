@@ -6,9 +6,8 @@
 
 import { createContext, useContext } from 'react';
 import { type Key } from '../hooks/useKeypress.js';
-import { type IdeIntegrationNudgeResult } from '../IdeIntegrationNudge.js';
 import { type FolderTrustChoice } from '../components/FolderTrustDialog.js';
-import { type AuthType, type EditorType } from '@alfred/alfred-cli-core';
+import { type AuthType } from '@alfred/alfred-cli-core';
 import { type SettingScope } from '../../config/settings.js';
 import type { AuthState } from '../types.js';
 
@@ -24,18 +23,11 @@ export interface UIActions {
   ) => void;
   setAuthState: (state: AuthState) => void;
   onAuthError: (error: string) => void;
-  handleEditorSelect: (
-    editorType: EditorType | undefined,
-    scope: SettingScope,
-  ) => void;
-  exitEditorDialog: () => void;
   exitPrivacyNotice: () => void;
   closeSettingsDialog: () => void;
   closeModelDialog: () => void;
-  closePermissionsDialog: () => void;
   setShellModeActive: (value: boolean) => void;
   vimHandleInput: (key: Key) => boolean;
-  handleIdePromptComplete: (result: IdeIntegrationNudgeResult) => void;
   handleFolderTrustSelect: (choice: FolderTrustChoice) => void;
   setConstrainHeight: (value: boolean) => void;
   onEscapePromptChange: (show: boolean) => void;

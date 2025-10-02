@@ -34,35 +34,24 @@ import {
 } from '../utils/editCorrector.js';
 import { createMockWorkspaceContext } from '../test-utils/mockWorkspaceContext.js';
 import { StandardFileSystemService } from '../services/fileSystemService.js';
-import type { DiffUpdateResult } from '../ide/ide-client.js';
-import { IdeClient } from '../ide/ide-client.js';
 
 const rootDir = path.resolve(os.tmpdir(), 'alfred-cli-test-root');
 
 // --- MOCKS ---
 vi.mock('../core/client.js');
 vi.mock('../utils/editCorrector.js');
-vi.mock('../ide/ide-client.js', () => ({
-  IdeClient: {
-    getInstance: vi.fn(),
-  },
-}));
+
+// IDE integration removed - IdeClient mocks removed
+
 let mockGeminiClientInstance: Mocked<GeminiClient>;
 let mockBaseLlmClientInstance: Mocked<BaseLlmClient>;
 const mockEnsureCorrectEdit = vi.fn<typeof ensureCorrectEdit>();
 const mockEnsureCorrectFileContent = vi.fn<typeof ensureCorrectFileContent>();
-const mockIdeClient = {
-  openDiff: vi.fn(),
-  isDiffingEnabled: vi.fn(),
-};
 
 // Wire up the mocked functions to be used by the actual module imports
 vi.mocked(ensureCorrectEdit).mockImplementation(mockEnsureCorrectEdit);
 vi.mocked(ensureCorrectFileContent).mockImplementation(
   mockEnsureCorrectFileContent,
-);
-vi.mocked(IdeClient.getInstance).mockResolvedValue(
-  mockIdeClient as unknown as IdeClient,
 );
 
 // Mock Config
@@ -460,106 +449,7 @@ describe('WriteFileTool', () => {
       );
     });
 
-    describe('with IDE integration', () => {
-      beforeEach(() => {
-        // Enable IDE mode and set connection status for these tests
-        mockConfigInternal.getIdeMode.mockReturnValue(true);
-        mockIdeClient.isDiffingEnabled.mockReturnValue(true);
-        mockIdeClient.openDiff.mockResolvedValue({
-          status: 'accepted',
-          content: 'ide-modified-content',
-        });
-      });
-
-      it('should call openDiff and await it when in IDE mode and connected', async () => {
-        const filePath = path.join(rootDir, 'ide_confirm_file.txt');
-        const params = { file_path: filePath, content: 'test' };
-        const invocation = tool.build(params);
-
-        const confirmation = (await invocation.shouldConfirmExecute(
-          abortSignal,
-        )) as ToolEditConfirmationDetails;
-
-        expect(mockIdeClient.openDiff).toHaveBeenCalledWith(
-          filePath,
-          'test', // The corrected content
-        );
-        // Ensure the promise is awaited by checking the result
-        expect(confirmation.ideConfirmation).toBeDefined();
-        await confirmation.ideConfirmation; // Should resolve
-      });
-
-      it('should not call openDiff if not in IDE mode', async () => {
-        mockConfigInternal.getIdeMode.mockReturnValue(false);
-        const filePath = path.join(rootDir, 'ide_disabled_file.txt');
-        const params = { file_path: filePath, content: 'test' };
-        const invocation = tool.build(params);
-
-        await invocation.shouldConfirmExecute(abortSignal);
-
-        expect(mockIdeClient.openDiff).not.toHaveBeenCalled();
-      });
-
-      it('should not call openDiff if IDE is not connected', async () => {
-        mockIdeClient.isDiffingEnabled.mockReturnValue(false);
-        const filePath = path.join(rootDir, 'ide_disconnected_file.txt');
-        const params = { file_path: filePath, content: 'test' };
-        const invocation = tool.build(params);
-
-        await invocation.shouldConfirmExecute(abortSignal);
-
-        expect(mockIdeClient.openDiff).not.toHaveBeenCalled();
-      });
-
-      it('should update params.content with IDE content when onConfirm is called', async () => {
-        const filePath = path.join(rootDir, 'ide_onconfirm_file.txt');
-        const params = { file_path: filePath, content: 'original-content' };
-        const invocation = tool.build(params);
-
-        // This is the key part: get the confirmation details
-        const confirmation = (await invocation.shouldConfirmExecute(
-          abortSignal,
-        )) as ToolEditConfirmationDetails;
-
-        // The `onConfirm` function should exist on the details object
-        expect(confirmation.onConfirm).toBeDefined();
-
-        // Call `onConfirm` to trigger the logic that updates the content
-        await confirmation.onConfirm!(ToolConfirmationOutcome.ProceedOnce);
-
-        // Now, check if the original `params` object (captured by the invocation) was modified
-        expect(invocation.params.content).toBe('ide-modified-content');
-      });
-
-      it('should not await ideConfirmation promise', async () => {
-        const filePath = path.join(rootDir, 'ide_no_await_file.txt');
-        const params = { file_path: filePath, content: 'test' };
-        const invocation = tool.build(params);
-
-        let diffPromiseResolved = false;
-        const diffPromise = new Promise<DiffUpdateResult>((resolve) => {
-          setTimeout(() => {
-            diffPromiseResolved = true;
-            resolve({ status: 'accepted', content: 'ide-modified-content' });
-          }, 50); // A small delay to ensure the check happens before resolution
-        });
-        mockIdeClient.openDiff.mockReturnValue(diffPromise);
-
-        const confirmation = (await invocation.shouldConfirmExecute(
-          abortSignal,
-        )) as ToolEditConfirmationDetails;
-
-        // This is the key check: the confirmation details should be returned
-        // *before* the diffPromise is resolved.
-        expect(diffPromiseResolved).toBe(false);
-        expect(confirmation).toBeDefined();
-        expect(confirmation.ideConfirmation).toBe(diffPromise);
-
-        // Now, we can await the promise to let the test finish cleanly.
-        await diffPromise;
-        expect(diffPromiseResolved).toBe(true);
-      });
-    });
+    // IDE integration tests removed - IDE integration has been removed from the codebase
   });
 
   describe('execute', () => {

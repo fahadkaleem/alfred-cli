@@ -6,7 +6,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { Mock } from 'vitest';
-import type { ConfigParameters, SandboxConfig } from './config.js';
+import type { ConfigParameters } from './config.js';
 import { Config, ApprovalMode } from './config.js';
 import * as path from 'node:path';
 import { setAlfredMdFilename as mockSetGeminiMdFilename } from '../tools/memoryTool.js';
@@ -136,10 +136,6 @@ vi.mock('../core/tokenLimits.js', () => ({
 
 describe('Server Config (config.ts)', () => {
   const MODEL = 'gemini-pro';
-  const SANDBOX: SandboxConfig = {
-    command: 'docker',
-    image: 'gemini-cli-sandbox',
-  };
   const TARGET_DIR = '/path/to/target';
   const DEBUG_MODE = false;
   const QUESTION = 'test question';
@@ -151,7 +147,6 @@ describe('Server Config (config.ts)', () => {
   const baseParams: ConfigParameters = {
     cwd: '/tmp',
     embeddingModel: EMBEDDING_MODEL,
-    sandbox: SANDBOX,
     targetDir: TARGET_DIR,
     debugMode: DEBUG_MODE,
     question: QUESTION,
@@ -888,10 +883,6 @@ describe('setApprovalMode with folder trust', () => {
 
 describe('BaseLlmClient Lifecycle', () => {
   const MODEL = 'gemini-pro';
-  const SANDBOX: SandboxConfig = {
-    command: 'docker',
-    image: 'gemini-cli-sandbox',
-  };
   const TARGET_DIR = '/path/to/target';
   const DEBUG_MODE = false;
   const QUESTION = 'test question';
@@ -903,7 +894,6 @@ describe('BaseLlmClient Lifecycle', () => {
   const baseParams: ConfigParameters = {
     cwd: '/tmp',
     embeddingModel: EMBEDDING_MODEL,
-    sandbox: SANDBOX,
     targetDir: TARGET_DIR,
     debugMode: DEBUG_MODE,
     question: QUESTION,
