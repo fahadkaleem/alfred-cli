@@ -121,7 +121,6 @@ export const AppContainer = (props: AppContainerProps) => {
   const { settings, config, initializationResult } = props;
   const historyManager = useHistory();
   useMemoryMonitor(historyManager);
-  const [corgiMode, setCorgiMode] = useState(false);
   const [debugMessage, setDebugMessage] = useState<string>('');
   const [quittingMessages, setQuittingMessages] = useState<
     HistoryItem[] | null
@@ -436,7 +435,6 @@ Logging in with Google... Please restart Gemini CLI to continue.
         }, 100);
       },
       setDebugMessage,
-      toggleCorgiMode: () => setCorgiMode((prev) => !prev),
       setExtensionsUpdateState,
       addConfirmUpdateExtensionRequest,
     }),
@@ -447,7 +445,6 @@ Logging in with Google... Please restart Gemini CLI to continue.
       openModelDialog,
       setQuittingMessages,
       setDebugMessage,
-      setCorgiMode,
       setExtensionsUpdateState,
       openPermissionsDialog,
       addConfirmUpdateExtensionRequest,
@@ -972,7 +969,6 @@ Logging in with Google... Please restart Gemini CLI to continue.
       isConfigInitialized,
       authError,
       isAuthDialogOpen,
-      corgiMode,
       debugMessage,
       quittingMessages,
       isSettingsDialogOpen,
@@ -1043,7 +1039,6 @@ Logging in with Google... Please restart Gemini CLI to continue.
       isConfigInitialized,
       authError,
       isAuthDialogOpen,
-      corgiMode,
       debugMessage,
       quittingMessages,
       isSettingsDialogOpen,

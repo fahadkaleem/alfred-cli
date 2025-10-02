@@ -51,7 +51,6 @@ interface SlashCommandProcessorActions {
   openPermissionsDialog: () => void;
   quit: (messages: HistoryItem[]) => void;
   setDebugMessage: (message: string) => void;
-  toggleCorgiMode: () => void;
   setExtensionsUpdateState: Dispatch<
     SetStateAction<Map<string, ExtensionUpdateState>>
   >;
@@ -198,7 +197,6 @@ export const useSlashCommandProcessor = (
         setDebugMessage: actions.setDebugMessage,
         pendingItem,
         setPendingItem,
-        toggleCorgiMode: actions.toggleCorgiMode,
         toggleVimEnabled,
         setAlfredMdFileCount,
         reloadCommands,
