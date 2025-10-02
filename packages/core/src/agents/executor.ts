@@ -6,7 +6,7 @@
 
 import type { Config } from '../config/config.js';
 import { reportError } from '../utils/errorReporting.js';
-import { GeminiChat, StreamEventType } from '../core/geminiChat.js';
+import { AlfredChat, StreamEventType } from '../core/alfredChat.js';
 import type {
   Content,
   Part,
@@ -233,7 +233,7 @@ export class AgentExecutor {
    * @returns The model's response, including any tool calls or text.
    */
   private async callModel(
-    chat: GeminiChat,
+    chat: AlfredChat,
     messages: Content[],
     tools: FunctionDeclaration[],
     signal: AbortSignal,
@@ -292,8 +292,8 @@ export class AgentExecutor {
     return { functionCalls, textResponse };
   }
 
-  /** Initializes a `GeminiChat` instance for the agent run. */
-  private async createChatObject(inputs: AgentInputs): Promise<GeminiChat> {
+  /** Initializes a `AlfredChat` instance for the agent run. */
+  private async createChatObject(inputs: AgentInputs): Promise<AlfredChat> {
     const { promptConfig, modelConfig } = this.definition;
 
     if (!promptConfig.systemPrompt && !promptConfig.initialMessages) {
@@ -323,7 +323,7 @@ export class AgentExecutor {
         generationConfig.systemInstruction = systemInstruction;
       }
 
-      return new GeminiChat(
+      return new AlfredChat(
         this.runtimeContext,
         generationConfig,
         startHistory,

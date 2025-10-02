@@ -25,10 +25,10 @@ import { ToolRegistry } from '../tools/tool-registry.js';
 import { LSTool } from '../tools/ls.js';
 import { ReadFileTool } from '../tools/read-file.js';
 import {
-  GeminiChat,
+  AlfredChat,
   StreamEventType,
   type StreamEvent,
-} from '../core/geminiChat.js';
+} from '../core/alfredChat.js';
 import type {
   FunctionCall,
   Part,
@@ -43,11 +43,11 @@ const { mockSendMessageStream, mockExecuteToolCall } = vi.hoisted(() => ({
   mockExecuteToolCall: vi.fn(),
 }));
 
-vi.mock('../core/geminiChat.js', async (importOriginal) => {
+vi.mock('../core/alfredChat.js', async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...(actual as object),
-    GeminiChat: vi.fn().mockImplementation(() => ({
+    AlfredChat: vi.fn().mockImplementation(() => ({
       sendMessageStream: mockSendMessageStream,
     })),
   };
@@ -59,7 +59,7 @@ vi.mock('../core/nonInteractiveToolExecutor.js', () => ({
 
 vi.mock('../utils/environmentContext.js');
 
-const MockedGeminiChat = GeminiChat as MockedClass<typeof GeminiChat>;
+const MockedAlfredChat = AlfredChat as MockedClass<typeof AlfredChat>;
 
 // A mock tool that is NOT on the NON_INTERACTIVE_TOOL_ALLOWLIST
 const MOCK_TOOL_NOT_ALLOWED = new MockTool({ name: 'write_file' });
@@ -241,7 +241,7 @@ describe('AgentExecutor', () => {
       expect(mockExecuteToolCall).toHaveBeenCalledTimes(1);
 
       // Verify System Prompt Templating
-      const chatConstructorArgs = MockedGeminiChat.mock.calls[0];
+      const chatConstructorArgs = MockedAlfredChat.mock.calls[0];
       const chatConfig = chatConstructorArgs[1];
       expect(chatConfig?.systemInstruction).toContain(
         'Achieve the goal: Find files.',
