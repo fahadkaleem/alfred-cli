@@ -24,11 +24,6 @@ export {
   parseTelemetryTargetValue,
 } from './config.js';
 export {
-  GcpTraceExporter,
-  GcpMetricExporter,
-  GcpLogExporter,
-} from './gcp-exporters.js';
-export {
   logCliConfiguration,
   logUserPrompt,
   logToolCall,

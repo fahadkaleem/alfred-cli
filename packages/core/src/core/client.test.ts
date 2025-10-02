@@ -39,7 +39,6 @@ import { DEFAULT_GEMINI_FLASH_MODEL } from '../config/models.js';
 import { FileDiscoveryService } from '../services/fileDiscoveryService.js';
 import { setSimulate429 } from '../utils/testUtils.js';
 import { tokenLimit } from './tokenLimits.js';
-import { ClearcutLogger } from '../telemetry/clearcut-logger/clearcut-logger.js';
 import type { ModelRouterService } from '../routing/modelRouterService.js';
 import { uiTelemetryService } from '../telemetry/uiTelemetry.js';
 
@@ -594,8 +593,6 @@ describe('Gemini Client (client.ts)', () => {
     });
 
     it('logs a telemetry event when compressing', async () => {
-      vi.spyOn(ClearcutLogger.prototype, 'logChatCompressionEvent');
-
       const MOCKED_TOKEN_LIMIT = 1000;
       const MOCKED_CONTEXT_PERCENTAGE_THRESHOLD = 0.5;
       vi.mocked(tokenLimit).mockReturnValue(MOCKED_TOKEN_LIMIT);
@@ -654,14 +651,6 @@ describe('Gemini Client (client.ts)', () => {
 
       await client.tryCompressChat('prompt-id-3', false);
 
-      expect(
-        ClearcutLogger.prototype.logChatCompressionEvent,
-      ).toHaveBeenCalledWith(
-        expect.objectContaining({
-          tokens_before: originalTokenCount,
-          tokens_after: newTokenCount,
-        }),
-      );
       expect(uiTelemetryService.setLastPromptTokenCount).toHaveBeenCalledWith(
         newTokenCount,
       );

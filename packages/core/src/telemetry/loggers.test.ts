@@ -86,7 +86,6 @@ import type {
 import { DiscoveredMCPTool } from '../tools/mcp-tool.js';
 import * as uiTelemetry from './uiTelemetry.js';
 import { makeFakeConfig } from '../test-utils/config.js';
-import { ClearcutLogger } from './clearcut-logger/clearcut-logger.js';
 import { UserAccountManager } from '../utils/userAccountManager.js';
 
 describe('loggers', () => {
@@ -115,22 +114,6 @@ describe('loggers', () => {
   describe('logChatCompression', () => {
     beforeEach(() => {
       vi.spyOn(metrics, 'recordChatCompressionMetrics');
-      vi.spyOn(ClearcutLogger.prototype, 'logChatCompressionEvent');
-    });
-
-    it('logs the chat compression event to Clearcut', () => {
-      const mockConfig = makeFakeConfig();
-
-      const event = makeChatCompressionEvent({
-        tokens_before: 9001,
-        tokens_after: 9000,
-      });
-
-      logChatCompression(mockConfig, event);
-
-      expect(
-        ClearcutLogger.prototype.logChatCompressionEvent,
-      ).toHaveBeenCalledWith(event);
     });
 
     it('records the chat compression event to OTEL', () => {
@@ -444,18 +427,10 @@ describe('loggers', () => {
       getUsageStatisticsEnabled: () => true,
     } as unknown as Config;
 
-    beforeEach(() => {
-      vi.spyOn(ClearcutLogger.prototype, 'logRipgrepFallbackEvent');
-    });
-
     it('should log ripgrep fallback event', () => {
       const event = new RipgrepFallbackEvent();
 
       logRipgrepFallback(mockConfig, event);
-
-      expect(
-        ClearcutLogger.prototype.logRipgrepFallbackEvent,
-      ).toHaveBeenCalled();
 
       const emittedEvent = mockLogger.emit.mock.calls[0][0];
       expect(emittedEvent.body).toBe('Switching to grep as fallback.');
@@ -473,10 +448,6 @@ describe('loggers', () => {
       const event = new RipgrepFallbackEvent('rg not found');
 
       logRipgrepFallback(mockConfig, event);
-
-      expect(
-        ClearcutLogger.prototype.logRipgrepFallbackEvent,
-      ).toHaveBeenCalled();
 
       const emittedEvent = mockLogger.emit.mock.calls[0][0];
       expect(emittedEvent.body).toBe('Switching to grep as fallback.');
@@ -1008,19 +979,11 @@ describe('loggers', () => {
   });
 
   describe('logMalformedJsonResponse', () => {
-    beforeEach(() => {
-      vi.spyOn(ClearcutLogger.prototype, 'logMalformedJsonResponseEvent');
-    });
-
-    it('logs the event to Clearcut and OTEL', () => {
+    it('logs the event to OTEL', () => {
       const mockConfig = makeFakeConfig();
       const event = new MalformedJsonResponseEvent('test-model');
 
       logMalformedJsonResponse(mockConfig, event);
-
-      expect(
-        ClearcutLogger.prototype.logMalformedJsonResponseEvent,
-      ).toHaveBeenCalledWith(event);
 
       expect(mockLogger.emit).toHaveBeenCalledWith({
         body: 'Malformed JSON response from test-model.',
@@ -1136,11 +1099,10 @@ describe('loggers', () => {
     } as unknown as Config;
 
     beforeEach(() => {
-      vi.spyOn(ClearcutLogger.prototype, 'logModelRoutingEvent');
       vi.spyOn(metrics, 'recordModelRoutingMetrics');
     });
 
-    it('should log the event to Clearcut and OTEL, and record metrics', () => {
+    it('should log the event to OTEL and record metrics', () => {
       const event = new ModelRoutingEvent(
         'gemini-pro',
         'default',
@@ -1151,10 +1113,6 @@ describe('loggers', () => {
       );
 
       logModelRouting(mockConfig, event);
-
-      expect(
-        ClearcutLogger.prototype.logModelRoutingEvent,
-      ).toHaveBeenCalledWith(event);
 
       expect(mockLogger.emit).toHaveBeenCalledWith({
         body: 'Model routing decision. Model: gemini-pro, Source: default',
@@ -1172,7 +1130,7 @@ describe('loggers', () => {
       );
     });
 
-    it('should only log to Clearcut if OTEL SDK is not initialized', () => {
+    it('should not log if OTEL SDK is not initialized', () => {
       vi.spyOn(sdk, 'isTelemetrySdkInitialized').mockReturnValue(false);
       const event = new ModelRoutingEvent(
         'gemini-pro',
@@ -1185,9 +1143,6 @@ describe('loggers', () => {
 
       logModelRouting(mockConfig, event);
 
-      expect(
-        ClearcutLogger.prototype.logModelRoutingEvent,
-      ).toHaveBeenCalledWith(event);
       expect(mockLogger.emit).not.toHaveBeenCalled();
       expect(metrics.recordModelRoutingMetrics).not.toHaveBeenCalled();
     });
@@ -1198,10 +1153,6 @@ describe('loggers', () => {
       getSessionId: () => 'test-session-id',
       getUsageStatisticsEnabled: () => true,
     } as unknown as Config;
-
-    beforeEach(() => {
-      vi.spyOn(ClearcutLogger.prototype, 'logExtensionInstallEvent');
-    });
 
     afterEach(() => {
       vi.resetAllMocks();
@@ -1216,10 +1167,6 @@ describe('loggers', () => {
       );
 
       logExtensionInstallEvent(mockConfig, event);
-
-      expect(
-        ClearcutLogger.prototype.logExtensionInstallEvent,
-      ).toHaveBeenCalledWith(event);
 
       expect(mockLogger.emit).toHaveBeenCalledWith({
         body: 'Installed extension vscode',
@@ -1243,10 +1190,6 @@ describe('loggers', () => {
       getUsageStatisticsEnabled: () => true,
     } as unknown as Config;
 
-    beforeEach(() => {
-      vi.spyOn(ClearcutLogger.prototype, 'logExtensionUninstallEvent');
-    });
-
     afterEach(() => {
       vi.resetAllMocks();
     });
@@ -1255,10 +1198,6 @@ describe('loggers', () => {
       const event = new ExtensionUninstallEvent('vscode', 'success');
 
       logExtensionUninstall(mockConfig, event);
-
-      expect(
-        ClearcutLogger.prototype.logExtensionUninstallEvent,
-      ).toHaveBeenCalledWith(event);
 
       expect(mockLogger.emit).toHaveBeenCalledWith({
         body: 'Uninstalled extension vscode',
@@ -1280,10 +1219,6 @@ describe('loggers', () => {
       getUsageStatisticsEnabled: () => true,
     } as unknown as Config;
 
-    beforeEach(() => {
-      vi.spyOn(ClearcutLogger.prototype, 'logExtensionEnableEvent');
-    });
-
     afterEach(() => {
       vi.resetAllMocks();
     });
@@ -1292,10 +1227,6 @@ describe('loggers', () => {
       const event = new ExtensionEnableEvent('vscode', 'user');
 
       logExtensionEnable(mockConfig, event);
-
-      expect(
-        ClearcutLogger.prototype.logExtensionEnableEvent,
-      ).toHaveBeenCalledWith(event);
 
       expect(mockLogger.emit).toHaveBeenCalledWith({
         body: 'Enabled extension vscode',
@@ -1317,10 +1248,6 @@ describe('loggers', () => {
       getUsageStatisticsEnabled: () => true,
     } as unknown as Config;
 
-    beforeEach(() => {
-      vi.spyOn(ClearcutLogger.prototype, 'logExtensionDisableEvent');
-    });
-
     afterEach(() => {
       vi.resetAllMocks();
     });
@@ -1329,10 +1256,6 @@ describe('loggers', () => {
       const event = new ExtensionDisableEvent('vscode', 'user');
 
       logExtensionDisable(mockConfig, event);
-
-      expect(
-        ClearcutLogger.prototype.logExtensionDisableEvent,
-      ).toHaveBeenCalledWith(event);
 
       expect(mockLogger.emit).toHaveBeenCalledWith({
         body: 'Disabled extension vscode',
