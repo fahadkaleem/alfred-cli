@@ -7,7 +7,7 @@
 import type React from 'react';
 import { useCallback, useState } from 'react';
 import { Box, Text } from 'ink';
-import { theme } from '../semantic-colors.js';
+import { useTheme } from '../contexts/ThemeContext.js';
 import { themeManager, DEFAULT_THEME } from '../themes/theme-manager.js';
 import { RadioButtonSelect } from './shared/RadioButtonSelect.js';
 import { DiffRenderer } from './messages/DiffRenderer.js';
@@ -37,6 +37,7 @@ export function ThemeDialog({
   availableTerminalHeight,
   terminalWidth,
 }: ThemeDialogProps): React.JSX.Element {
+  const { semanticColors } = useTheme();
   const [selectedScope, setSelectedScope] = useState<SettingScope>(
     SettingScope.User,
   );
@@ -185,7 +186,7 @@ export function ThemeDialog({
   return (
     <Box
       borderStyle="round"
-      borderColor={theme.border.default}
+      borderColor={semanticColors.border.default}
       flexDirection="column"
       paddingTop={includePadding ? 1 : 0}
       paddingBottom={includePadding ? 1 : 0}
@@ -199,7 +200,7 @@ export function ThemeDialog({
           <Box flexDirection="column" width="45%" paddingRight={2}>
             <Text bold={mode === 'theme'} wrap="truncate">
               {mode === 'theme' ? '> ' : '  '}Select Theme{' '}
-              <Text color={theme.text.secondary}>
+              <Text color={semanticColors.text.secondary}>
                 {otherScopeModifiedMessage}
               </Text>
             </Text>
@@ -217,7 +218,7 @@ export function ThemeDialog({
 
           {/* Right Column: Preview */}
           <Box flexDirection="column" width="55%" paddingLeft={2}>
-            <Text bold color={theme.text.primary}>
+            <Text bold color={semanticColors.text.primary}>
               Preview
             </Text>
             {/* Get the Theme object for the highlighted theme, fall back to default if not found */}
@@ -229,7 +230,7 @@ export function ThemeDialog({
               return (
                 <Box
                   borderStyle="single"
-                  borderColor={theme.border.default}
+                  borderColor={semanticColors.border.default}
                   paddingTop={includePadding ? 1 : 0}
                   paddingBottom={includePadding ? 1 : 0}
                   paddingLeft={1}
@@ -273,7 +274,7 @@ def fibonacci(n):
         />
       )}
       <Box marginTop={1}>
-        <Text color={theme.text.secondary} wrap="truncate">
+        <Text color={semanticColors.text.secondary} wrap="truncate">
           (Use Enter to {mode === 'theme' ? 'select' : 'apply scope'}, Tab to{' '}
           {mode === 'theme' ? 'configure scope' : 'select theme'})
         </Text>

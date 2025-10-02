@@ -51,6 +51,7 @@ import { handleAutoUpdate } from './utils/handleAutoUpdate.js';
 import { appEvents, AppEvent } from './utils/events.js';
 import { computeWindowTitle } from './utils/windowTitle.js';
 import { SettingsContext } from './ui/contexts/SettingsContext.js';
+import { ThemeProvider } from './ui/contexts/ThemeContext.js';
 
 import { SessionStatsProvider } from './ui/contexts/SessionContext.js';
 import { VimModeProvider } from './ui/contexts/VimModeContext.js';
@@ -145,23 +146,27 @@ export async function startInteractiveUI(
     const kittyProtocolStatus = useKittyKeyboardProtocol();
     return (
       <SettingsContext.Provider value={settings}>
-        <KeypressProvider
-          kittyProtocolEnabled={kittyProtocolStatus.enabled}
-          config={config}
-          debugKeystrokeLogging={settings.merged.general?.debugKeystrokeLogging}
-        >
-          <SessionStatsProvider>
-            <VimModeProvider settings={settings}>
-              <AppContainer
-                config={config}
-                settings={settings}
-                startupWarnings={startupWarnings}
-                version={version}
-                initializationResult={initializationResult}
-              />
-            </VimModeProvider>
-          </SessionStatsProvider>
-        </KeypressProvider>
+        <ThemeProvider>
+          <KeypressProvider
+            kittyProtocolEnabled={kittyProtocolStatus.enabled}
+            config={config}
+            debugKeystrokeLogging={
+              settings.merged.general?.debugKeystrokeLogging
+            }
+          >
+            <SessionStatsProvider>
+              <VimModeProvider settings={settings}>
+                <AppContainer
+                  config={config}
+                  settings={settings}
+                  startupWarnings={startupWarnings}
+                  version={version}
+                  initializationResult={initializationResult}
+                />
+              </VimModeProvider>
+            </SessionStatsProvider>
+          </KeypressProvider>
+        </ThemeProvider>
       </SettingsContext.Provider>
     );
   };

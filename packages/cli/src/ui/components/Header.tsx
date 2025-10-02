@@ -8,7 +8,7 @@ import type React from 'react';
 import { Box, Text } from 'ink';
 import Gradient from 'ink-gradient';
 import BigText from 'ink-big-text';
-import { theme } from '../semantic-colors.js';
+import { useTheme } from '../contexts/ThemeContext.js';
 import { shortenPath, tildeifyPath } from '@alfred/alfred-cli-core';
 import { useTerminalSize } from '../hooks/useTerminalSize.js';
 
@@ -24,6 +24,7 @@ export const Header: React.FC<HeaderProps> = ({
   model,
   targetDir,
 }) => {
+  const { semanticColors } = useTheme();
   const { columns: terminalWidth } = useTerminalSize();
   const pathLength = Math.max(20, Math.floor(terminalWidth * 0.25));
   const displayPath = shortenPath(tildeifyPath(targetDir), pathLength);
@@ -32,8 +33,8 @@ export const Header: React.FC<HeaderProps> = ({
     <Box flexDirection="row" gap={2} alignItems="center">
       {/* Left: Alfred BigText */}
       <Box>
-        {theme.ui.gradient ? (
-          <Gradient colors={theme.ui.gradient}>
+        {semanticColors.ui.gradient ? (
+          <Gradient colors={semanticColors.ui.gradient}>
             <BigText text="Alfred" font="tiny" />
           </Gradient>
         ) : (
@@ -43,23 +44,23 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Right: Version, Model, CWD */}
       <Box flexDirection="column" justifyContent="flex-start">
-        {theme.ui.gradient ? (
-          <Gradient colors={theme.ui.gradient}>
+        {semanticColors.ui.gradient ? (
+          <Gradient colors={semanticColors.ui.gradient}>
             <Text>
               v{version} · {model}
             </Text>
           </Gradient>
         ) : (
-          <Text color={theme.text.link}>
+          <Text color={semanticColors.text.link}>
             v{version} · {model}
           </Text>
         )}
-        {theme.ui.gradient ? (
-          <Gradient colors={theme.ui.gradient}>
+        {semanticColors.ui.gradient ? (
+          <Gradient colors={semanticColors.ui.gradient}>
             <Text>{displayPath}</Text>
           </Gradient>
         ) : (
-          <Text color={theme.text.link}>{displayPath}</Text>
+          <Text color={semanticColors.text.link}>{displayPath}</Text>
         )}
       </Box>
     </Box>

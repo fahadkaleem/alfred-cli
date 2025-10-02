@@ -6,6 +6,7 @@
 
 import { useState, useCallback } from 'react';
 import { themeManager } from '../themes/theme-manager.js';
+import { useTheme } from '../contexts/ThemeContext.js';
 import type { LoadedSettings, SettingScope } from '../../config/settings.js'; // Import LoadedSettings, AppSettings, MergedSetting
 import { type HistoryItem, MessageType } from '../types.js';
 import process from 'node:process';
@@ -26,6 +27,7 @@ export const useThemeCommand = (
   addItem: (item: Omit<HistoryItem, 'id'>, timestamp: number) => void,
   initialThemeError: string | null,
 ): UseThemeCommandReturn => {
+  const { setTheme, loadCustomThemes } = useTheme();
   const [isThemeDialogOpen, setIsThemeDialogOpen] =
     useState(!!initialThemeError);
 
@@ -45,7 +47,7 @@ export const useThemeCommand = (
 
   const applyTheme = useCallback(
     (themeName: string | undefined) => {
-      if (!themeManager.setActiveTheme(themeName)) {
+      if (!setTheme(themeName)) {
         // If theme is not found, open the theme selection dialog and set error message
         setIsThemeDialogOpen(true);
         setThemeError(`Theme "${themeName}" not found.`);
@@ -53,7 +55,7 @@ export const useThemeCommand = (
         setThemeError(null); // Clear any previous theme error on success
       }
     },
-    [setThemeError],
+    [setTheme, setThemeError],
   );
 
   const handleThemeHighlight = useCallback(
@@ -81,7 +83,7 @@ export const useThemeCommand = (
         }
         loadedSettings.setValue(scope, 'ui.theme', themeName); // Update the merged settings
         if (loadedSettings.merged.ui?.customThemes) {
-          themeManager.loadCustomThemes(loadedSettings.merged.ui?.customThemes);
+          loadCustomThemes(loadedSettings.merged.ui?.customThemes);
         }
         applyTheme(loadedSettings.merged.ui?.theme); // Apply the current theme
         setThemeError(null);
@@ -89,7 +91,7 @@ export const useThemeCommand = (
         setIsThemeDialogOpen(false); // Close the dialog
       }
     },
-    [applyTheme, loadedSettings, setThemeError],
+    [applyTheme, loadedSettings, setThemeError, loadCustomThemes],
   );
 
   return {

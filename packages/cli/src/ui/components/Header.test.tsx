@@ -11,6 +11,40 @@ import * as useTerminalSize from '../hooks/useTerminalSize.js';
 
 vi.mock('../hooks/useTerminalSize.js');
 
+vi.mock('../contexts/ThemeContext.js', () => ({
+  useTheme: vi.fn(() => ({
+    semanticColors: {
+      text: {
+        primary: '#FFFFFF',
+        secondary: '#AAAAAA',
+        link: '#3B82F6',
+        accent: '#8B5CF6',
+      },
+      background: {
+        primary: '#1E1E2E',
+        diff: {
+          added: '#28350B',
+          removed: '#430000',
+        },
+      },
+      border: {
+        default: '#6C7086',
+        focused: '#89B4FA',
+      },
+      ui: {
+        comment: '#6C7086',
+        symbol: '#89DCEB',
+        gradient: ['#4796E4', '#847ACE', '#C3677F'],
+      },
+      status: {
+        error: '#F38BA8',
+        success: '#A6E3A1',
+        warning: '#F9E2AF',
+      },
+    },
+  })),
+}));
+
 describe('<Header />', () => {
   beforeEach(() => {
     vi.spyOn(useTerminalSize, 'useTerminalSize').mockReturnValue({
