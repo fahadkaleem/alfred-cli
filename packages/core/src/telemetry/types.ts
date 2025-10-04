@@ -699,3 +699,77 @@ export class ExtensionDisableEvent implements BaseTelemetryEvent {
     this.setting_scope = settingScope;
   }
 }
+
+// Stub event types for provider telemetry (minimal implementation)
+/* eslint-disable @typescript-eslint/no-unused-vars */
+export class ConversationRequestEvent implements BaseTelemetryEvent {
+  'event.name' = 'conversation_request';
+  'event.timestamp' = new Date().toISOString();
+
+  constructor(
+    provider: string,
+    conversationId: string,
+    turnNumber: number,
+    promptId: string,
+    content: unknown,
+    tools?: unknown,
+    toolFormat?: string,
+  ) {
+    // Stub - no-op
+  }
+}
+
+export class ConversationResponseEvent implements BaseTelemetryEvent {
+  'event.name' = 'conversation_response';
+  'event.timestamp' = new Date().toISOString();
+
+  constructor(
+    provider: string,
+    conversationId: string,
+    turnNumber: number,
+    promptId: string,
+    content: string,
+    duration: number,
+    success: boolean,
+    error?: string,
+  ) {
+    // Stub - no-op
+  }
+}
+
+export class TokenUsageEvent implements BaseTelemetryEvent {
+  'event.name' = 'token_usage';
+  'event.timestamp' = new Date().toISOString();
+
+  constructor(
+    provider: string,
+    conversationId: string,
+    inputTokens: number,
+    outputTokens: number,
+    cachedTokens: number,
+    toolTokens: number,
+    thoughtTokens: number,
+    totalTokens: number,
+  ) {
+    // Stub - no-op
+  }
+}
+
+export class ProviderSwitchEvent implements BaseTelemetryEvent {
+  'event.name' = 'provider_switch';
+  'event.timestamp' = new Date().toISOString();
+
+  constructor(fromProvider: string, toProvider: string, reason?: string) {
+    // Stub - no-op
+  }
+}
+
+export class ProviderCapabilityEvent implements BaseTelemetryEvent {
+  'event.name' = 'provider_capability';
+  'event.timestamp' = new Date().toISOString();
+
+  constructor(provider: string, capability: string, supported: boolean) {
+    // Stub - no-op
+  }
+}
+/* eslint-enable @typescript-eslint/no-unused-vars */

@@ -390,6 +390,22 @@ export class LoopDetectionService {
   }
 
   private async checkForLoopWithLLM(signal: AbortSignal) {
+    // Skip LLM-based loop detection when using a provider (e.g., Anthropic)
+    // The loop detection service currently only works with Gemini API
+    const providerManager = this.config.getProviderManager();
+    if (providerManager) {
+      try {
+        const activeProvider = providerManager.getActiveProvider();
+        if (activeProvider) {
+          // Provider is active - skip LLM loop check
+          // Other loop detection mechanisms (tool repetition, content repetition) still work
+          return false;
+        }
+      } catch {
+        // No active provider, continue with Gemini-based check
+      }
+    }
+
     const recentHistory = this.config
       .getGeminiClient()
       .getHistory()

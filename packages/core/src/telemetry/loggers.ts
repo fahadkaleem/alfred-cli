@@ -780,3 +780,46 @@ export function logExtensionDisable(
   };
   logger.emit(logRecord);
 }
+
+// Stub functions for provider telemetry (minimal implementation)
+import type {
+  ConversationRequestEvent,
+  ConversationResponseEvent,
+  TokenUsageEvent,
+  ProviderSwitchEvent,
+  ProviderCapabilityEvent,
+} from './types.js';
+
+/* eslint-disable @typescript-eslint/no-unused-vars */
+export function logConversationRequest(
+  config: Config,
+  event: ConversationRequestEvent,
+): void {
+  // Stub - logging disabled for now
+}
+
+export function logConversationResponse(
+  config: Config,
+  event: ConversationResponseEvent,
+): void {
+  // Stub - logging disabled for now
+}
+
+export function logTokenUsage(config: Config, event: TokenUsageEvent): void {
+  // Stub - logging disabled for now
+}
+
+export function logProviderSwitch(
+  config: Config,
+  event: ProviderSwitchEvent,
+): void {
+  // Stub - logging disabled for now
+}
+
+export function logProviderCapability(
+  config: Config,
+  event: ProviderCapabilityEvent,
+): void {
+  // Stub - logging disabled for now
+}
+/* eslint-enable @typescript-eslint/no-unused-vars */

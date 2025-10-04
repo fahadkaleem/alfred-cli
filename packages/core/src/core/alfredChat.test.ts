@@ -1798,7 +1798,9 @@ describe('AlfredChat', () => {
         },
       ]);
 
-      chat.stripThoughtsFromHistory();
+      // stripThoughtsFromHistory() has been removed - thoughts are now
+      // filtered automatically in recordHistory(). Since this history was set via
+      // setHistory() which uses HistoryService, we can just retrieve it:
 
       expect(chat.getHistory()).toEqual([
         {

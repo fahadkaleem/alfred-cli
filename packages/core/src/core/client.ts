@@ -175,12 +175,12 @@ export class GeminiClient {
     return this.getChat().getHistory();
   }
 
-  stripThoughtsFromHistory() {
-    this.getChat().stripThoughtsFromHistory();
-  }
-
   setHistory(history: Content[]) {
     this.getChat().setHistory(history);
+  }
+
+  stripThoughtsFromHistory() {
+    this.getChat().stripThoughtsFromHistory();
   }
 
   async setTools(): Promise<void> {

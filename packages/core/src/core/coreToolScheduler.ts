@@ -233,6 +233,15 @@ const createErrorResponse = (
   callId: request.callId,
   error,
   responseParts: [
+    // First, echo back the tool call (required for provider protocol)
+    {
+      functionCall: {
+        id: request.callId,
+        name: request.name,
+        args: request.args,
+      },
+    },
+    // Then, the error response
     {
       functionResponse: {
         id: request.callId,
@@ -463,6 +472,15 @@ export class CoreToolScheduler {
             response: {
               callId: currentCall.request.callId,
               responseParts: [
+                // First, echo back the tool call (required for provider protocol)
+                {
+                  functionCall: {
+                    id: currentCall.request.callId,
+                    name: currentCall.request.name,
+                    args: currentCall.request.args,
+                  },
+                },
+                // Then, the cancellation response
                 {
                   functionResponse: {
                     id: currentCall.request.callId,
@@ -940,7 +958,19 @@ export class CoreToolScheduler {
               );
               const successResponse: ToolCallResponseInfo = {
                 callId,
-                responseParts: response,
+                // Include BOTH the tool call and response (required for provider protocol)
+                responseParts: [
+                  // First, echo back the tool call
+                  {
+                    functionCall: {
+                      id: scheduledCall.request.callId,
+                      name: scheduledCall.request.name,
+                      args: scheduledCall.request.args,
+                    },
+                  },
+                  // Then, spread the tool response parts
+                  ...response,
+                ],
                 resultDisplay: toolResult.returnDisplay,
                 error: undefined,
                 errorType: undefined,

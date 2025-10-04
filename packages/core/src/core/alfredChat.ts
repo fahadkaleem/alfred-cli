@@ -40,6 +40,14 @@ import { handleFallback } from '../fallback/handler.js';
 import { isFunctionResponse } from '../utils/messageInspectors.js';
 import { partListUnionToString } from './alfredRequest.js';
 import { uiTelemetryService } from '../telemetry/uiTelemetry.js';
+import { HistoryService } from '../services/history/HistoryService.js';
+import { ContentConverters } from '../services/history/ContentConverters.js';
+import type {
+  IContent,
+  ToolCallBlock,
+  ToolResponseBlock,
+} from '../services/history/IContent.js';
+import type { IProvider } from '../providers/IProvider.js';
 
 export enum StreamEventType {
   /** A regular content chunk from the API. */
@@ -125,43 +133,6 @@ function validateHistory(history: Content[]) {
 }
 
 /**
- * Extracts the curated (valid) history from a comprehensive history.
- *
- * @remarks
- * The model may sometimes generate invalid or empty contents(e.g., due to safety
- * filters or recitation). Extracting valid turns from the history
- * ensures that subsequent requests could be accepted by the model.
- */
-function extractCuratedHistory(comprehensiveHistory: Content[]): Content[] {
-  if (comprehensiveHistory === undefined || comprehensiveHistory.length === 0) {
-    return [];
-  }
-  const curatedHistory: Content[] = [];
-  const length = comprehensiveHistory.length;
-  let i = 0;
-  while (i < length) {
-    if (comprehensiveHistory[i].role === 'user') {
-      curatedHistory.push(comprehensiveHistory[i]);
-      i++;
-    } else {
-      const modelOutput: Content[] = [];
-      let isValid = true;
-      while (i < length && comprehensiveHistory[i].role === 'model') {
-        modelOutput.push(comprehensiveHistory[i]);
-        if (isValid && !isValidContent(comprehensiveHistory[i])) {
-          isValid = false;
-        }
-        i++;
-      }
-      if (isValid) {
-        curatedHistory.push(...modelOutput);
-      }
-    }
-  }
-  return curatedHistory;
-}
-
-/**
  * Custom error to signal that a stream completed with invalid content,
  * which should trigger a retry.
  */
@@ -187,15 +158,32 @@ export class AlfredChat {
   // model.
   private sendPromise: Promise<void> = Promise.resolve();
   private readonly chatRecordingService: ChatRecordingService;
+  private historyService: HistoryService;
 
   constructor(
     private readonly config: Config,
     private readonly generationConfig: GenerateContentConfig = {},
-    private history: Content[] = [],
+    initialHistory: Content[] = [],
   ) {
-    validateHistory(history);
+    validateHistory(initialHistory);
     this.chatRecordingService = new ChatRecordingService(config);
     this.chatRecordingService.initialize();
+
+    // Initialize HistoryService for provider support
+    this.historyService = new HistoryService();
+
+    // Convert and add initial history to HistoryService
+    if (initialHistory.length > 0) {
+      const currentModel = this.config.getModel();
+      const idGen = this.historyService.getIdGeneratorCallback();
+      for (const content of initialHistory) {
+        const matcher = this.makePositionMatcher();
+        this.historyService.add(
+          ContentConverters.toIContent(content, idGen, matcher),
+          currentModel,
+        );
+      }
+    }
   }
 
   setSystemInstruction(sysInstr: string) {
@@ -237,11 +225,49 @@ export class AlfredChat {
     });
     this.sendPromise = streamDonePromise;
 
-    const userContent = createUserContent(params.message);
+    // Check if this is a paired tool call/response array (from tool executor)
+    let userContent: Content | Content[];
+    const messageArray = Array.isArray(params.message) ? params.message : null;
+    const isPairedToolResponse =
+      messageArray &&
+      messageArray.length === 2 &&
+      messageArray[0] &&
+      typeof messageArray[0] === 'object' &&
+      'functionCall' in messageArray[0] &&
+      messageArray[1] &&
+      typeof messageArray[1] === 'object' &&
+      'functionResponse' in messageArray[1];
+
+    if (isPairedToolResponse && messageArray) {
+      // For providers, only send the tool response, not the echo of the tool call
+      // The tool call is already in history from the model's previous response
+      // The echo is only needed for legacy Gemini API
+      const provider = this.getActiveProvider();
+      if (provider && this.providerSupportsIContent(provider)) {
+        userContent = createUserContent([messageArray[1]]);
+      } else {
+        // Legacy path: include both tool call and response (matching llxprt-code)
+        userContent = [
+          {
+            role: 'model' as const,
+            parts: [messageArray[0] as Part],
+          },
+          {
+            role: 'user' as const,
+            parts: [messageArray[1] as Part],
+          },
+        ];
+      }
+    } else {
+      userContent = createUserContent(params.message);
+    }
 
     // Record user input - capture complete message with all parts (text, files, images, etc.)
     // but skip recording function responses (tool call results) as they should be stored in tool call records
-    if (!isFunctionResponse(userContent)) {
+    // Skip recording if it's a paired tool response (array) or a function response
+    const shouldSkipRecording =
+      Array.isArray(userContent) || isFunctionResponse(userContent);
+    if (!shouldSkipRecording) {
       const userMessage = Array.isArray(params.message)
         ? params.message
         : [params.message];
@@ -253,9 +279,57 @@ export class AlfredChat {
       });
     }
 
-    // Add user content to history ONCE before any attempts.
-    this.history.push(userContent);
-    const requestContents = this.getHistory(true);
+    // DO NOT add anything to history here - wait until after successful send!
+    // Tool responses will be handled in recordHistory after the model responds
+    // This is the "send-then-commit" pattern to avoid orphaned tool calls
+
+    // Get current history WITHOUT the new user message
+    const currentHistory = this.getHistory(true);
+
+    // Build request with history + new user content (but don't commit to history yet)
+    let requestContents: Content[];
+    if (Array.isArray(userContent)) {
+      // This is a tool call/response pair
+      // For providers, we only need the response part since the tool call is already in history
+      const provider = this.getActiveProvider();
+      if (provider && this.providerSupportsIContent(provider)) {
+        // Only include the tool response (second element), not the echo
+        requestContents = [...currentHistory, userContent[1]];
+      } else {
+        // Legacy Gemini API needs both the echo and response
+        requestContents = [...currentHistory, ...userContent];
+      }
+    } else if (!Array.isArray(userContent) && userContent.parts) {
+      // Check if this is tool responses (multiple tools called in parallel)
+      const provider = this.getActiveProvider();
+      if (provider && this.providerSupportsIContent(provider)) {
+        // For providers like Anthropic, we need to split multiple tool responses into separate messages
+        const toolResponseParts = userContent.parts.filter(
+          (part) =>
+            part && typeof part === 'object' && 'functionResponse' in part,
+        );
+
+        if (toolResponseParts.length > 0) {
+          // Create separate messages for each tool response
+          const toolResponseMessages: Content[] = toolResponseParts.map(
+            (part) => ({
+              role: 'user' as const,
+              parts: [part],
+            }),
+          );
+
+          requestContents = [...currentHistory, ...toolResponseMessages];
+        } else {
+          // Not tool responses, treat as regular user message
+          requestContents = [...currentHistory, userContent];
+        }
+      } else {
+        // Legacy API or non-tool-response message
+        requestContents = [...currentHistory, userContent];
+      }
+    } else {
+      requestContents = [...currentHistory, userContent];
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
@@ -278,12 +352,14 @@ export class AlfredChat {
               requestContents,
               params,
               prompt_id,
+              userContent,
             );
 
             for await (const chunk of stream) {
               yield { type: StreamEventType.CHUNK, value: chunk };
             }
 
+            // History is managed by processStreamResponse - it adds both user and model messages
             lastError = null;
             break;
           } catch (error) {
@@ -327,10 +403,7 @@ export class AlfredChat {
               ),
             );
           }
-          // If the stream fails, remove the user message that was added.
-          if (self.history[self.history.length - 1] === userContent) {
-            self.history.pop();
-          }
+          // With send-then-commit pattern, history is only updated on success
           throw lastError;
         }
       } finally {
@@ -344,7 +417,20 @@ export class AlfredChat {
     requestContents: Content[],
     params: SendMessageParameters,
     prompt_id: string,
+    userInput: Content | Content[],
   ): Promise<AsyncGenerator<GenerateContentResponse>> {
+    // Try to use provider if available
+    const provider = this.getActiveProvider();
+    if (provider && this.providerSupportsIContent(provider)) {
+      const providerStream = await this.makeProviderApiCall(
+        requestContents,
+        params,
+        userInput,
+      );
+      return this.processStreamResponse(model, providerStream, userInput);
+    }
+
+    // Fallback to legacy ContentGenerator
     const apiCall = () => {
       const modelToUse = getEffectiveModel(
         this.config.isInFallbackMode(),
@@ -389,7 +475,54 @@ export class AlfredChat {
       authType: this.config.getContentGeneratorConfig()?.authType,
     });
 
-    return this.processStreamResponse(model, streamResponse);
+    return this.processStreamResponse(model, streamResponse, userInput);
+  }
+
+  /**
+   * Make API call using the provider (Anthropic, Gemini via provider, etc.)
+   */
+  private async makeProviderApiCall(
+    requestContents: Content[],
+    _params: SendMessageParameters,
+    _userInput: Content | Content[],
+  ): Promise<AsyncGenerator<GenerateContentResponse>> {
+    const provider = this.getActiveProvider();
+    if (!provider) {
+      throw new Error('No active provider configured');
+    }
+
+    // Convert Gemini Content[] to IContent[]
+    const idGen = this.historyService.getIdGeneratorCallback();
+    const matcher = this.makePositionMatcher();
+    const iContents: IContent[] = requestContents.map((content) =>
+      ContentConverters.toIContent(content, idGen, matcher),
+    );
+
+    // Get tools in the format the provider expects
+    const tools = this.generationConfig.tools;
+
+    // Call the provider directly with IContent
+    const streamResponse = provider.generateChatCompletion!(
+      iContents,
+      tools as
+        | Array<{
+            functionDeclarations: Array<{
+              name: string;
+              description?: string;
+              parametersJsonSchema?: unknown;
+            }>;
+          }>
+        | undefined,
+    );
+
+    // Convert IContent stream to GenerateContentResponse stream
+    // Return the converted stream WITHOUT calling processStreamResponse here
+    // The caller will call processStreamResponse to ensure history is recorded only once
+    return async function* () {
+      for await (const iContent of streamResponse) {
+        yield this.convertIContentToResponse(iContent);
+      }
+    }.bind(this)();
   }
 
   /**
@@ -416,47 +549,85 @@ export class AlfredChat {
    * chat session.
    */
   getHistory(curated: boolean = false): Content[] {
-    const history = curated
-      ? extractCuratedHistory(this.history)
-      : this.history;
+    // Get history from HistoryService in IContent format
+    const iContents = curated
+      ? this.historyService.getCurated()
+      : this.historyService.getAll();
+
+    // Convert to Gemini Content format
+    const contents = ContentConverters.toGeminiContents(iContents);
+
     // Deep copy the history to avoid mutating the history outside of the
     // chat session.
-    return structuredClone(history);
+    return structuredClone(contents);
   }
 
   /**
    * Clears the chat history.
    */
   clearHistory(): void {
-    this.history = [];
+    this.historyService.clear();
   }
 
   /**
    * Adds a new entry to the chat history.
    */
   addHistory(content: Content): void {
-    this.history.push(content);
+    this.historyService.add(
+      ContentConverters.toIContent(content),
+      this.config.getModel(),
+    );
   }
 
+  /**
+   * Sets the chat history, replacing any existing history.
+   */
   setHistory(history: Content[]): void {
-    this.history = history;
+    this.historyService.clear();
+    const currentModel = this.config.getModel();
+    for (const content of history) {
+      this.historyService.add(
+        ContentConverters.toIContent(content),
+        currentModel,
+      );
+    }
   }
 
+  /**
+   * Removes thinking/thought content from loaded history for backwards compatibility.
+   * This strips both Gemini thoughts (thought: true, thoughtSignature) and
+   * Anthropic thinking blocks (type: 'thinking').
+   *
+   * Used when loading history from files to ensure old history doesn't contain
+   * internal reasoning that wasn't meant to be persisted.
+   */
   stripThoughtsFromHistory(): void {
-    this.history = this.history.map((content) => {
+    // Get current history from service
+    const currentHistory = this.getHistory(true);
+
+    // Filter and clean thoughts from history
+    const cleanedHistory = currentHistory.map((content) => {
       const newContent = { ...content };
       if (newContent.parts) {
-        newContent.parts = newContent.parts.map((part) => {
-          if (part && typeof part === 'object' && 'thoughtSignature' in part) {
-            const newPart = { ...part };
-            delete (newPart as { thoughtSignature?: string }).thoughtSignature;
-            return newPart;
+        newContent.parts = newContent.parts.filter((part) => {
+          // Filter Gemini thoughts (has 'thought' property or 'thoughtSignature')
+          if (part && typeof part === 'object') {
+            if ('thought' in part || 'thoughtSignature' in part) {
+              return false;
+            }
+            // Filter Anthropic thinking blocks (type: 'thinking')
+            if ('type' in part && part.type === 'thinking') {
+              return false;
+            }
           }
-          return part;
+          return true;
         });
       }
       return newContent;
     });
+
+    // Reset history with cleaned content
+    this.setHistory(cleanedHistory);
   }
 
   setTools(tools: Tool[]): void {
@@ -494,6 +665,7 @@ export class AlfredChat {
   private async *processStreamResponse(
     model: string,
     streamResponse: AsyncGenerator<GenerateContentResponse>,
+    userInput: Content | Content[],
   ): AsyncGenerator<GenerateContentResponse> {
     const modelResponseParts: Part[] = [];
 
@@ -584,7 +756,11 @@ export class AlfredChat {
       }
     }
 
-    this.history.push({ role: 'model', parts: consolidatedParts });
+    // Use recordHistory to correctly save the conversation turn.
+    const modelOutput: Content[] = [
+      { role: 'model', parts: consolidatedParts },
+    ];
+    this.recordHistory(userInput, modelOutput, undefined);
   }
 
   /**
@@ -675,6 +851,352 @@ export class AlfredChat {
     }
     const tool = this.config.getToolRegistry().getTool(part.functionCall.name);
     return !!tool && MUTATOR_KINDS.includes(tool.kind);
+  }
+
+  /**
+   * Create a position-based matcher for tool responses.
+   * Returns the next unmatched tool call from the current history.
+   */
+  private makePositionMatcher():
+    | (() => { historyId: string; toolName?: string })
+    | undefined {
+    const queue = this.historyService
+      .findUnmatchedToolCalls()
+      .map((b) => ({ historyId: b.id, toolName: b.name }));
+
+    // Return undefined if there are no unmatched tool calls
+    if (queue.length === 0) {
+      return undefined;
+    }
+
+    // Return a function that always returns a valid value (never undefined)
+    return () => {
+      const result = queue.shift();
+      // If queue is empty, return a fallback value
+      return result || { historyId: '', toolName: undefined };
+    };
+  }
+
+  /**
+   * Get the active provider from the ProviderManager via Config
+   */
+  private getActiveProvider(): IProvider | undefined {
+    const providerManager = this.config.getProviderManager();
+    if (!providerManager) {
+      return undefined;
+    }
+
+    try {
+      return providerManager.getActiveProvider();
+    } catch {
+      // No active provider set
+      return undefined;
+    }
+  }
+
+  /**
+   * Check if a provider supports the IContent interface
+   */
+  private providerSupportsIContent(provider: IProvider | undefined): boolean {
+    if (!provider) {
+      return false;
+    }
+
+    // Check if the provider has the IContent method
+    return (
+      typeof (provider as { generateChatCompletion?: unknown })
+        .generateChatCompletion === 'function'
+    );
+  }
+
+  /**
+   * Convert IContent (from provider) to GenerateContentResponse for SDK compatibility
+   */
+  private convertIContentToResponse(input: IContent): GenerateContentResponse {
+    // Convert IContent blocks to Gemini Parts
+    const parts: Part[] = [];
+
+    for (const block of input.blocks) {
+      switch (block.type) {
+        case 'text':
+          parts.push({ text: block.text });
+          break;
+        case 'tool_call': {
+          const toolCall = block as ToolCallBlock;
+          parts.push({
+            functionCall: {
+              id: toolCall.id,
+              name: toolCall.name,
+              args: toolCall.parameters as Record<string, unknown>,
+            },
+          });
+          break;
+        }
+        case 'tool_response': {
+          const toolResponse = block as ToolResponseBlock;
+          parts.push({
+            functionResponse: {
+              id: toolResponse.callId,
+              name: toolResponse.toolName,
+              response: toolResponse.result as Record<string, unknown>,
+            },
+          });
+          break;
+        }
+        case 'thinking':
+          // Include thinking blocks as thought parts
+          parts.push({
+            thought: true,
+            text: block.thought,
+          });
+          break;
+        default:
+          // Skip unsupported block types
+          break;
+      }
+    }
+
+    // Build the response structure
+    const response = {
+      candidates: [
+        {
+          content: {
+            role: 'model',
+            parts,
+          },
+          // Add finishReason for stream validation
+          finishReason: 'STOP' as const,
+        },
+      ],
+      // These are required properties that must be present
+      get text() {
+        return parts.find((p) => 'text' in p)?.text || '';
+      },
+      functionCalls: parts
+        .filter((p) => 'functionCall' in p)
+        .map((p) => p.functionCall!),
+      executableCode: undefined,
+      codeExecutionResult: undefined,
+      // data property will be added below
+    } as GenerateContentResponse;
+
+    // Add data property that returns self-reference
+    // Make it non-enumerable to avoid circular reference in JSON.stringify
+    Object.defineProperty(response, 'data', {
+      get() {
+        return response;
+      },
+      enumerable: false,
+      configurable: true,
+    });
+
+    // Add usage metadata if present
+    if (input.metadata?.usage) {
+      response.usageMetadata = {
+        promptTokenCount: input.metadata.usage.promptTokens || 0,
+        candidatesTokenCount: input.metadata.usage.completionTokens || 0,
+        totalTokenCount: input.metadata.usage.totalTokens || 0,
+      };
+    }
+
+    return response;
+  }
+
+  /**
+   * Records a conversation turn in the history service.
+   * Handles user input, model output, and automatic function calling history.
+   */
+  private recordHistory(
+    userInput: Content | Content[],
+    modelOutput: Content[],
+    usageMetadata?: {
+      promptTokens: number;
+      completionTokens: number;
+      totalTokens: number;
+    } | null,
+  ): void {
+    const newHistoryEntries: IContent[] = [];
+
+    // Part 1: Handle the user's part of the turn.
+    const idGen = this.historyService.getIdGeneratorCallback();
+    const matcher = this.makePositionMatcher();
+
+    if (Array.isArray(userInput)) {
+      // This is a paired tool call/response from the executor
+      const provider = this.getActiveProvider();
+      if (provider && this.providerSupportsIContent(provider)) {
+        // For providers: only record the tool response (second element)
+        // The tool call is already in history from the model's previous response
+        const userIContent = ContentConverters.toIContent(
+          userInput[1],
+          idGen,
+          matcher,
+        );
+        newHistoryEntries.push(userIContent);
+      } else {
+        // Legacy Gemini API: record both the echo and response
+        for (const content of userInput) {
+          const userIContent = ContentConverters.toIContent(
+            content,
+            idGen,
+            matcher,
+          );
+          newHistoryEntries.push(userIContent);
+        }
+      }
+    } else if (!Array.isArray(userInput) && userInput.parts) {
+      // Check if this is multiple tool responses in a single message
+      const provider = this.getActiveProvider();
+      if (provider && this.providerSupportsIContent(provider)) {
+        const toolResponseParts = userInput.parts.filter(
+          (part) =>
+            part && typeof part === 'object' && 'functionResponse' in part,
+        );
+
+        if (toolResponseParts.length > 0) {
+          // Multiple tool responses - split into separate history entries
+          for (const responsePart of toolResponseParts) {
+            const responseContent: Content = {
+              role: 'user' as const,
+              parts: [responsePart],
+            };
+            const userIContent = ContentConverters.toIContent(
+              responseContent,
+              idGen,
+              matcher,
+            );
+            newHistoryEntries.push(userIContent);
+          }
+        } else {
+          // Regular user message
+          const userIContent = ContentConverters.toIContent(
+            userInput,
+            idGen,
+            matcher,
+          );
+          newHistoryEntries.push(userIContent);
+        }
+      } else {
+        // Legacy API or non-provider
+        const userIContent = ContentConverters.toIContent(
+          userInput,
+          idGen,
+          matcher,
+        );
+        newHistoryEntries.push(userIContent);
+      }
+    } else {
+      // Normal user message
+      const userIContent = ContentConverters.toIContent(
+        userInput,
+        idGen,
+        matcher,
+      );
+      newHistoryEntries.push(userIContent);
+    }
+
+    // Part 2: Handle the model's part of the turn, filtering out thoughts.
+    const nonThoughtModelOutput = modelOutput.filter(
+      (content) => !this.isThoughtContent(content),
+    );
+
+    let outputContents: Content[] = [];
+    if (nonThoughtModelOutput.length > 0) {
+      outputContents = nonThoughtModelOutput;
+    } else if (
+      modelOutput.length === 0 &&
+      !Array.isArray(userInput) &&
+      !isFunctionResponse(userInput)
+    ) {
+      // Add an empty model response if the model truly returned nothing.
+      outputContents.push({ role: 'model', parts: [] } as Content);
+    }
+
+    // Part 3: Consolidate the parts of this turn's model response.
+    const consolidatedOutputContents: Content[] = [];
+    if (outputContents.length > 0) {
+      for (const content of outputContents) {
+        const lastContent =
+          consolidatedOutputContents[consolidatedOutputContents.length - 1];
+        if (this.hasTextContent(lastContent) && this.hasTextContent(content)) {
+          lastContent.parts[0].text += content.parts[0].text || '';
+          if (content.parts.length > 1) {
+            lastContent.parts.push(...content.parts.slice(1));
+          }
+        } else {
+          consolidatedOutputContents.push(content);
+        }
+      }
+    }
+
+    // Part 4: Add the new turn (user and model parts) to the history service.
+    const currentModel = this.config.getModel();
+    for (const entry of newHistoryEntries) {
+      this.historyService.add(entry, currentModel);
+    }
+    for (const content of consolidatedOutputContents) {
+      // Always add model responses to history, including tool calls
+      // Tool calls from the model need to be in history so the model knows it made them
+      const iContent = ContentConverters.toIContent(content);
+
+      // Add usage metadata if available from streaming
+      if (usageMetadata) {
+        iContent.metadata = {
+          ...iContent.metadata,
+          usage: {
+            promptTokens: usageMetadata.promptTokens,
+            completionTokens: usageMetadata.completionTokens,
+            totalTokens: usageMetadata.totalTokens,
+          },
+        };
+      }
+
+      // ALWAYS add model responses to history, regardless of usage metadata
+      this.historyService.add(iContent, currentModel);
+    }
+  }
+
+  /**
+   * Helper to check if content has text.
+   */
+  private hasTextContent(
+    content: Content | undefined,
+  ): content is Content & { parts: [{ text: string }, ...Part[]] } {
+    return !!(
+      content &&
+      content.role === 'model' &&
+      content.parts &&
+      content.parts.length > 0 &&
+      typeof content.parts[0].text === 'string' &&
+      content.parts[0].text !== ''
+    );
+  }
+
+  /**
+   * Checks if content contains thinking/thought blocks from any provider.
+   * Supports both Gemini (thought: true) and Anthropic (type: 'thinking') formats.
+   */
+  private isThoughtContent(content: Content): boolean {
+    if (!content.parts || content.parts.length === 0) {
+      return false;
+    }
+
+    const firstPart = content.parts[0];
+    if (!firstPart || typeof firstPart !== 'object') {
+      return false;
+    }
+
+    // Check for Gemini thought format
+    if ('thought' in firstPart) {
+      return true;
+    }
+
+    // Check for Anthropic thinking format
+    if ('type' in firstPart && firstPart.type === 'thinking') {
+      return true;
+    }
+
+    return false;
   }
 }
 

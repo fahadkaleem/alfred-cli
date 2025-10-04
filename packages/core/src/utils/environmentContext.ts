@@ -60,8 +60,24 @@ export async function getEnvironmentContext(config: Config): Promise<Part[]> {
   const platform = process.platform;
   const directoryContext = await getDirectoryContextString(config);
 
+  // Determine which AI assistant is being used based on active provider
+  let assistantName = 'Alfred CLI';
+  try {
+    const providerManager = config.getProviderManager();
+    if (providerManager) {
+      const activeProvider = providerManager.getActiveProvider();
+      if (activeProvider.name === 'anthropic') {
+        assistantName = 'Claude (via Alfred CLI)';
+      } else if (activeProvider.name === 'gemini') {
+        assistantName = 'Gemini (via Alfred CLI)';
+      }
+    }
+  } catch {
+    // If no provider manager or active provider, use default
+  }
+
   const context = `
-This is the Gemini CLI. We are setting up the context for our chat.
+This is ${assistantName}. We are setting up the context for our chat.
 Today's date is ${today} (formatted according to the user's locale).
 My operating system is: ${platform}
 ${directoryContext}

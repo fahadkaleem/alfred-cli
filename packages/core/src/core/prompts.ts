@@ -380,3 +380,10 @@ The structure MUST be as follows:
 </state_snapshot>
 `.trim();
 }
+
+// Async version for provider compatibility
+export async function getCoreSystemPromptAsync(
+  userMemory?: string,
+): Promise<string> {
+  return getCoreSystemPrompt(userMemory);
+}

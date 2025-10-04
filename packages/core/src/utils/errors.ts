@@ -105,3 +105,11 @@ function parseResponseData(error: GaxiosError): ResponseData {
   }
   return error.response?.data as ResponseData;
 }
+
+// For provider compatibility
+export class NotYetImplemented extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'NotYetImplemented';
+  }
+}
