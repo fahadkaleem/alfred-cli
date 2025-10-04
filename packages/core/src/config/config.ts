@@ -31,6 +31,8 @@ import { MemoryTool, setAlfredMdFilename } from '../tools/memoryTool.js';
 import { WebSearchTool } from '../tools/web-search.js';
 import { GeminiClient } from '../core/client.js';
 import { BaseLlmClient } from '../core/baseLlmClient.js';
+import { ProviderManager } from '../providers/ProviderManager.js';
+import { AnthropicProvider } from '../providers/anthropic/AnthropicProvider.js';
 import { FileDiscoveryService } from '../services/fileDiscoveryService.js';
 import { GitService } from '../services/gitService.js';
 import type { TelemetryTarget } from '../telemetry/index.js';
@@ -45,12 +47,15 @@ import { StartSessionEvent } from '../telemetry/index.js';
 import {
   DEFAULT_GEMINI_EMBEDDING_MODEL,
   DEFAULT_GEMINI_FLASH_MODEL,
+  DEFAULT_ANTHROPIC_MODEL,
 } from './models.js';
 import { shouldAttemptBrowserLaunch } from '../utils/browser.js';
 import type { MCPOAuthConfig } from '../mcp/oauth-provider.js';
 import { WriteTodosTool } from '../tools/write-todos.js';
 import type { FileSystemService } from '../services/fileSystemService.js';
 import { StandardFileSystemService } from '../services/fileSystemService.js';
+import { getSettingsService } from '../settings/settingsServiceInstance.js';
+import type { SettingsService } from '../settings/settingsServiceInstance.js';
 import {
   logCliConfiguration,
   logRipgrepFallback,
@@ -247,6 +252,7 @@ export class Config {
   private toolRegistry!: ToolRegistry;
   private promptRegistry!: PromptRegistry;
   private readonly sessionId: string;
+  private settingsService = getSettingsService();
   private fileSystemService: FileSystemService;
   private contentGeneratorConfig!: ContentGeneratorConfig;
   private contentGenerator!: ContentGenerator;
@@ -272,6 +278,7 @@ export class Config {
   private readonly usageStatisticsEnabled: boolean;
   private alfredClient!: GeminiClient;
   private baseLlmClient!: BaseLlmClient;
+  private providerManager!: ProviderManager;
   private modelRouterService: ModelRouterService;
   private readonly fileFiltering: {
     respectGitIgnore: boolean;
@@ -435,6 +442,12 @@ export class Config {
     if (this.getProxy()) {
       setGlobalDispatcher(new ProxyAgent(this.getProxy() as string));
     }
+
+    // Initialize ProviderManager (providers will be registered in refreshAuth based on authType)
+    this.providerManager = new ProviderManager();
+    this.providerManager.setConfig(this);
+
+    // Keep GeminiClient for backward compatibility
     this.alfredClient = new GeminiClient(this);
     this.modelRouterService = new ModelRouterService(this);
   }
@@ -470,8 +483,8 @@ export class Config {
       this.contentGeneratorConfig?.authType === AuthType.USE_GEMINI &&
       authMethod === AuthType.LOGIN_WITH_GOOGLE
     ) {
-      // Restore the conversation history to the new client
-      this.alfredClient.stripThoughtsFromHistory();
+      // Thoughts are now filtered automatically in recordHistory()
+      // No need to manually strip them
     }
 
     const newContentGeneratorConfig = createContentGeneratorConfig(
@@ -485,6 +498,34 @@ export class Config {
     );
     // Only assign to instance properties after successful initialization
     this.contentGeneratorConfig = newContentGeneratorConfig;
+
+    // Initialize provider for Anthropic only (Gemini uses original simple path)
+    if (authMethod === AuthType.USE_ANTHROPIC) {
+      const settingsService = this.getSettingsService();
+      const savedModel = settingsService.getProviderSettings('anthropic')[
+        'model'
+      ] as string;
+
+      const anthropicProvider = new AnthropicProvider(
+        newContentGeneratorConfig.apiKey,
+      );
+
+      this.providerManager.registerProvider(anthropicProvider);
+      this.providerManager.setActiveProvider('anthropic');
+
+      // Only set default model if no model is saved in settings
+      if (!savedModel) {
+        settingsService.setProviderSetting(
+          'anthropic',
+          'model',
+          DEFAULT_ANTHROPIC_MODEL,
+        );
+      }
+    } else {
+      // For Gemini: clear active provider to use original simple path
+      const settingsService = this.getSettingsService();
+      settingsService.set('activeProvider', null);
+    }
 
     // Initialize BaseLlmClient now that the ContentGenerator is available
     this.baseLlmClient = new BaseLlmClient(this.contentGenerator, this);
@@ -533,6 +574,24 @@ export class Config {
   }
 
   getModel(): string {
+    // If using Anthropic provider, get model from provider settings
+    const settingsService = this.getSettingsService();
+    const activeProvider = settingsService.get('activeProvider') as string;
+
+    if (activeProvider === 'anthropic' && this.providerManager) {
+      const anthropicProvider =
+        this.providerManager.getProviderByName('anthropic');
+      if (anthropicProvider) {
+        const providerModel =
+          anthropicProvider.getCurrentModel?.() ||
+          anthropicProvider.getDefaultModel();
+        if (providerModel) {
+          return providerModel;
+        }
+      }
+    }
+
+    // For Gemini (original behavior): just return this.model
     return this.model;
   }
 
@@ -542,6 +601,19 @@ export class Config {
       return;
     }
 
+    // If using Anthropic provider, set model on provider (which handles persistence)
+    const settingsService = this.getSettingsService();
+    const activeProvider = settingsService.get('activeProvider') as string;
+
+    if (activeProvider === 'anthropic' && this.providerManager) {
+      const anthropicProvider =
+        this.providerManager.getProviderByName('anthropic');
+      if (anthropicProvider?.setModel) {
+        anthropicProvider.setModel(newModel);
+      }
+    }
+
+    // For Gemini (original behavior): just set this.model (session-only, no persistence)
     this.model = newModel;
   }
 
@@ -831,6 +903,13 @@ export class Config {
   }
 
   /**
+   * Get the SettingsService instance
+   */
+  getSettingsService(): SettingsService {
+    return this.settingsService;
+  }
+
+  /**
    * Set a custom FileSystemService
    */
   setFileSystemService(fileSystemService: FileSystemService): void {
@@ -1028,6 +1107,41 @@ export class Config {
     await registry.discoverAllTools();
     return registry;
   }
+
+  // Stub methods for provider support (minimal implementation)
+  getRedactionConfig() {
+    return {
+      redactApiKeys: false,
+      redactCredentials: false,
+      redactFilePaths: false,
+      redactUrls: false,
+      redactEmails: false,
+      redactPersonalInfo: false,
+    };
+  }
+
+  getConversationLoggingEnabled(): boolean {
+    return false;
+  }
+
+  getConversationLogPath(): string {
+    return '';
+  }
+
+  getProviderManager(): ProviderManager {
+    return this.providerManager;
+  }
 }
+
+// Type for redaction config
+export interface RedactionConfig {
+  redactApiKeys: boolean;
+  redactCredentials: boolean;
+  redactFilePaths: boolean;
+  redactUrls: boolean;
+  redactEmails: boolean;
+  redactPersonalInfo: boolean;
+}
+
 // Export model constants for use in CLI
 export { DEFAULT_GEMINI_FLASH_MODEL };

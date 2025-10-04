@@ -12,6 +12,8 @@ import {
   DEFAULT_GEMINI_FLASH_MODEL,
   DEFAULT_GEMINI_MODEL,
   DEFAULT_GEMINI_MODEL_AUTO,
+  DEFAULT_ANTHROPIC_MODEL,
+  ANTHROPIC_OPUS_4_1_MODEL,
   ModelSlashCommandEvent,
   logModelSlashCommand,
 } from '@alfred/alfred-cli-core';
@@ -24,7 +26,7 @@ interface ModelDialogProps {
   onClose: () => void;
 }
 
-const MODEL_OPTIONS = [
+const GEMINI_MODEL_OPTIONS = [
   {
     value: DEFAULT_GEMINI_MODEL_AUTO,
     title: 'Auto (recommended)',
@@ -51,11 +53,40 @@ const MODEL_OPTIONS = [
   },
 ];
 
+const ANTHROPIC_MODEL_OPTIONS = [
+  {
+    value: DEFAULT_ANTHROPIC_MODEL,
+    title: 'Claude Sonnet 4.5 (recommended)',
+    description: 'Most intelligent model, best for complex reasoning',
+    key: DEFAULT_ANTHROPIC_MODEL,
+  },
+  {
+    value: ANTHROPIC_OPUS_4_1_MODEL,
+    title: 'Claude Opus 4.1',
+    description: 'Powerful model for highly complex tasks',
+    key: ANTHROPIC_OPUS_4_1_MODEL,
+  },
+];
+
 export function ModelDialog({ onClose }: ModelDialogProps): React.JSX.Element {
   const config = useContext(ConfigContext);
 
+  // Determine active provider from settings
+  const settingsService = config?.getSettingsService();
+  const activeProvider = settingsService?.get('activeProvider') as string;
+
+  // Select model options based on active provider
+  const modelOptions =
+    activeProvider === 'anthropic'
+      ? ANTHROPIC_MODEL_OPTIONS
+      : GEMINI_MODEL_OPTIONS;
+
   // Determine the Preferred Model (read once when the dialog opens).
-  const preferredModel = config?.getModel() || DEFAULT_GEMINI_MODEL_AUTO;
+  const preferredModel =
+    config?.getModel() ||
+    (activeProvider === 'anthropic'
+      ? DEFAULT_ANTHROPIC_MODEL
+      : DEFAULT_GEMINI_MODEL_AUTO);
 
   useKeypress(
     (key) => {
@@ -68,8 +99,8 @@ export function ModelDialog({ onClose }: ModelDialogProps): React.JSX.Element {
 
   // Calculate the initial index based on the preferred model.
   const initialIndex = useMemo(
-    () => MODEL_OPTIONS.findIndex((option) => option.value === preferredModel),
-    [preferredModel],
+    () => modelOptions.findIndex((option) => option.value === preferredModel),
+    [modelOptions, preferredModel],
   );
 
   // Handle selection internally (Autonomous Dialog).
@@ -85,6 +116,8 @@ export function ModelDialog({ onClose }: ModelDialogProps): React.JSX.Element {
     [config, onClose],
   );
 
+  const providerName = activeProvider === 'anthropic' ? 'Claude' : 'Gemini';
+
   return (
     <Box
       borderStyle="round"
@@ -93,10 +126,10 @@ export function ModelDialog({ onClose }: ModelDialogProps): React.JSX.Element {
       padding={1}
       width="100%"
     >
-      <Text bold>Select Model</Text>
+      <Text bold>Select {providerName} Model</Text>
       <Box marginTop={1}>
         <DescriptiveRadioButtonSelect
-          items={MODEL_OPTIONS}
+          items={modelOptions}
           onSelect={handleSelect}
           initialIndex={initialIndex}
           showNumbers={true}
@@ -104,7 +137,7 @@ export function ModelDialog({ onClose }: ModelDialogProps): React.JSX.Element {
       </Box>
       <Box flexDirection="column">
         <Text color={theme.text.secondary}>
-          {'> To use a specific Gemini model, use the --model flag.'}
+          {`> To use a specific ${providerName} model, use the --model flag.`}
         </Text>
       </Box>
       <Box marginTop={1} flexDirection="column">

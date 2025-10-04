@@ -12,6 +12,8 @@ export {
   DEFAULT_GEMINI_FLASH_MODEL,
   DEFAULT_GEMINI_FLASH_LITE_MODEL,
   DEFAULT_GEMINI_EMBEDDING_MODEL,
+  DEFAULT_ANTHROPIC_MODEL,
+  ANTHROPIC_OPUS_4_1_MODEL,
 } from './src/config/models.js';
 export {
   serializeTerminalToObject,

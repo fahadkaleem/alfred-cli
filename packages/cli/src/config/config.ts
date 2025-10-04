@@ -610,6 +610,7 @@ export async function loadCliConfig(
   const resolvedModel: string =
     argv.model ||
     process.env['GEMINI_MODEL'] ||
+    process.env['ANTHROPIC_MODEL'] ||
     settings.model?.name ||
     defaultModel;
 
