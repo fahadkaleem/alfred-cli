@@ -130,6 +130,19 @@ describe('<HistoryItemDisplay />', () => {
     expect(lastFrame()).toContain('Agent powering down. Goodbye!');
   });
 
+  it('renders ThinkingMessage for "thinking" type', () => {
+    const item: HistoryItem = {
+      ...baseItem,
+      type: MessageType.THINKING,
+      text: 'Analyzing the problem...',
+    };
+    const { lastFrame } = renderWithProviders(
+      <HistoryItemDisplay {...baseItem} item={item} />,
+    );
+    expect(lastFrame()).toContain('💭 Thinking');
+    expect(lastFrame()).toContain('Analyzing the problem...');
+  });
+
   it('should escape ANSI codes in text content', () => {
     const historyItem: HistoryItem = {
       id: 1,

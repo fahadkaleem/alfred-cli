@@ -15,6 +15,7 @@ import { InfoMessage } from './messages/InfoMessage.js';
 import { ErrorMessage } from './messages/ErrorMessage.js';
 import { ToolGroupMessage } from './messages/ToolGroupMessage.js';
 import { GeminiMessageContent } from './messages/GeminiMessageContent.js';
+import { ThinkingMessage } from './messages/ThinkingMessage.js';
 import { CompressionMessage } from './messages/CompressionMessage.js';
 import { WarningMessage } from './messages/WarningMessage.js';
 import { Box } from 'ink';
@@ -81,6 +82,12 @@ export const HistoryItemDisplay: React.FC<HistoryItemDisplayProps> = ({
           availableTerminalHeight={
             availableTerminalHeightGemini ?? availableTerminalHeight
           }
+          terminalWidth={terminalWidth}
+        />
+      )}
+      {itemForDisplay.type === 'thinking' && (
+        <ThinkingMessage
+          text={itemForDisplay.text}
           terminalWidth={terminalWidth}
         />
       )}
