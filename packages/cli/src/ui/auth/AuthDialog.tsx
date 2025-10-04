@@ -57,6 +57,11 @@ export function AuthDialog({
       key: AuthType.USE_GEMINI,
     },
     {
+      label: 'Use Anthropic API Key',
+      value: AuthType.USE_ANTHROPIC,
+      key: AuthType.USE_ANTHROPIC,
+    },
+    {
       label: 'Vertex AI',
       value: AuthType.USE_VERTEX_AI,
       key: AuthType.USE_VERTEX_AI,
@@ -89,6 +94,10 @@ export function AuthDialog({
 
     if (process.env['GEMINI_API_KEY']) {
       return item.value === AuthType.USE_GEMINI;
+    }
+
+    if (process.env['ANTHROPIC_API_KEY']) {
+      return item.value === AuthType.USE_ANTHROPIC;
     }
 
     return item.value === AuthType.LOGIN_WITH_GOOGLE;
