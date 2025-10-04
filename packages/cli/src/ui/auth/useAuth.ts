@@ -52,6 +52,10 @@ export const useAuthCommand = (settings: LoadedSettings, config: Config) => {
           onAuthError(
             'Existing API key detected (GEMINI_API_KEY). Select "Gemini API Key" option to use it.',
           );
+        } else if (process.env['ANTHROPIC_API_KEY']) {
+          onAuthError(
+            'Existing API key detected (ANTHROPIC_API_KEY). Select "Anthropic API Key" option to use it.',
+          );
         } else {
           onAuthError('No authentication method selected.');
         }
