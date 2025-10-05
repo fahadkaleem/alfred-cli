@@ -79,10 +79,8 @@ export const Footer: React.FC = () => {
           {!hideCWD &&
             (nightly ? (
               <Gradient colors={theme.ui.gradient}>
-                <Text>
-                  {displayPath}
-                  {branchName && <Text> ({branchName}*)</Text>}
-                </Text>
+                {displayPath}
+                {branchName && ` (${branchName}*)`}
               </Gradient>
             ) : (
               <Text color={theme.text.link}>

@@ -7,7 +7,7 @@
 /* eslint-disable react/prop-types */
 
 import { useState, useEffect, useMemo } from 'react';
-import { Box, Text } from 'ink';
+import { Text } from 'ink';
 
 const AVAILABLE_RUNES = '0123456789abcdefABCDEF~!@#$£€%^&*()+=_'.split('');
 const BRAILLE_PATTERNS =
@@ -215,7 +215,7 @@ export const ThinkingAnimation: React.FC<ThinkingAnimationProps> = ({
   const elapsed = Date.now() - startTime;
 
   return (
-    <Box>
+    <Text>
       {currentFrame.map((item, i) => {
         const shouldShow = initialized || elapsed >= birthOffsets[i];
         if (shouldShow) {
@@ -232,6 +232,6 @@ export const ThinkingAnimation: React.FC<ThinkingAnimationProps> = ({
           );
         }
       })}
-    </Box>
+    </Text>
   );
 };
