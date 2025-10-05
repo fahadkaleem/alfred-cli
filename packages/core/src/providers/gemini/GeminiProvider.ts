@@ -99,7 +99,7 @@ export class GeminiProvider implements IProvider {
       baseURL,
     );
 
-    this.logger = new DebugLogger('llxprt:gemini:provider');
+    this.logger = new DebugLogger('alfred:gemini:provider');
 
     // Do not determine auth mode on instantiation.
     // This will be done lazily when a chat completion is requested.
@@ -721,7 +721,7 @@ export class GeminiProvider implements IProvider {
             }
 
             // For OAuth, use the code assist content generator
-            // Note: Detailed logging is now handled by DebugLogger in codeAssist.ts with namespace llxprt:code:assist
+            // Note: Detailed logging is now handled by DebugLogger in codeAssist.ts with namespace alfred:code:assist
             const oauthContentGenerator =
               await createCodeAssistContentGenerator(
                 httpOptions,

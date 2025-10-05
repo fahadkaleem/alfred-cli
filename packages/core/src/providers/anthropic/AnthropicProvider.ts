@@ -44,15 +44,10 @@ export class AnthropicProvider implements IProvider {
   private settingsHelper: ProviderSettingsHelper;
 
   // Model patterns for max output tokens
+  // Based on official Anthropic documentation as of 2025
   private modelTokenPatterns: Array<{ pattern: RegExp; tokens: number }> = [
-    { pattern: /claude-.*opus-4/i, tokens: 32000 },
-    { pattern: /claude-.*sonnet-4/i, tokens: 64000 },
-    { pattern: /claude-.*haiku-4/i, tokens: 200000 }, // Future-proofing for Haiku 4
-    { pattern: /claude-.*3-7.*sonnet/i, tokens: 64000 },
-    { pattern: /claude-.*3-5.*sonnet/i, tokens: 8192 },
-    { pattern: /claude-.*3-5.*haiku/i, tokens: 8192 },
-    { pattern: /claude-.*3.*opus/i, tokens: 4096 },
-    { pattern: /claude-.*3.*haiku/i, tokens: 4096 },
+    { pattern: /claude-opus-4/i, tokens: 32000 }, // Claude Opus 4.1: 32K max output
+    { pattern: /claude-sonnet-4/i, tokens: 64000 }, // Claude Sonnet 4.5: 64K max output
   ];
 
   constructor(
@@ -155,7 +150,7 @@ export class AnthropicProvider implements IProvider {
     const isOAuthToken = authToken.startsWith('sk-ant-oat');
 
     if (isOAuthToken) {
-      // For OAuth, return only the two working models
+      // For OAuth, return only the two supported models
       this.logger['debug'](
         () => 'Using hardcoded model list for OAuth authentication',
       );
@@ -165,15 +160,15 @@ export class AnthropicProvider implements IProvider {
           name: 'Claude Opus 4.1',
           provider: 'anthropic',
           supportedToolFormats: ['anthropic'],
-          contextWindow: 500000,
+          contextWindow: 200000,
           maxOutputTokens: 32000,
         },
         {
-          id: 'claude-3-5-sonnet-20241022',
-          name: 'Claude 3.5 Sonnet',
+          id: 'claude-sonnet-4-5-20250929',
+          name: 'Claude Sonnet 4.5',
           provider: 'anthropic',
           supportedToolFormats: ['anthropic'],
-          contextWindow: 400000,
+          contextWindow: 200000,
           maxOutputTokens: 64000,
         },
       ];
@@ -183,20 +178,26 @@ export class AnthropicProvider implements IProvider {
       // Fetch models from Anthropic API (beta endpoint) - only for API keys
       const models: IModel[] = [];
 
-      // Handle pagination
+      // Handle pagination and filter to only supported models
       for await (const model of this.anthropic.beta.models.list()) {
-        models.push({
-          id: model['id'],
-          name: model.display_name || model['id'],
-          provider: 'anthropic',
-          supportedToolFormats: ['anthropic'],
-          contextWindow: this.getContextWindowForModel(model['id']),
-          maxOutputTokens: this.getMaxTokensForModel(model['id']),
-        });
+        // Only include Claude Opus 4.1 and Claude Sonnet 4.5
+        const modelId = model['id'];
+        if (
+          modelId.startsWith('claude-opus-4-') ||
+          modelId.startsWith('claude-sonnet-4-')
+        ) {
+          models.push({
+            id: modelId,
+            name: model.display_name || modelId,
+            provider: 'anthropic',
+            supportedToolFormats: ['anthropic'],
+            contextWindow: this.getContextWindowForModel(modelId),
+            maxOutputTokens: this.getMaxTokensForModel(modelId),
+          });
+        }
       }
 
-      // Add "latest" aliases for Claude 4 tiers (opus, sonnet). We pick the newest
-      // version of each tier based on the sorted order created above.
+      // Add "latest" aliases for Claude 4 tiers (opus, sonnet)
       const addLatestAlias = (tier: 'opus' | 'sonnet') => {
         const latest = models
           .filter((m) => m['id'].startsWith(`claude-${tier}-4-`))
@@ -205,7 +206,7 @@ export class AnthropicProvider implements IProvider {
           models.push({
             ...latest,
             id: `claude-${tier}-4-latest`,
-            name: latest['name'].replace(/-\d{8}$/, '-latest'),
+            name: latest['name'].replace(/-\d{8}$/, ' (latest)'),
           });
         }
       };
@@ -215,7 +216,25 @@ export class AnthropicProvider implements IProvider {
       return models;
     } catch (error) {
       this.logger['debug'](() => `Failed to fetch Anthropic models: ${error}`);
-      return []; // Return empty array on error
+      // Return fallback models on error
+      return [
+        {
+          id: 'claude-opus-4-1-20250805',
+          name: 'Claude Opus 4.1',
+          provider: 'anthropic',
+          supportedToolFormats: ['anthropic'],
+          contextWindow: 200000,
+          maxOutputTokens: 32000,
+        },
+        {
+          id: 'claude-sonnet-4-5-20250929',
+          name: 'Claude Sonnet 4.5',
+          provider: 'anthropic',
+          supportedToolFormats: ['anthropic'],
+          contextWindow: 200000,
+          maxOutputTokens: 64000,
+        },
+      ];
     }
   }
 
@@ -279,24 +298,21 @@ export class AnthropicProvider implements IProvider {
 
   getDefaultModel(): string {
     // Return hardcoded default - do NOT call getModel() to avoid circular dependency
-    return 'claude-3-5-sonnet-20241022';
+    return 'claude-sonnet-4-5-20250929';
   }
 
   /**
    * Helper method to get the latest Claude 4 model ID for a given tier.
    * This can be used when you want to ensure you're using the latest model.
-   * @param tier - The model tier: 'opus', 'sonnet', or 'haiku'
+   * @param tier - The model tier: 'opus' or 'sonnet'
    * @returns The latest model ID for that tier
    */
-  getLatestClaude4Model(tier: 'opus' | 'sonnet' | 'haiku' = 'sonnet'): string {
+  getLatestClaude4Model(tier: 'opus' | 'sonnet' = 'sonnet'): string {
     switch (tier) {
       case 'opus':
         return 'claude-opus-4-latest';
       case 'sonnet':
         return 'claude-sonnet-4-latest';
-      case 'haiku':
-        // Haiku 4 not yet available, but future-proofed
-        return 'claude-haiku-4-latest';
       default:
         return 'claude-sonnet-4-latest';
     }
@@ -308,13 +324,13 @@ export class AnthropicProvider implements IProvider {
       modelId === 'claude-opus-4-latest' ||
       modelId.includes('claude-opus-4')
     ) {
-      return 32000;
+      return 32000; // Claude Opus 4.1: 32K max output tokens
     }
     if (
       modelId === 'claude-sonnet-4-latest' ||
       modelId.includes('claude-sonnet-4')
     ) {
-      return 64000;
+      return 64000; // Claude Sonnet 4.5: 64K max output tokens
     }
 
     // Try to match model patterns
@@ -324,23 +340,13 @@ export class AnthropicProvider implements IProvider {
       }
     }
 
-    // Default for unknown models
-    return 4096;
+    // Default for unknown models (fallback to Sonnet's limit)
+    return 64000;
   }
 
-  private getContextWindowForModel(modelId: string): number {
-    // Claude 4 models have larger context windows
-    if (modelId.includes('claude-opus-4')) {
-      return 500000;
-    }
-    if (modelId.includes('claude-sonnet-4')) {
-      return 400000;
-    }
-    // Claude 3.7 models
-    if (modelId.includes('claude-3-7')) {
-      return 300000;
-    }
-    // Default for Claude 3.x models
+  private getContextWindowForModel(_modelId: string): number {
+    // Both Claude Opus 4.1 and Sonnet 4.5 have 200K context windows
+    // (with 1M token option in limited/beta settings)
     return 200000;
   }
 

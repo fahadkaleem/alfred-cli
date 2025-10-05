@@ -31,7 +31,7 @@ import type { ToolCallBlock } from '../services/history/IContent.js';
 import { DebugLogger } from '../debug/DebugLogger.js';
 
 export class ToolFormatter implements IToolFormatter {
-  private logger = new DebugLogger('llxprt:tools:formatter');
+  private logger = new DebugLogger('alfred:tools:formatter');
 
   /**
    * Convert Gemini format tools directly to OpenAI format

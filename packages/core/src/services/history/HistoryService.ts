@@ -57,7 +57,7 @@ export class HistoryService
   private totalTokens: number = 0;
   private tokenizerCache = new Map<string, ITokenizer>();
   private tokenizerLock: Promise<void> = Promise.resolve();
-  private logger = new DebugLogger('llxprt:history:service');
+  private logger = new DebugLogger('alfred:history:service');
 
   // Compression state and queue
   private isCompressing: boolean = false;

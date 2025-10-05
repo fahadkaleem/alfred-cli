@@ -19,7 +19,7 @@ import { DebugLogger } from '../../debug/index.js';
  * Converts between Gemini Content format and IContent format
  */
 export class ContentConverters {
-  private static logger = new DebugLogger('llxprt:content:converters');
+  private static logger = new DebugLogger('alfred:content:converters');
   private static normalizeToHistoryId(
     id: string | undefined,
   ): string | undefined {

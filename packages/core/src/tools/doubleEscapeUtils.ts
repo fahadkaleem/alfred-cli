@@ -27,7 +27,7 @@
 
 import { DebugLogger } from '../debug/index.js';
 
-const logger = new DebugLogger('llxprt:tools:doubleEscape');
+const logger = new DebugLogger('alfred:tools:doubleEscape');
 
 /**
  * Detects if a tool format should use double-escape handling
