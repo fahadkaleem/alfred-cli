@@ -16,15 +16,14 @@ interface UserMessageProps {
 
 export const UserMessage: React.FC<UserMessageProps> = ({ text }) => {
   const prefix = '> ';
-  const prefixWidth = prefix.length;
   const isSlashCommand = checkIsSlashCommand(text);
 
   const textColor = isSlashCommand ? theme.text.accent : theme.text.secondary;
 
   return (
     <Box flexDirection="row" paddingY={0} marginY={1} alignSelf="flex-start">
-      <Box width={prefixWidth}>
-        <Text color={theme.text.accent} aria-label={SCREEN_READER_USER_PREFIX}>
+      <Box>
+        <Text color="white" aria-label={SCREEN_READER_USER_PREFIX}>
           {prefix}
         </Text>
       </Box>

@@ -7,7 +7,6 @@
 import type React from 'react';
 import { Text, Box } from 'ink';
 import { MarkdownDisplay } from '../../utils/MarkdownDisplay.js';
-import { theme } from '../../semantic-colors.js';
 import { SCREEN_READER_MODEL_PREFIX } from '../../textConstants.js';
 
 interface GeminiMessageProps {
@@ -23,13 +22,12 @@ export const GeminiMessage: React.FC<GeminiMessageProps> = ({
   availableTerminalHeight,
   terminalWidth,
 }) => {
-  const prefix = '█ ';
-  const prefixWidth = prefix.length;
+  const prefix = '⏺ ';
 
   return (
     <Box flexDirection="row">
-      <Box width={prefixWidth}>
-        <Text color={theme.text.accent} aria-label={SCREEN_READER_MODEL_PREFIX}>
+      <Box>
+        <Text color="white" aria-label={SCREEN_READER_MODEL_PREFIX}>
           {prefix}
         </Text>
       </Box>

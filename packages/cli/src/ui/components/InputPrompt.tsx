@@ -854,7 +854,7 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
         paddingX={1}
       >
         <Text
-          color={statusColor ?? theme.text.accent}
+          color={statusColor ?? 'white'}
           aria-label={statusText || undefined}
         >
           {shellModeActive ? (
