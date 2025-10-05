@@ -28,10 +28,10 @@ describe('ConfigurationManager', () => {
     delete process.env['DEBUG_LEVEL'];
 
     // Clean up test config files that might have been created
-    const userConfigPath = path.join(os.homedir(), '.llxprt', 'settings.json');
+    const userConfigPath = path.join(os.homedir(), '.alfred', 'settings.json');
     const projectConfigPath = path.join(
       process.cwd(),
-      '.llxprt',
+      '.alfred',
       'config.json',
     );
 
@@ -60,7 +60,7 @@ describe('ConfigurationManager', () => {
 
   afterAll(() => {
     // Restore user config backup if it exists
-    const userConfigPath = path.join(os.homedir(), '.llxprt', 'settings.json');
+    const userConfigPath = path.join(os.homedir(), '.alfred', 'settings.json');
     const backupPath = userConfigPath + '.test-backup';
 
     if (fs.existsSync(backupPath)) {

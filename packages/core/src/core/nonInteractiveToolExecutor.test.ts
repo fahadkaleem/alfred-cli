@@ -102,6 +102,13 @@ describe('executeToolCall', () => {
           : undefined,
       responseParts: [
         {
+          functionCall: {
+            name: 'testTool',
+            id: 'call1',
+            args: { param1: 'value1' },
+          },
+        },
+        {
           functionResponse: {
             name: 'testTool',
             id: 'call1',
@@ -142,6 +149,13 @@ describe('executeToolCall', () => {
       contentLength: expectedErrorMessage.length,
       responseParts: [
         {
+          functionCall: {
+            name: 'nonexistentTool',
+            id: 'call2',
+            args: {},
+          },
+        },
+        {
           functionResponse: {
             name: 'nonexistentTool',
             id: 'call2',
@@ -178,6 +192,13 @@ describe('executeToolCall', () => {
       error: new Error('Invalid parameters'),
       errorType: ToolErrorType.INVALID_TOOL_PARAMS,
       responseParts: [
+        {
+          functionCall: {
+            name: 'testTool',
+            id: 'call3',
+            args: { param1: 'invalid' },
+          },
+        },
         {
           functionResponse: {
             id: 'call3',
@@ -223,6 +244,13 @@ describe('executeToolCall', () => {
       errorType: ToolErrorType.EXECUTION_FAILED,
       responseParts: [
         {
+          functionCall: {
+            name: 'testTool',
+            id: 'call4',
+            args: { param1: 'value1' },
+          },
+        },
+        {
           functionResponse: {
             id: 'call4',
             name: 'testTool',
@@ -261,6 +289,13 @@ describe('executeToolCall', () => {
       resultDisplay: 'Something went very wrong',
       contentLength: 'Something went very wrong'.length,
       responseParts: [
+        {
+          functionCall: {
+            name: 'testTool',
+            id: 'call5',
+            args: { param1: 'value1' },
+          },
+        },
         {
           functionResponse: {
             name: 'testTool',
@@ -304,6 +339,13 @@ describe('executeToolCall', () => {
       resultDisplay: 'Image processed',
       contentLength: undefined,
       responseParts: [
+        {
+          functionCall: {
+            name: 'testTool',
+            id: 'call6',
+            args: {},
+          },
+        },
         {
           functionResponse: {
             name: 'testTool',

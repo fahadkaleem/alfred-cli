@@ -174,6 +174,13 @@ describe('useReactToolScheduler in YOLO Mode', () => {
           resultDisplay: 'YOLO Formatted tool output',
           responseParts: [
             {
+              functionCall: {
+                id: 'yoloCall',
+                name: 'mockToolRequiresConfirmation',
+                args: { data: 'any data' },
+              },
+            },
+            {
               functionResponse: {
                 id: 'yoloCall',
                 name: 'mockToolRequiresConfirmation',
@@ -317,6 +324,13 @@ describe('useReactToolScheduler', () => {
         response: expect.objectContaining({
           resultDisplay: 'Formatted tool output',
           responseParts: [
+            {
+              functionCall: {
+                id: 'call1',
+                name: 'mockTool',
+                args: { param: 'value' },
+              },
+            },
             {
               functionResponse: {
                 id: 'call1',
@@ -711,6 +725,13 @@ describe('useReactToolScheduler', () => {
         resultDisplay: 'Display 1',
         responseParts: [
           {
+            functionCall: {
+              id: 'multi1',
+              name: 'tool1',
+              args: { p: 1 },
+            },
+          },
+          {
             functionResponse: {
               id: 'multi1',
               name: 'tool1',
@@ -726,6 +747,13 @@ describe('useReactToolScheduler', () => {
       response: expect.objectContaining({
         resultDisplay: 'Display 2',
         responseParts: [
+          {
+            functionCall: {
+              id: 'multi2',
+              name: 'tool2',
+              args: { p: 2 },
+            },
+          },
           {
             functionResponse: {
               id: 'multi2',

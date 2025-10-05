@@ -68,41 +68,7 @@ export interface IProviderManager {
   setServerToolsProvider(provider: IProvider | null): void;
 
   /**
-   * Accumulate token usage for a session
+   * Get a provider by name (for OAuth manager and config)
    */
-  accumulateSessionTokens(
-    providerName: string,
-    usage: {
-      input: number;
-      output: number;
-      cache: number;
-      tool: number;
-      thought: number;
-    },
-  ): void;
-
-  /**
-   * Get token usage for the current session
-   */
-  getSessionTokenUsage(): {
-    input: number;
-    output: number;
-    cache: number;
-    tool: number;
-    thought: number;
-    total: number;
-  };
-
-  /**
-   * Get provider performance metrics
-   */
-  getProviderMetrics(providerName?: string): {
-    tokensPerMinute: number;
-    throttleWaitTimeMs: number;
-  } | null;
-
-  /**
-   * Reset token usage for the current session
-   */
-  resetSessionTokenUsage(): void;
+  getProviderByName(name: string): IProvider | undefined;
 }

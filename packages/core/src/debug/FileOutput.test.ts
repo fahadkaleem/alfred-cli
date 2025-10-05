@@ -40,7 +40,7 @@ vi.mock('path', () => ({
 describe('FileOutput', () => {
   let fileOutput: FileOutput;
   const mockHomedir = '/test/home';
-  const mockDebugDir = '/test/home/.llxprt/debug';
+  const mockDebugDir = '/test/home/.alfred/debug';
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -82,7 +82,7 @@ describe('FileOutput', () => {
   /**
    * @requirement REQ-005.2
    * @scenario Directory creation
-   * @given ~/.llxprt/debug directory does not exist
+   * @given ~/.alfred/debug directory does not exist
    * @when FileOutput writes first log entry
    * @then Directory created with proper permissions
    */

@@ -645,6 +645,7 @@ describe('LoopDetectionService LLM Checks', () => {
       getBaseLlmClient: () => mockBaseLlmClient,
       getDebugMode: () => false,
       getTelemetryEnabled: () => true,
+      getProviderManager: vi.fn().mockReturnValue(undefined),
     } as unknown as Config;
 
     service = new LoopDetectionService(mockConfig);

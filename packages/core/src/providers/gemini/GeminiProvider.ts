@@ -6,6 +6,7 @@
 
 import { DebugLogger } from '../../debug/index.js';
 import type { IModel } from '../IModel.js';
+import type { IProvider } from '../IProvider.js';
 import type {
   IContent,
   TextBlock,
@@ -25,11 +26,11 @@ import type {
   GenerateContentParameters,
   GenerateContentResponse,
 } from '@google/genai';
-import { BaseProvider } from '../BaseProvider.js';
-import type { BaseProviderConfig } from '../BaseProvider.js';
 import type { IProviderConfig } from '../types/IProviderConfig.js';
 import type { OAuthManager } from '../../auth/precedence.js';
 import { getSettingsService } from '../../settings/settingsServiceInstance.js';
+import { ProviderAuthHelper } from '../helpers/ProviderAuthHelper.js';
+import { ProviderSettingsHelper } from '../helpers/ProviderSettingsHelper.js';
 
 /**
  * @plan PLAN-20250822-GEMINIFALLBACK.P12
@@ -57,13 +58,19 @@ interface GeminiResponseWithUsage {
   usageMetadata?: GeminiUsageMetadata;
 }
 
-export class GeminiProvider extends BaseProvider {
+export class GeminiProvider implements IProvider {
+  readonly name: string = 'gemini';
   private logger: DebugLogger;
   private authMode: GeminiAuthMode = 'none';
   private currentModel: string = 'gemini-2.5-pro';
   private modelExplicitlySet: boolean = false;
   private modelParams?: Record<string, unknown>;
   private geminiOAuthManager?: OAuthManager;
+  private globalConfig?: Config;
+
+  // Helpers for auth and settings (composition over inheritance)
+  private authHelper: ProviderAuthHelper;
+  private settingsHelper: ProviderSettingsHelper;
 
   constructor(
     apiKey?: string,
@@ -71,21 +78,28 @@ export class GeminiProvider extends BaseProvider {
     config?: Config,
     oauthManager?: OAuthManager,
   ) {
-    // Initialize base provider with auth configuration
-    const baseConfig: BaseProviderConfig = {
-      name: 'gemini',
-      apiKey,
-      baseURL,
-      envKeyNames: ['GEMINI_API_KEY', 'GOOGLE_API_KEY'],
-      isOAuthEnabled: false, // OAuth enablement will be checked dynamically
-      oauthProvider: 'gemini',
-      oauthManager, // Keep the manager for checking enablement
-    };
+    // Store config and OAuth manager
+    this.globalConfig = config;
+    this.geminiOAuthManager = oauthManager;
 
-    super(baseConfig, undefined, config);
+    // Initialize auth helper with precedence logic
+    this.authHelper = new ProviderAuthHelper(
+      'gemini',
+      ['GEMINI_API_KEY', 'GOOGLE_API_KEY'],
+      false, // OAuth support will be checked dynamically via supportsOAuth()
+      'gemini',
+      oauthManager,
+      apiKey,
+    );
+
+    // Initialize settings helper with configuration
+    this.settingsHelper = new ProviderSettingsHelper(
+      'gemini',
+      undefined,
+      baseURL,
+    );
 
     this.logger = new DebugLogger('llxprt:gemini:provider');
-    this.geminiOAuthManager = oauthManager;
 
     // Do not determine auth mode on instantiation.
     // This will be done lazily when a chat completion is requested.
@@ -104,8 +118,13 @@ export class GeminiProvider extends BaseProvider {
         typeof manager.isOAuthEnabled === 'function'
       ) {
         const isEnabled = manager.isOAuthEnabled('gemini');
-        // Update the OAuth configuration
-        this.updateOAuthConfig(isEnabled, 'gemini', this.geminiOAuthManager);
+        // Update the OAuth configuration using auth helper
+        this.authHelper.updateOAuthConfig(
+          isEnabled,
+          this.supportsOAuth(),
+          'gemini',
+          this.geminiOAuthManager,
+        );
       }
     }
   }
@@ -132,8 +151,8 @@ export class GeminiProvider extends BaseProvider {
 
     // No Gemini-specific credentials, check OAuth availability
     try {
-      const token = await this.getAuthToken();
-      const authMethodName = await this.getAuthMethodName();
+      const token = await this.authHelper.getToken();
+      const authMethodName = await this.authHelper.getAuthMethodName();
 
       // Check if OAuth is configured for Gemini
       const manager = this.geminiOAuthManager as OAuthManager & {
@@ -220,10 +239,9 @@ export class GeminiProvider extends BaseProvider {
   }
 
   /**
-   * Implementation of BaseProvider abstract method
    * Determines if this provider supports OAuth authentication
    */
-  protected supportsOAuth(): boolean {
+  private supportsOAuth(): boolean {
     // Check if OAuth is actually enabled for Gemini in the OAuth manager
     const manager = this.geminiOAuthManager as OAuthManager & {
       isOAuthEnabled?(provider: string): boolean;
@@ -270,14 +288,21 @@ export class GeminiProvider extends BaseProvider {
   /**
    * Sets the config instance for reading OAuth credentials
    */
-  override setConfig(config: Config | IProviderConfig): void {
-    // Sync with config model if user hasn't explicitly set a model
-    // This ensures consistency between config and provider state
-    const configModel =
-      config instanceof Config ? config.getModel() : undefined;
+  setConfig(config: Config | IProviderConfig): void {
+    // Store the global config if it's a Config instance
+    if (config instanceof Config) {
+      this.globalConfig = config;
 
-    if (!this.modelExplicitlySet && configModel) {
-      this.currentModel = configModel;
+      // Sync with config model if user hasn't explicitly set a model
+      const configModel = config.getModel();
+      if (!this.modelExplicitlySet && configModel) {
+        this.currentModel = configModel;
+      }
+    }
+
+    // Update settings helper with new config
+    if (!(config instanceof Config)) {
+      this.settingsHelper.setConfig(config);
     }
 
     // Update OAuth configuration based on OAuth manager state, not config authType
@@ -285,6 +310,7 @@ export class GeminiProvider extends BaseProvider {
     this.updateOAuthState();
 
     // Clear auth cache when config changes to allow re-determination
+    this.authHelper.clearCache();
   }
 
   async getModels(): Promise<IModel[]> {
@@ -315,10 +341,10 @@ export class GeminiProvider extends BaseProvider {
     // For API key modes (gemini-api-key or vertex-ai), try to fetch real models
     if (this.authMode === 'gemini-api-key' || this.authMode === 'vertex-ai') {
       const apiKey =
-        (await this.getAuthToken()) || process.env['GEMINI_API_KEY'];
+        (await this.authHelper.getToken()) || process.env['GEMINI_API_KEY'];
       if (apiKey) {
         try {
-          const baseURL = this.getBaseURL();
+          const baseURL = this.settingsHelper.getBaseURL();
           const url = baseURL
             ? `${baseURL.replace(/\/$/, '')}/v1beta/models?key=${apiKey}`
             : `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
@@ -377,9 +403,9 @@ export class GeminiProvider extends BaseProvider {
     ];
   }
 
-  override setApiKey(apiKey: string): void {
-    // Call base provider implementation
-    super.setApiKey(apiKey);
+  setApiKey(apiKey: string): void {
+    // Update API key using auth helper
+    this.authHelper.setApiKey(apiKey);
 
     // Set the API key as an environment variable so it can be used by the core library
     // CRITICAL FIX: When clearing the key (empty string), delete the env var instead of setting to empty
@@ -390,12 +416,15 @@ export class GeminiProvider extends BaseProvider {
     }
 
     // Clear auth cache when API key changes
-    this.clearAuthCache();
+    this.authHelper.clearCache();
   }
 
-  override setBaseUrl(baseUrl?: string): void {
-    // Call base provider implementation which stores in ephemeral settings
-    super.setBaseUrl?.(baseUrl);
+  setBaseUrl(baseUrl?: string): void {
+    // Update base URL using settings helper
+    this.settingsHelper.setBaseUrl(baseUrl);
+
+    // Clear auth cache as base URL change might affect auth
+    this.authHelper.clearCache();
   }
 
   /**
@@ -424,7 +453,7 @@ export class GeminiProvider extends BaseProvider {
   /**
    * Gets the current model ID
    */
-  override getCurrentModel(): string {
+  getCurrentModel(): string {
     // Try to get from SettingsService first (source of truth)
     try {
       const settingsService = getSettingsService();
@@ -444,14 +473,14 @@ export class GeminiProvider extends BaseProvider {
   /**
    * Gets the default model for Gemini
    */
-  override getDefaultModel(): string {
+  getDefaultModel(): string {
     return 'gemini-2.5-pro';
   }
 
   /**
    * Sets the current model ID
    */
-  override setModel(modelId: string): void {
+  setModel(modelId: string): void {
     // Update SettingsService as the source of truth
     try {
       const settingsService = getSettingsService();
@@ -470,7 +499,7 @@ export class GeminiProvider extends BaseProvider {
   /**
    * Sets additional model parameters to include in requests
    */
-  override setModelParams(params: Record<string, unknown> | undefined): void {
+  setModelParams(params: Record<string, unknown> | undefined): void {
     if (params === undefined) {
       this.modelParams = undefined;
     } else {
@@ -481,21 +510,21 @@ export class GeminiProvider extends BaseProvider {
   /**
    * Gets the current model parameters
    */
-  override getModelParams(): Record<string, unknown> | undefined {
+  getModelParams(): Record<string, unknown> | undefined {
     return this.modelParams;
   }
 
   /**
    * Checks if the current auth mode requires payment
    */
-  override isPaidMode(): boolean {
+  isPaidMode(): boolean {
     return this.authMode === 'gemini-api-key' || this.authMode === 'vertex-ai';
   }
 
   /**
    * Clears provider state but preserves explicitly set model
    */
-  override clearState(): void {
+  clearState(): void {
     // Clear auth-related state
     this.authMode = 'none';
     // Only reset model if it wasn't explicitly set by user
@@ -511,9 +540,9 @@ export class GeminiProvider extends BaseProvider {
   /**
    * Clear all authentication including environment variable
    */
-  override clearAuth(): void {
-    // Call base implementation to clear SettingsService
-    super.clearAuth?.();
+  clearAuth(): void {
+    // Clear auth using helper
+    this.authHelper.clearAuth();
     // CRITICAL: Also clear the environment variable that setApiKey sets
     delete process.env['GEMINI_API_KEY'];
   }
@@ -521,23 +550,30 @@ export class GeminiProvider extends BaseProvider {
   /**
    * Forces re-determination of auth method
    */
-  override clearAuthCache(): void {
-    // Call the base implementation to clear the cached token
-    super.clearAuthCache();
+  clearAuthCache(): void {
+    // Clear the cached token using auth helper
+    this.authHelper.clearCache();
     // Don't clear the auth mode itself, just allow re-determination next time
+  }
+
+  /**
+   * Check if authenticated
+   */
+  async isAuthenticated(): Promise<boolean> {
+    return this.authHelper.isAuthenticated();
   }
 
   /**
    * Get the list of server tools supported by this provider
    */
-  override getServerTools(): string[] {
+  getServerTools(): string[] {
     return ['web_search', 'web_fetch'];
   }
 
   /**
    * Invoke a server tool (native provider tool)
    */
-  override async invokeServerTool(
+  async invokeServerTool(
     toolName: string,
     params: unknown,
     _config?: unknown,
@@ -596,10 +632,10 @@ export class GeminiProvider extends BaseProvider {
 
           genAI = new GoogleGenAI({
             apiKey: authToken,
-            httpOptions: this.getBaseURL()
+            httpOptions: this.settingsHelper.getBaseURL()
               ? {
                   ...httpOptions,
-                  baseUrl: this.getBaseURL(),
+                  baseUrl: this.settingsHelper.getBaseURL(),
                 }
               : httpOptions,
           });
@@ -629,10 +665,10 @@ export class GeminiProvider extends BaseProvider {
           genAI = new GoogleGenAI({
             apiKey: authToken,
             vertexai: true,
-            httpOptions: this.getBaseURL()
+            httpOptions: this.settingsHelper.getBaseURL()
               ? {
                   ...httpOptions,
-                  baseUrl: this.getBaseURL(),
+                  baseUrl: this.settingsHelper.getBaseURL(),
                 }
               : httpOptions,
           });
@@ -761,10 +797,10 @@ export class GeminiProvider extends BaseProvider {
         case 'gemini-api-key': {
           genAI = new GoogleGenAI({
             apiKey: authToken,
-            httpOptions: this.getBaseURL()
+            httpOptions: this.settingsHelper.getBaseURL()
               ? {
                   ...httpOptions,
-                  baseUrl: this.getBaseURL(),
+                  baseUrl: this.settingsHelper.getBaseURL(),
                 }
               : httpOptions,
           });
@@ -794,10 +830,10 @@ export class GeminiProvider extends BaseProvider {
           genAI = new GoogleGenAI({
             apiKey: authToken,
             vertexai: true,
-            httpOptions: this.getBaseURL()
+            httpOptions: this.settingsHelper.getBaseURL()
               ? {
                   ...httpOptions,
-                  baseUrl: this.getBaseURL(),
+                  baseUrl: this.settingsHelper.getBaseURL(),
                 }
               : httpOptions,
           });
@@ -989,7 +1025,7 @@ export class GeminiProvider extends BaseProvider {
         httpOptions,
         AuthType.LOGIN_WITH_GOOGLE,
         configForOAuth as Config,
-        this.getBaseURL(),
+        this.settingsHelper.getBaseURL(),
       );
 
       const userMemory = this.globalConfig?.getUserMemory
@@ -1032,8 +1068,8 @@ export class GeminiProvider extends BaseProvider {
       const genAI = new GoogleGenAI({
         apiKey: authToken,
         vertexai: this.authMode === 'vertex-ai',
-        httpOptions: this.getBaseURL()
-          ? { ...httpOptions, baseUrl: this.getBaseURL() }
+        httpOptions: this.settingsHelper.getBaseURL()
+          ? { ...httpOptions, baseUrl: this.settingsHelper.getBaseURL() }
           : httpOptions,
       });
 

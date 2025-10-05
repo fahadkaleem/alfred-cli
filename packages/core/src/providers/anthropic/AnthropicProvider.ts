@@ -11,8 +11,7 @@ import type { IModel } from '../IModel.js';
 import { ToolFormatter } from '../../tools/ToolFormatter.js';
 import type { ToolFormat } from '../../tools/IToolFormatter.js';
 import type { IProviderConfig } from '../types/IProviderConfig.js';
-import { BaseProvider } from '../BaseProvider.js';
-import type { BaseProviderConfig } from '../BaseProvider.js';
+import type { IProvider } from '../IProvider.js';
 import type { OAuthManager } from '../../auth/precedence.js';
 import { getSettingsService } from '../../settings/settingsServiceInstance.js';
 import type {
@@ -27,13 +26,22 @@ import {
   logDoubleEscapingInChunk,
 } from '../../tools/doubleEscapeUtils.js';
 import { getCoreSystemPrompt } from '../../core/prompts.js';
+import { ProviderAuthHelper } from '../helpers/ProviderAuthHelper.js';
+import { ProviderSettingsHelper } from '../helpers/ProviderSettingsHelper.js';
 
-export class AnthropicProvider extends BaseProvider {
+export class AnthropicProvider implements IProvider {
+  readonly name: string = 'anthropic';
   private logger: DebugLogger;
   private anthropic: Anthropic;
   private toolFormatter: ToolFormatter;
   toolFormat: ToolFormat = 'anthropic';
   private _cachedAuthKey?: string; // Track cached auth key for client recreation
+  private providerConfig?: IProviderConfig;
+  private globalConfig?: { getUserMemory?: () => string };
+
+  // Helpers for auth and settings (composition over inheritance)
+  private authHelper: ProviderAuthHelper;
+  private settingsHelper: ProviderSettingsHelper;
 
   // Model patterns for max output tokens
   private modelTokenPatterns: Array<{ pattern: RegExp; tokens: number }> = [
@@ -53,18 +61,25 @@ export class AnthropicProvider extends BaseProvider {
     config?: IProviderConfig,
     oauthManager?: OAuthManager,
   ) {
-    // Initialize base provider with auth configuration
-    const baseConfig: BaseProviderConfig = {
-      name: 'anthropic',
-      apiKey,
-      baseURL,
-      envKeyNames: ['ANTHROPIC_API_KEY'],
-      isOAuthEnabled: !!oauthManager,
-      oauthProvider: oauthManager ? 'anthropic' : undefined,
-      oauthManager,
-    };
+    // Store config for later use
+    this.providerConfig = config;
 
-    super(baseConfig, config);
+    // Initialize auth helper with precedence logic
+    this.authHelper = new ProviderAuthHelper(
+      'anthropic',
+      ['ANTHROPIC_API_KEY'],
+      true, // supportsOAuth
+      oauthManager ? 'anthropic' : undefined,
+      oauthManager,
+      apiKey,
+    );
+
+    // Initialize settings helper with configuration
+    this.settingsHelper = new ProviderSettingsHelper(
+      'anthropic',
+      config,
+      baseURL,
+    );
 
     this.logger = new DebugLogger('alfred:anthropic:provider');
 
@@ -78,21 +93,12 @@ export class AnthropicProvider extends BaseProvider {
   }
 
   /**
-   * Implementation of BaseProvider abstract method
-   * Determines if this provider supports OAuth authentication
-   */
-  protected supportsOAuth(): boolean {
-    // Anthropic supports OAuth authentication
-    return true;
-  }
-
-  /**
    * @plan:PLAN-20250823-AUTHFIXES.P15
    * @requirement:REQ-004
    * Update the Anthropic client with resolved authentication if needed
    */
   private async updateClientWithResolvedAuth(): Promise<void> {
-    const resolvedToken = await this.getAuthToken();
+    const resolvedToken = await this.authHelper.getToken();
     if (!resolvedToken) {
       throw new Error(
         'No authentication available for Anthropic API calls. Use /auth anthropic to re-authenticate or /auth anthropic logout to clear any expired session.',
@@ -104,8 +110,8 @@ export class AnthropicProvider extends BaseProvider {
       // Check if this is an OAuth token (starts with sk-ant-oat)
       const isOAuthToken = resolvedToken.startsWith('sk-ant-oat');
 
-      // Use the unified getBaseURL() method from BaseProvider
-      const baseURL = this.getBaseURL();
+      // Use the settings helper to get base URL
+      const baseURL = this.settingsHelper.getBaseURL();
 
       if (isOAuthToken) {
         // For OAuth tokens, use authToken field which sends Bearer token
@@ -134,8 +140,8 @@ export class AnthropicProvider extends BaseProvider {
     }
   }
 
-  override async getModels(): Promise<IModel[]> {
-    const authToken = await this.getAuthToken();
+  async getModels(): Promise<IModel[]> {
+    const authToken = await this.authHelper.getToken();
     if (!authToken) {
       throw new Error(
         'No authentication available for Anthropic API calls. Use /auth anthropic to re-authenticate or /auth anthropic logout to clear any expired session.',
@@ -213,13 +219,12 @@ export class AnthropicProvider extends BaseProvider {
     }
   }
 
-  override setApiKey(apiKey: string): void {
-    // Call base provider implementation
-    super.setApiKey(apiKey);
+  setApiKey(apiKey: string): void {
+    // Update API key using auth helper
+    this.authHelper.setApiKey(apiKey);
 
     // Create a new Anthropic client with the updated API key
-    const resolvedBaseURL =
-      this.providerConfig?.baseUrl || this.baseProviderConfig.baseURL;
+    const resolvedBaseURL = this.settingsHelper.getBaseURL();
     this.anthropic = new Anthropic({
       apiKey,
       baseURL: resolvedBaseURL,
@@ -227,13 +232,16 @@ export class AnthropicProvider extends BaseProvider {
     });
   }
 
-  override setBaseUrl(baseUrl?: string): void {
-    // Call base provider implementation which stores in ephemeral settings
-    super.setBaseUrl?.(baseUrl);
+  setBaseUrl(baseUrl?: string): void {
+    // Update base URL using settings helper
+    this.settingsHelper.setBaseUrl(baseUrl);
+
+    // Clear auth cache as base URL change might affect auth
+    this.authHelper.clearCache();
 
     // Create a new Anthropic client with the updated (or cleared) base URL
     // Will be updated with actual token in updateClientWithResolvedAuth
-    const resolvedBaseURL = this.getBaseURL();
+    const resolvedBaseURL = this.settingsHelper.getBaseURL();
     this.anthropic = new Anthropic({
       apiKey: '', // Empty string, will be replaced when auth is resolved
       baseURL: resolvedBaseURL,
@@ -241,26 +249,22 @@ export class AnthropicProvider extends BaseProvider {
     });
   }
 
-  override setModel(modelId: string): void {
-    // Update SettingsService as the source of truth
+  setModel(modelId: string): void {
+    // Update SettingsService using settings helper
     try {
-      const settingsService = getSettingsService();
-      settingsService.setProviderSetting(this['name'], 'model', modelId);
+      this.settingsHelper.setModel(modelId);
     } catch (error) {
       this.logger['debug'](
         () => `Failed to persist model to SettingsService: ${error}`,
       );
     }
-    // No local caching - always look up from SettingsService
   }
 
-  override getCurrentModel(): string {
+  getCurrentModel(): string {
     // Try to get from SettingsService first (source of truth)
     try {
       const settingsService = getSettingsService();
-      const providerSettings = settingsService.getProviderSettings(
-        this['name'],
-      );
+      const providerSettings = settingsService.getProviderSettings(this.name);
       if (providerSettings['model']) {
         return providerSettings['model'] as string;
       }
@@ -273,7 +277,7 @@ export class AnthropicProvider extends BaseProvider {
     return this.getDefaultModel();
   }
 
-  override getDefaultModel(): string {
+  getDefaultModel(): string {
     // Return hardcoded default - do NOT call getModel() to avoid circular dependency
     return 'claude-3-5-sonnet-20241022';
   }
@@ -343,21 +347,21 @@ export class AnthropicProvider extends BaseProvider {
   /**
    * Anthropic always requires payment (API key or OAuth)
    */
-  override isPaidMode(): boolean {
+  isPaidMode(): boolean {
     return true;
   }
 
   /**
    * Get the list of server tools supported by this provider
    */
-  override getServerTools(): string[] {
+  getServerTools(): string[] {
     return [];
   }
 
   /**
    * Invoke a server tool (native provider tool)
    */
-  override async invokeServerTool(
+  async invokeServerTool(
     _toolName: string,
     _params: unknown,
     _config?: unknown,
@@ -369,52 +373,40 @@ export class AnthropicProvider extends BaseProvider {
    * Set model parameters that will be merged into API calls
    * @param params Parameters to merge with existing, or undefined to clear all
    */
-  override setModelParams(params: Record<string, unknown> | undefined): void {
+  setModelParams(params: Record<string, unknown> | undefined): void {
     const settingsService = getSettingsService();
 
     if (params === undefined) {
       // Clear all model params
-      settingsService.setProviderSetting(
-        this['name'],
-        'temperature',
-        undefined,
-      );
-      settingsService.setProviderSetting(this['name'], 'max_tokens', undefined);
-      settingsService.setProviderSetting(this['name'], 'top_p', undefined);
-      settingsService.setProviderSetting(this['name'], 'top_k', undefined);
+      settingsService.setProviderSetting(this.name, 'temperature', undefined);
+      settingsService.setProviderSetting(this.name, 'max_tokens', undefined);
+      settingsService.setProviderSetting(this.name, 'top_p', undefined);
+      settingsService.setProviderSetting(this.name, 'top_k', undefined);
     } else {
       // Set each param individually
       if ('temperature' in params) {
         settingsService.setProviderSetting(
-          this['name'],
+          this.name,
           'temperature',
           params['temperature'],
         );
       }
       if ('max_tokens' in params) {
         settingsService.setProviderSetting(
-          this['name'],
+          this.name,
           'max_tokens',
           params['max_tokens'],
         );
       }
       if ('top_p' in params) {
-        settingsService.setProviderSetting(
-          this['name'],
-          'top_p',
-          params['top_p'],
-        );
+        settingsService.setProviderSetting(this.name, 'top_p', params['top_p']);
       }
       if ('top_k' in params) {
-        settingsService.setProviderSetting(
-          this['name'],
-          'top_k',
-          params['top_k'],
-        );
+        settingsService.setProviderSetting(this.name, 'top_k', params['top_k']);
       }
       if ('stop_sequences' in params) {
         settingsService.setProviderSetting(
-          this['name'],
+          this.name,
           'stop_sequences',
           params['stop_sequences'],
         );
@@ -426,10 +418,10 @@ export class AnthropicProvider extends BaseProvider {
    * Get current model parameters
    * @returns Current parameters or undefined if not set
    */
-  override getModelParams(): Record<string, unknown> | undefined {
+  getModelParams(): Record<string, unknown> | undefined {
     // Always get from SettingsService
     const settingsService = getSettingsService();
-    const providerSettings = settingsService.getProviderSettings(this['name']);
+    const providerSettings = settingsService.getProviderSettings(this.name);
 
     if (!providerSettings) {
       return undefined;
@@ -451,19 +443,33 @@ export class AnthropicProvider extends BaseProvider {
   }
 
   /**
-   * Override clearAuthCache to also clear cached auth key
+   * Clear auth cache (also clear cached auth key for client recreation)
    */
-  override clearAuthCache(): void {
-    super.clearAuthCache();
+  clearAuthCache(): void {
+    this.authHelper.clearCache();
     this._cachedAuthKey = undefined;
   }
 
   /**
-   * Check if the provider is authenticated using any available method
-   * Uses the base provider's isAuthenticated implementation
+   * Clear all authentication
    */
-  override async isAuthenticated(): Promise<boolean> {
-    return super.isAuthenticated();
+  clearAuth(): void {
+    this.authHelper.clearAuth();
+    this._cachedAuthKey = undefined;
+  }
+
+  /**
+   * Clear provider state
+   */
+  clearState(): void {
+    this.clearAuthCache();
+  }
+
+  /**
+   * Check if the provider is authenticated using any available method
+   */
+  async isAuthenticated(): Promise<boolean> {
+    return this.authHelper.isAuthenticated();
   }
 
   /**
@@ -477,7 +483,7 @@ export class AnthropicProvider extends BaseProvider {
       // First check SettingsService for toolFormat override in provider settings
       // Note: This is synchronous access to cached settings, not async
       const currentSettings = settingsService['settings'];
-      const providerSettings = currentSettings?.providers?.[this['name']];
+      const providerSettings = currentSettings?.providers?.[this.name];
       const toolFormatOverride = providerSettings?.['toolFormat'] as
         | ToolFormat
         | 'auto'
@@ -500,7 +506,7 @@ export class AnthropicProvider extends BaseProvider {
     }
   }
 
-  override getToolFormat(): ToolFormat {
+  getToolFormat(): ToolFormat {
     // Use the same detection logic as detectToolFormat()
     return this.detectToolFormat();
   }
@@ -509,22 +515,29 @@ export class AnthropicProvider extends BaseProvider {
    * Set tool format override for this provider
    * @param format The format to use, or null to clear override
    */
-  override setToolFormatOverride(format: string | null): void {
+  setToolFormatOverride(format: string | null): void {
     const settingsService = getSettingsService();
     if (format === null) {
-      settingsService.setProviderSetting(this['name'], 'toolFormat', 'auto');
+      settingsService.setProviderSetting(this.name, 'toolFormat', 'auto');
       this.logger['debug'](
-        () => `Tool format override cleared for ${this['name']}`,
+        () => `Tool format override cleared for ${this.name}`,
       );
     } else {
-      settingsService.setProviderSetting(this['name'], 'toolFormat', format);
+      settingsService.setProviderSetting(this.name, 'toolFormat', format);
       this.logger['debug'](
-        () => `Tool format override set to '${format}' for ${this['name']}`,
+        () => `Tool format override set to '${format}' for ${this.name}`,
       );
     }
 
     // Clear cached auth key to ensure new format takes effect
     this._cachedAuthKey = undefined;
+  }
+
+  /**
+   * Set provider config
+   */
+  setConfig(config: IProviderConfig): void {
+    this.settingsHelper.setConfig(config);
   }
 
   /**
@@ -870,7 +883,7 @@ export class AnthropicProvider extends BaseProvider {
     await this.updateClientWithResolvedAuth();
 
     // Check OAuth mode
-    const authToken = await this.getAuthToken();
+    const authToken = await this.authHelper.getToken();
     const isOAuth = authToken && authToken.startsWith('sk-ant-oat');
 
     // Get streaming setting from ephemeral settings (default: enabled)
