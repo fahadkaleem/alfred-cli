@@ -10,7 +10,7 @@ import { Text } from 'ink';
 import { LoadingIndicator } from './LoadingIndicator.js';
 import { StreamingContext } from '../contexts/StreamingContext.js';
 import { StreamingState } from '../types.js';
-import { vi } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import * as useTerminalSize from '../hooks/useTerminalSize.js';
 
 // Mock GeminiRespondingSpinner
@@ -32,6 +32,16 @@ vi.mock('./GeminiRespondingSpinner.js', () => ({
 
 vi.mock('../hooks/useTerminalSize.js', () => ({
   useTerminalSize: vi.fn(),
+}));
+
+vi.mock('../contexts/SettingsContext.js', () => ({
+  useSettings: vi.fn(() => ({
+    merged: {
+      ui: {
+        thinkingAnimationStyle: 'spinner',
+      },
+    },
+  })),
 }));
 
 const useTerminalSizeMock = vi.mocked(useTerminalSize.useTerminalSize);

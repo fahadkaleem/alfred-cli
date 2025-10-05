@@ -15,6 +15,9 @@ import {
   SCREEN_READER_RESPONDING,
 } from '../textConstants.js';
 import { theme } from '../semantic-colors.js';
+import { ThinkingAnimation } from './ThinkingAnimation.js';
+
+type AnimationStyle = 'spinner' | 'braille' | 'japanese' | 'symbols';
 
 interface GeminiRespondingSpinnerProps {
   /**
@@ -23,17 +26,23 @@ interface GeminiRespondingSpinnerProps {
    */
   nonRespondingDisplay?: string;
   spinnerType?: SpinnerName;
+  animationStyle?: AnimationStyle;
 }
 
 export const GeminiRespondingSpinner: React.FC<
   GeminiRespondingSpinnerProps
-> = ({ nonRespondingDisplay, spinnerType = 'dots' }) => {
+> = ({
+  nonRespondingDisplay,
+  spinnerType = 'dots',
+  animationStyle = 'japanese',
+}) => {
   const streamingState = useStreamingContext();
   const isScreenReaderEnabled = useIsScreenReaderEnabled();
   if (streamingState === StreamingState.Responding) {
     return (
       <GeminiSpinner
         spinnerType={spinnerType}
+        animationStyle={animationStyle}
         altText={SCREEN_READER_RESPONDING}
       />
     );
@@ -49,19 +58,41 @@ export const GeminiRespondingSpinner: React.FC<
 
 interface GeminiSpinnerProps {
   spinnerType?: SpinnerName;
+  animationStyle?: AnimationStyle;
   altText?: string;
 }
 
 export const GeminiSpinner: React.FC<GeminiSpinnerProps> = ({
   spinnerType = 'dots',
+  animationStyle = 'japanese',
   altText,
 }) => {
   const isScreenReaderEnabled = useIsScreenReaderEnabled();
-  return isScreenReaderEnabled ? (
-    <Text>{altText}</Text>
-  ) : (
-    <Text color={theme.text.primary}>
-      <Spinner type={spinnerType} />
-    </Text>
+
+  if (isScreenReaderEnabled) {
+    return <Text>{altText}</Text>;
+  }
+
+  if (animationStyle === 'spinner') {
+    return (
+      <Text color={theme.text.primary}>
+        <Spinner type={spinnerType} />
+      </Text>
+    );
+  }
+
+  // Use ThinkingAnimation for braille, japanese, or symbols
+  const gradientColors = theme.ui.gradient || ['#ec4899', '#8b5cf6'];
+  const colorA = gradientColors[0] || '#ec4899';
+  const colorB = gradientColors[1] || gradientColors[0] || '#8b5cf6';
+
+  return (
+    <ThinkingAnimation
+      size={15}
+      gradColorA={colorA}
+      gradColorB={colorB}
+      cycleColors={true}
+      runeSet={animationStyle}
+    />
   );
 };

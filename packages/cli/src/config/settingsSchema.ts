@@ -360,6 +360,21 @@ const SETTINGS_SCHEMA = {
         description: 'Custom witty phrases to display during loading.',
         showInDialog: false,
       },
+      thinkingAnimationStyle: {
+        type: 'enum',
+        label: 'Thinking Animation Style',
+        category: 'UI',
+        requiresRestart: false,
+        default: 'japanese',
+        description: 'Visual style for thinking indicators.',
+        showInDialog: true,
+        options: [
+          { value: 'spinner', label: 'Spinner (dots)' },
+          { value: 'braille', label: 'Braille Patterns' },
+          { value: 'japanese', label: 'Japanese Characters' },
+          { value: 'symbols', label: 'Symbols & Digits' },
+        ],
+      },
       accessibility: {
         type: 'object',
         label: 'Accessibility',

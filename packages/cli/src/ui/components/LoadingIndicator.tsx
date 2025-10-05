@@ -14,6 +14,7 @@ import { GeminiRespondingSpinner } from './GeminiRespondingSpinner.js';
 import { formatDuration } from '../utils/formatters.js';
 import { useTerminalSize } from '../hooks/useTerminalSize.js';
 import { isNarrowWidth } from '../utils/isNarrowWidth.js';
+import { useSettings } from '../contexts/SettingsContext.js';
 
 interface LoadingIndicatorProps {
   currentLoadingPhrase?: string;
@@ -31,6 +32,7 @@ export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
   const streamingState = useStreamingContext();
   const { columns: terminalWidth } = useTerminalSize();
   const isNarrow = isNarrowWidth(terminalWidth);
+  const settings = useSettings();
 
   if (streamingState === StreamingState.Idle) {
     return null;
@@ -42,6 +44,9 @@ export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
     streamingState !== StreamingState.WaitingForConfirmation
       ? `(esc to cancel, ${elapsedTime < 60 ? `${elapsedTime}s` : formatDuration(elapsedTime * 1000)})`
       : null;
+
+  const animationStyle = (settings.merged.ui?.thinkingAnimationStyle ||
+    'japanese') as 'spinner' | 'braille' | 'japanese' | 'symbols';
 
   return (
     <Box paddingLeft={0} flexDirection="column">
@@ -59,6 +64,7 @@ export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
                   ? '⠏'
                   : ''
               }
+              animationStyle={animationStyle}
             />
           </Box>
           {primaryText && (
