@@ -14,7 +14,6 @@ import type { ProcessedFileReadResult } from '../utils/fileUtils.js';
 import {
   detectFileType,
   processSingleFileContent,
-  DEFAULT_ENCODING,
   getSpecificMimeType,
 } from '../utils/fileUtils.js';
 import type { PartListUnion } from '@google/genai';
@@ -119,52 +118,10 @@ class ReadManyFilesToolInvocation extends BaseToolInvocation<
 
   getDescription(): string {
     const allPatterns = [...this.params.paths, ...(this.params.include || [])];
-    const pathDesc = `using patterns: 
-${allPatterns.join('`, `')}
- (within target directory: 
-${this.config.getTargetDir()}
-) `;
-
-    // Determine the final list of exclusion patterns exactly as in execute method
-    const paramExcludes = this.params.exclude || [];
-    const paramUseDefaultExcludes = this.params.useDefaultExcludes !== false;
-    const alfredIgnorePatterns = this.config
-      .getFileService()
-      .getAlfredIgnorePatterns();
-    const finalExclusionPatternsForDescription: string[] =
-      paramUseDefaultExcludes
-        ? [
-            ...getDefaultExcludes(this.config),
-            ...paramExcludes,
-            ...alfredIgnorePatterns,
-          ]
-        : [...paramExcludes, ...alfredIgnorePatterns];
-
-    let excludeDesc = `Excluding: ${
-      finalExclusionPatternsForDescription.length > 0
-        ? `patterns like 
-${finalExclusionPatternsForDescription
-  .slice(0, 2)
-  .join(
-    '`, `',
-  )}${finalExclusionPatternsForDescription.length > 2 ? '...`' : '`'}`
-        : 'none specified'
-    }`;
-
-    // Add a note if .alfredignore patterns contributed to the final list of exclusions
-    if (alfredIgnorePatterns.length > 0) {
-      const alfredPatternsInEffect = alfredIgnorePatterns.filter((p) =>
-        finalExclusionPatternsForDescription.includes(p),
-      ).length;
-      if (alfredPatternsInEffect > 0) {
-        excludeDesc += ` (includes ${alfredPatternsInEffect} from .alfredignore)`;
-      }
-    }
-
-    return `Will attempt to read and concatenate files ${pathDesc}. ${excludeDesc}. File encoding: ${DEFAULT_ENCODING}. Separator: "${DEFAULT_OUTPUT_SEPARATOR_FORMAT.replace(
-      '{filePath}',
-      'path/to/file.ext',
-    )}".`;
+    const patternsStr = allPatterns.map((p) => `'${p}'`).join(', ');
+    const fullDesc = `patterns: ${patternsStr}`;
+    // Cap at 60 characters similar to other tools
+    return fullDesc.length > 60 ? fullDesc.substring(0, 60) + '...' : fullDesc;
   }
 
   async execute(signal: AbortSignal): Promise<ToolResult> {
@@ -410,45 +367,12 @@ ${finalExclusionPatternsForDescription
       }
     }
 
-    let displayMessage = `### ReadManyFiles Result (Target Dir: \`${this.config.getTargetDir()}\`)\n\n`;
+    // Simple display message showing count
+    let displayMessage: string;
     if (processedFilesRelativePaths.length > 0) {
-      displayMessage += `Successfully read and concatenated content from **${processedFilesRelativePaths.length} file(s)**.\n`;
-      if (processedFilesRelativePaths.length <= 10) {
-        displayMessage += `\n**Processed Files:**\n`;
-        processedFilesRelativePaths.forEach(
-          (p) => (displayMessage += `- \`${p}\`\n`),
-        );
-      } else {
-        displayMessage += `\n**Processed Files (first 10 shown):**\n`;
-        processedFilesRelativePaths
-          .slice(0, 10)
-          .forEach((p) => (displayMessage += `- \`${p}\`\n`));
-        displayMessage += `- ...and ${processedFilesRelativePaths.length - 10} more.\n`;
-      }
-    }
-
-    if (skippedFiles.length > 0) {
-      if (processedFilesRelativePaths.length === 0) {
-        displayMessage += `No files were read and concatenated based on the criteria.\n`;
-      }
-      if (skippedFiles.length <= 5) {
-        displayMessage += `\n**Skipped ${skippedFiles.length} item(s):**\n`;
-      } else {
-        displayMessage += `\n**Skipped ${skippedFiles.length} item(s) (first 5 shown):**\n`;
-      }
-      skippedFiles
-        .slice(0, 5)
-        .forEach(
-          (f) => (displayMessage += `- \`${f.path}\` (Reason: ${f.reason})\n`),
-        );
-      if (skippedFiles.length > 5) {
-        displayMessage += `- ...and ${skippedFiles.length - 5} more.\n`;
-      }
-    } else if (
-      processedFilesRelativePaths.length === 0 &&
-      skippedFiles.length === 0
-    ) {
-      displayMessage += `No files were read and concatenated based on the criteria.\n`;
+      displayMessage = `Read ${processedFilesRelativePaths.length} file(s)`;
+    } else {
+      displayMessage = 'No files found';
     }
 
     if (contentParts.length > 0) {

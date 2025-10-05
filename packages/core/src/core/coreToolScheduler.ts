@@ -167,12 +167,28 @@ export function convertToFunctionResponse(
   }
 
   if (Array.isArray(contentToProcess)) {
+    // Concatenate all text parts into a single string for the function response
+    // This ensures compatibility with providers like Anthropic that require
+    // all tool result content in a single field
+    const combinedText = contentToProcess
+      .map((part) => {
+        if (typeof part === 'string') {
+          return part;
+        } else if (part && typeof part === 'object' && 'text' in part) {
+          return part.text ?? '';
+        }
+        return '';
+      })
+      .filter((text) => text.length > 0)
+      .join('\n')
+      .trim(); // Remove leading/trailing whitespace to avoid extra blank lines
+
     const functionResponse = createFunctionResponsePart(
       callId,
       toolName,
-      'Tool execution succeeded.',
+      combinedText || 'Tool execution succeeded.',
     );
-    return [functionResponse, ...toParts(contentToProcess)];
+    return [functionResponse];
   }
 
   // After this point, contentToProcess is a single Part object.
@@ -211,18 +227,6 @@ export function convertToFunctionResponse(
   return [
     createFunctionResponsePart(callId, toolName, 'Tool execution succeeded.'),
   ];
-}
-
-function toParts(input: PartListUnion): Part[] {
-  const parts: Part[] = [];
-  for (const part of Array.isArray(input) ? input : [input]) {
-    if (typeof part === 'string') {
-      parts.push({ text: part });
-    } else if (part) {
-      parts.push(part);
-    }
-  }
-  return parts;
 }
 
 const createErrorResponse = (

@@ -56,8 +56,24 @@ export const HistoryItemDisplay: React.FC<HistoryItemDisplayProps> = ({
 }) => {
   const itemForDisplay = useMemo(() => escapeAnsiCtrlCodes(item), [item]);
 
+  // Skip rendering empty gemini messages (when assistant goes straight to tool calls)
+  const shouldSkipRendering =
+    (itemForDisplay.type === 'gemini' ||
+      itemForDisplay.type === 'gemini_content') &&
+    itemForDisplay.text.trim() === '';
+
+  if (shouldSkipRendering) {
+    return null;
+  }
+
+  // Add vertical margin for tool groups to ensure spacing
+  const marginProps =
+    itemForDisplay.type === 'tool_group'
+      ? { marginTop: 1, marginBottom: 1 }
+      : {};
+
   return (
-    <Box flexDirection="column" key={itemForDisplay.id}>
+    <Box flexDirection="column" key={itemForDisplay.id} {...marginProps}>
       {/* Render standard message types */}
       {itemForDisplay.type === 'user' && (
         <UserMessage text={itemForDisplay.text} />

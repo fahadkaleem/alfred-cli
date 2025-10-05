@@ -103,6 +103,30 @@ function getDiffStat(
   };
 }
 
+function generateDiffSummary(
+  fileName: string,
+  isNewFile: boolean,
+  content: string,
+  diffStat?: DiffStat,
+): string {
+  if (isNewFile) {
+    const lineCount = content.split('\n').length;
+    const linesText = lineCount === 1 ? 'line' : 'lines';
+    return `Created ${fileName} with ${lineCount} ${linesText}\n`;
+  }
+
+  if (!diffStat) {
+    return `Updated ${fileName}\n`;
+  }
+
+  const totalAdditions = diffStat.model_added_lines + diffStat.user_added_lines;
+  const totalRemovals =
+    diffStat.model_removed_lines + diffStat.user_removed_lines;
+  const additionsText = totalAdditions === 1 ? 'addition' : 'additions';
+  const removalsText = totalRemovals === 1 ? 'removal' : 'removals';
+  return `Updated ${fileName} with ${totalAdditions} ${additionsText} and ${totalRemovals} ${removalsText}\n`;
+}
+
 /**
  * Parameters for the WriteFile tool
  */
@@ -239,14 +263,16 @@ class WriteFileToolInvocation extends BaseToolInvocation<
       return false;
     }
 
-    const { originalContent, correctedContent } = correctedContentResult;
+    const { originalContent, correctedContent, fileExists } =
+      correctedContentResult;
     const relativePath = makeRelative(
       this.params.file_path,
       this.config.getTargetDir(),
     );
     const fileName = path.basename(this.params.file_path);
+    const isNewFile = !fileExists;
 
-    const fileDiff = Diff.createPatch(
+    const rawDiffForConfirm = Diff.createPatch(
       fileName,
       originalContent, // Original content (empty if new file or unreadable)
       correctedContent, // Content after potential correction
@@ -254,6 +280,22 @@ class WriteFileToolInvocation extends BaseToolInvocation<
       'Proposed',
       DEFAULT_DIFF_OPTIONS,
     );
+
+    const confirmDiffStat = isNewFile
+      ? undefined
+      : getDiffStat(
+          fileName,
+          originalContent,
+          correctedContent,
+          correctedContent,
+        );
+    const summary = generateDiffSummary(
+      fileName,
+      isNewFile,
+      correctedContent,
+      confirmDiffStat,
+    );
+    const fileDiff = summary + rawDiffForConfirm;
 
     const confirmationDetails: ToolEditConfirmationDetails = {
       type: 'edit',
@@ -328,7 +370,7 @@ class WriteFileToolInvocation extends BaseToolInvocation<
         ? '' // Or some indicator of unreadable content
         : originalContent;
 
-      const fileDiff = Diff.createPatch(
+      const rawDiff = Diff.createPatch(
         fileName,
         currentContentForDiff,
         fileContent,
@@ -344,6 +386,14 @@ class WriteFileToolInvocation extends BaseToolInvocation<
         originallyProposedContent,
         content,
       );
+
+      const summary = generateDiffSummary(
+        fileName,
+        isNewFile,
+        fileContent,
+        diffStat,
+      );
+      const fileDiff = summary + rawDiff;
 
       const llmSuccessMessageParts = [
         isNewFile

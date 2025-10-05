@@ -121,7 +121,7 @@ export const ToolMessage: React.FC<ToolMessageProps> = ({
     }
   }
   return (
-    <Box paddingX={1} paddingY={0} flexDirection="column">
+    <Box paddingY={0} flexDirection="column">
       <Box minHeight={1}>
         <ToolStatusIndicator status={status} name={name} />
         <ToolInfo
@@ -140,39 +140,45 @@ export const ToolMessage: React.FC<ToolMessageProps> = ({
         {emphasis === 'high' && <TrailingIndicator />}
       </Box>
       {resultDisplay && (
-        <Box paddingLeft={STATUS_INDICATOR_WIDTH} width="100%" marginTop={1}>
-          <Box flexDirection="column">
-            {typeof resultDisplay === 'string' && renderOutputAsMarkdown ? (
-              <Box flexDirection="column">
-                <MarkdownDisplay
-                  text={resultDisplay}
-                  isPending={false}
+        <Box width="100%">
+          <Box flexDirection="row">
+            <Box minWidth={STATUS_INDICATOR_WIDTH}>
+              <Text color={theme.text.secondary}>{'  '}╰◖▶ </Text>
+            </Box>
+            <Box flexDirection="column">
+              {typeof resultDisplay === 'string' && renderOutputAsMarkdown ? (
+                <Box flexDirection="column">
+                  <MarkdownDisplay
+                    text={resultDisplay}
+                    isPending={false}
+                    availableTerminalHeight={availableHeight}
+                    terminalWidth={childWidth}
+                  />
+                </Box>
+              ) : typeof resultDisplay === 'string' &&
+                !renderOutputAsMarkdown ? (
+                <MaxSizedBox maxHeight={availableHeight} maxWidth={childWidth}>
+                  <Box>
+                    <Text wrap="wrap" color={theme.text.primary}>
+                      {resultDisplay}
+                    </Text>
+                  </Box>
+                </MaxSizedBox>
+              ) : typeof resultDisplay === 'object' &&
+                'fileDiff' in resultDisplay ? (
+                <DiffRenderer
+                  diffContent={resultDisplay.fileDiff}
+                  filename={resultDisplay.fileName}
                   availableTerminalHeight={availableHeight}
                   terminalWidth={childWidth}
                 />
-              </Box>
-            ) : typeof resultDisplay === 'string' && !renderOutputAsMarkdown ? (
-              <MaxSizedBox maxHeight={availableHeight} maxWidth={childWidth}>
-                <Box>
-                  <Text wrap="wrap" color={theme.text.primary}>
-                    {resultDisplay}
-                  </Text>
-                </Box>
-              </MaxSizedBox>
-            ) : typeof resultDisplay === 'object' &&
-              'fileDiff' in resultDisplay ? (
-              <DiffRenderer
-                diffContent={resultDisplay.fileDiff}
-                filename={resultDisplay.fileName}
-                availableTerminalHeight={availableHeight}
-                terminalWidth={childWidth}
-              />
-            ) : (
-              <AnsiOutputText
-                data={resultDisplay as AnsiOutput}
-                availableTerminalHeight={availableHeight}
-              />
-            )}
+              ) : (
+                <AnsiOutputText
+                  data={resultDisplay as AnsiOutput}
+                  availableTerminalHeight={availableHeight}
+                />
+              )}
+            </Box>
           </Box>
         </Box>
       )}

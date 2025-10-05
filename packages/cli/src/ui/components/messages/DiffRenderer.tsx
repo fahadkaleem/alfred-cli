@@ -103,7 +103,16 @@ export const DiffRenderer: React.FC<DiffRendererProps> = ({
     return <Text color={semanticTheme.status.warning}>No diff content.</Text>;
   }
 
-  const parsedLines = parseDiffWithLineNumbers(diffContent);
+  // Extract summary line if it exists (first line starting with "Updated" or "Created")
+  let summary: string | null = null;
+  let actualDiffContent = diffContent;
+  const lines = diffContent.split('\n');
+  if (lines[0]?.startsWith('Updated ') || lines[0]?.startsWith('Created ')) {
+    summary = lines[0];
+    actualDiffContent = lines.slice(1).join('\n');
+  }
+
+  const parsedLines = parseDiffWithLineNumbers(actualDiffContent);
 
   if (parsedLines.length === 0) {
     return (
@@ -165,6 +174,15 @@ export const DiffRenderer: React.FC<DiffRendererProps> = ({
       tabWidth,
       availableTerminalHeight,
       terminalWidth,
+    );
+  }
+
+  if (summary) {
+    return (
+      <Box flexDirection="column">
+        <Text color={semanticTheme.text.secondary}>{summary}</Text>
+        {renderedOutput}
+      </Box>
     );
   }
 

@@ -96,6 +96,15 @@ function getDiffStat(
   };
 }
 
+function generateDiffSummary(fileName: string, diffStat: DiffStat): string {
+  const totalAdditions = diffStat.model_added_lines + diffStat.user_added_lines;
+  const totalRemovals =
+    diffStat.model_removed_lines + diffStat.user_removed_lines;
+  const additionsText = totalAdditions === 1 ? 'addition' : 'additions';
+  const removalsText = totalRemovals === 1 ? 'removal' : 'removals';
+  return `Updated ${fileName} with ${totalAdditions} ${additionsText} and ${totalRemovals} ${removalsText}\n`;
+}
+
 export function applyReplacement(
   currentContent: string | null,
   oldString: string,
@@ -326,7 +335,7 @@ class EditToolInvocation implements ToolInvocation<EditToolParams, ToolResult> {
     }
 
     const fileName = path.basename(this.params.file_path);
-    const fileDiff = Diff.createPatch(
+    const rawDiffForConfirm = Diff.createPatch(
       fileName,
       editData.currentContent ?? '',
       editData.newContent,
@@ -334,6 +343,15 @@ class EditToolInvocation implements ToolInvocation<EditToolParams, ToolResult> {
       'Proposed',
       DEFAULT_DIFF_OPTIONS,
     );
+
+    const confirmDiffStat = getDiffStat(
+      fileName,
+      editData.currentContent ?? '',
+      editData.newContent,
+      editData.newContent,
+    );
+    const summary = generateDiffSummary(fileName, confirmDiffStat);
+    const fileDiff = summary + rawDiffForConfirm;
 
     const confirmationDetails: ToolEditConfirmationDetails = {
       type: 'edit',
@@ -425,7 +443,7 @@ class EditToolInvocation implements ToolInvocation<EditToolParams, ToolResult> {
         editData.newContent,
       );
 
-      const fileDiff = Diff.createPatch(
+      const rawDiff = Diff.createPatch(
         fileName,
         editData.currentContent ?? '', // Should not be null here if not isNewFile
         editData.newContent,
@@ -433,6 +451,10 @@ class EditToolInvocation implements ToolInvocation<EditToolParams, ToolResult> {
         'Proposed',
         DEFAULT_DIFF_OPTIONS,
       );
+
+      const summary = generateDiffSummary(fileName, diffStat);
+      const fileDiff = summary + rawDiff;
+
       const displayResult = {
         fileDiff,
         fileName,
