@@ -61,7 +61,7 @@ export function CompressionMessage({
         {isPending ? (
           <Spinner type="dots" />
         ) : (
-          <Text color={theme.text.accent}>✦</Text>
+          <Text color={theme.text.accent}>█</Text>
         )}
       </Box>
       <Box>
