@@ -122,54 +122,134 @@ export class ProviderContentGenerator implements ContentGenerator {
   }
 
   /**
-   * Preprocess content array for provider-specific requirements
-   * Handles tool response formatting differences between Gemini and other providers
+   * Preprocess content array for provider-specific requirements.
+   * Handles tool response formatting differences between Gemini and other providers:
+   * 1. Removes tool call echoes that immediately precede their responses (Gemini-only requirement)
+   * 2. Splits messages with multiple tool responses into separate messages (Anthropic requirement)
    */
   private preprocessForProvider(contents: Content[]): Content[] {
     const processedContents: Content[] = [];
 
-    for (const content of contents) {
-      // Check for paired tool call/response pattern from alfredChat
-      // This occurs when tool executor sends [functionCall, functionResponse] array
-      const isPairedToolEcho =
-        content.role === 'model' &&
-        content.parts?.length === 1 &&
-        content.parts[0] &&
-        typeof content.parts[0] === 'object' &&
-        'functionCall' in content.parts[0];
+    for (let i = 0; i < contents.length; i++) {
+      const content = contents[i];
 
-      if (isPairedToolEcho) {
-        // Skip the echo of tool call - providers already have it in history
-        // Only Gemini API needs this echo
+      // Skip tool call echoes that are part of a paired call/response
+      if (this.isToolCallEcho(content, contents[i + 1])) {
         continue;
       }
 
-      // Check for multiple tool responses in a single message
-      if (content.role === 'user' && content.parts) {
-        const toolResponseParts = content.parts.filter(
-          (part) =>
-            part && typeof part === 'object' && 'functionResponse' in part,
-        );
-
-        if (toolResponseParts.length > 1) {
-          // Multiple tool responses - split into separate messages for providers
-          // Anthropic requires each tool response in a separate message
-          for (const responsePart of toolResponseParts) {
-            processedContents.push({
-              role: 'user' as const,
-              parts: [responsePart],
-            });
-          }
-        } else {
-          // Single tool response or regular message - keep as-is
-          processedContents.push(content);
+      // Split multiple tool responses into separate messages
+      if (this.hasMultipleToolResponses(content)) {
+        const toolResponseParts = this.extractToolResponseParts(content);
+        for (const responsePart of toolResponseParts) {
+          processedContents.push({
+            role: 'user' as const,
+            parts: [responsePart],
+          });
         }
       } else {
-        // Regular message - keep as-is
         processedContents.push(content);
       }
     }
 
     return processedContents;
+  }
+
+  /**
+   * Checks if a content is a tool call echo that should be filtered out.
+   * An echo is a model message with a single function call that is immediately
+   * followed by the matching function response from the tool executor.
+   * Only Gemini API requires these echoes; other providers have the tool call in history.
+   */
+  private isToolCallEcho(
+    content: Content,
+    nextContent: Content | undefined,
+  ): boolean {
+    if (content.role !== 'model' || !this.hasSingleFunctionCall(content)) {
+      return false;
+    }
+
+    if (!nextContent || !this.hasSingleFunctionResponse(nextContent)) {
+      return false;
+    }
+
+    // Verify the IDs match between call and response
+    const callId = this.getFunctionCallId(content);
+    const responseId = this.getFunctionResponseId(nextContent);
+
+    return callId !== undefined && callId === responseId;
+  }
+
+  /**
+   * Checks if content has exactly one function call part.
+   */
+  private hasSingleFunctionCall(content: Content): boolean {
+    return (
+      content.parts?.length === 1 &&
+      !!content.parts[0] &&
+      typeof content.parts[0] === 'object' &&
+      'functionCall' in content.parts[0]
+    );
+  }
+
+  /**
+   * Checks if content has exactly one function response part.
+   */
+  private hasSingleFunctionResponse(content: Content): boolean {
+    return (
+      content.role === 'user' &&
+      content.parts?.length === 1 &&
+      !!content.parts[0] &&
+      typeof content.parts[0] === 'object' &&
+      'functionResponse' in content.parts[0]
+    );
+  }
+
+  /**
+   * Extracts the function call ID from content.
+   */
+  private getFunctionCallId(content: Content): string | undefined {
+    const part = content.parts?.[0];
+    if (!part || typeof part !== 'object' || !('functionCall' in part)) {
+      return undefined;
+    }
+    return (part as { functionCall?: { id?: string } }).functionCall?.id;
+  }
+
+  /**
+   * Extracts the function response ID from content.
+   */
+  private getFunctionResponseId(content: Content): string | undefined {
+    const part = content.parts?.[0];
+    if (!part || typeof part !== 'object' || !('functionResponse' in part)) {
+      return undefined;
+    }
+    return (part as { functionResponse?: { id?: string } }).functionResponse
+      ?.id;
+  }
+
+  /**
+   * Checks if content has multiple tool response parts.
+   */
+  private hasMultipleToolResponses(content: Content): boolean {
+    if (content.role !== 'user' || !content.parts) {
+      return false;
+    }
+
+    const toolResponseParts = this.extractToolResponseParts(content);
+    return toolResponseParts.length > 1;
+  }
+
+  /**
+   * Extracts all function response parts from content.
+   */
+  private extractToolResponseParts(content: Content): Part[] {
+    if (!content.parts) {
+      return [];
+    }
+
+    return content.parts.filter(
+      (part) => part && typeof part === 'object' && 'functionResponse' in part,
+    );
   }
 }

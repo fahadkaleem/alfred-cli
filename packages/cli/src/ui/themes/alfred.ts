@@ -12,7 +12,7 @@ const alfredColors: ColorsTheme = {
   Foreground: '#DFDBDD',
   LightBlue: '#4FBEFE',
   AccentBlue: '#858392',
-  AccentPurple: '#AD6EFF',
+  AccentPurple: '#12C78F',
   AccentCyan: '#0ADCD9',
   AccentGreen: '#12C78F',
   AccentYellow: '#E8FE96',
