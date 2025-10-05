@@ -129,6 +129,7 @@ describe('AlfredChat', () => {
         getTool: vi.fn(),
       }),
       getContentGenerator: vi.fn().mockReturnValue(mockContentGenerator),
+      getProviderManager: vi.fn().mockReturnValue(undefined), // No provider for legacy tests
     } as unknown as Config;
 
     // Disable 429 simulation for tests
@@ -1802,19 +1803,25 @@ describe('AlfredChat', () => {
       // filtered automatically in recordHistory(). Since this history was set via
       // setHistory() which uses HistoryService, we can just retrieve it:
 
-      expect(chat.getHistory()).toEqual([
-        {
-          role: 'user',
-          parts: [{ text: 'hello' }],
-        },
-        {
-          role: 'model',
-          parts: [
-            { text: 'thinking...' },
-            { functionCall: { name: 'test', args: {} } },
-          ],
-        },
-      ]);
+      const history = chat.getHistory();
+      expect(history).toHaveLength(2);
+      expect(history[0]).toEqual({
+        role: 'user',
+        parts: [{ text: 'hello' }],
+      });
+      expect(history[1]).toEqual({
+        role: 'model',
+        parts: [
+          { text: 'thinking...' },
+          {
+            functionCall: {
+              name: 'test',
+              args: {},
+              id: expect.stringMatching(/^hist_tool_/),
+            },
+          },
+        ],
+      });
     });
   });
 });

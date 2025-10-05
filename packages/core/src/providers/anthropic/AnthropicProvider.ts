@@ -579,6 +579,44 @@ export class AnthropicProvider extends BaseProvider {
   }
 
   /**
+   * Handle parallel tool responses by ensuring each tool response is in a separate IContent.
+   * Anthropic requires each tool result to be in a separate message for parallel tool calls.
+   *
+   * This method scans the content array and splits any IContent with multiple tool_response blocks
+   * into separate IContent messages, one per tool response.
+   */
+  private handleParallelToolResponses(content: IContent[]): IContent[] {
+    const processedContent: IContent[] = [];
+
+    for (const iContent of content) {
+      // Check if this is a tool speaker with multiple tool_response blocks
+      if (iContent.speaker === 'tool') {
+        const toolResponseBlocks = iContent.blocks.filter(
+          (block) => block.type === 'tool_response',
+        ) as ToolResponseBlock[];
+
+        if (toolResponseBlocks.length > 1) {
+          // Split into separate IContent messages, one per tool response
+          for (const toolResponseBlock of toolResponseBlocks) {
+            processedContent.push({
+              speaker: 'tool',
+              blocks: [toolResponseBlock],
+            });
+          }
+        } else {
+          // Single tool response or no tool responses, keep as-is
+          processedContent.push(iContent);
+        }
+      } else {
+        // Not a tool message, keep as-is
+        processedContent.push(iContent);
+      }
+    }
+
+    return processedContent;
+  }
+
+  /**
    * Generate chat completion with IContent interface
    * Convert IContent directly to Anthropic API format
    */
@@ -592,6 +630,9 @@ export class AnthropicProvider extends BaseProvider {
       }>;
     }>,
   ): AsyncIterableIterator<IContent> {
+    // Handle parallel tool responses - split any IContent with multiple tool_response blocks
+    const processedContent = this.handleParallelToolResponses(content);
+
     // Convert IContent directly to Anthropic API format (no IMessage!)
     const anthropicMessages: Array<{
       role: 'user' | 'assistant';
@@ -613,15 +654,15 @@ export class AnthropicProvider extends BaseProvider {
     // requirements for tool responses that we're not fully meeting yet.
     let startIndex = 0;
     while (
-      startIndex < content.length &&
-      content[startIndex].speaker === 'tool'
+      startIndex < processedContent.length &&
+      processedContent[startIndex].speaker === 'tool'
     ) {
       this.logger['debug'](
         () => `Skipping orphaned tool response at beginning of conversation`,
       );
       startIndex++;
     }
-    const filteredContent = content.slice(startIndex);
+    const filteredContent = processedContent.slice(startIndex);
 
     // Group consecutive tool responses together for Anthropic API
     let pendingToolResults: Array<{

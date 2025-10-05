@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { Content, Part } from '@google/genai';
+import type { Content, Part, GenerateContentResponse } from '@google/genai';
 import type {
   IContent,
   ContentBlock,
@@ -410,6 +410,100 @@ export class ContentConverters {
     });
 
     return results;
+  }
+
+  /**
+   * Convert IContent to GenerateContentResponse format
+   * This is used by providers that return IContent to maintain SDK compatibility
+   */
+  static toGenerateContentResponse(input: IContent): GenerateContentResponse {
+    // Convert IContent blocks to Gemini Parts
+    const parts: Part[] = [];
+
+    for (const block of input.blocks) {
+      switch (block.type) {
+        case 'text':
+          parts.push({ text: block.text });
+          break;
+        case 'tool_call': {
+          const toolCall = block as ToolCallBlock;
+          parts.push({
+            functionCall: {
+              id: toolCall.id,
+              name: toolCall.name,
+              args: toolCall.parameters as Record<string, unknown>,
+            },
+          });
+          break;
+        }
+        case 'tool_response': {
+          const toolResponse = block as ToolResponseBlock;
+          parts.push({
+            functionResponse: {
+              id: toolResponse.callId,
+              name: toolResponse.toolName,
+              response: toolResponse.result as Record<string, unknown>,
+            },
+          });
+          break;
+        }
+        case 'thinking':
+          // Include thinking blocks as thought parts
+          parts.push({
+            thought: true,
+            text: block.thought,
+          });
+          break;
+        default:
+          // Skip unsupported block types
+          break;
+      }
+    }
+
+    // Build the response structure
+    const response = {
+      candidates: [
+        {
+          content: {
+            role: 'model',
+            parts,
+          },
+          // Add finishReason for stream validation
+          finishReason: 'STOP' as const,
+        },
+      ],
+      // These are required properties that must be present
+      get text() {
+        return parts.find((p) => 'text' in p)?.text || '';
+      },
+      functionCalls: parts
+        .filter((p) => 'functionCall' in p)
+        .map((p) => p.functionCall!),
+      executableCode: undefined,
+      codeExecutionResult: undefined,
+      // data property will be added below
+    } as GenerateContentResponse;
+
+    // Add data property that returns self-reference
+    // Make it non-enumerable to avoid circular reference in JSON.stringify
+    Object.defineProperty(response, 'data', {
+      get() {
+        return response;
+      },
+      enumerable: false,
+      configurable: true,
+    });
+
+    // Add usage metadata if present
+    if (input.metadata?.usage) {
+      response.usageMetadata = {
+        promptTokenCount: input.metadata.usage.promptTokens || 0,
+        candidatesTokenCount: input.metadata.usage.completionTokens || 0,
+        totalTokenCount: input.metadata.usage.totalTokens || 0,
+      };
+    }
+
+    return response;
   }
 }
 

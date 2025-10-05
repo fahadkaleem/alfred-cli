@@ -518,11 +518,14 @@ export class AlfredChat {
     // Convert IContent stream to GenerateContentResponse stream
     // Return the converted stream WITHOUT calling processStreamResponse here
     // The caller will call processStreamResponse to ensure history is recorded only once
-    return async function* () {
+    const convertStream = async function* (
+      this: AlfredChat,
+    ): AsyncGenerator<GenerateContentResponse> {
       for await (const iContent of streamResponse) {
         yield this.convertIContentToResponse(iContent);
       }
-    }.bind(this)();
+    };
+    return convertStream.call(this);
   }
 
   /**
