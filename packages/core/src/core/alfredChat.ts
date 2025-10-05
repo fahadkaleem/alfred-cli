@@ -42,12 +42,7 @@ import { partListUnionToString } from './alfredRequest.js';
 import { uiTelemetryService } from '../telemetry/uiTelemetry.js';
 import { HistoryService } from '../services/history/HistoryService.js';
 import { ContentConverters } from '../services/history/ContentConverters.js';
-import type {
-  IContent,
-  ToolCallBlock,
-  ToolResponseBlock,
-} from '../services/history/IContent.js';
-import type { IProvider } from '../providers/IProvider.js';
+import type { IContent } from '../services/history/IContent.js';
 
 export enum StreamEventType {
   /** A regular content chunk from the API. */
@@ -239,32 +234,24 @@ export class AlfredChat {
       'functionResponse' in messageArray[1];
 
     if (isPairedToolResponse && messageArray) {
-      // For providers, only send the tool response, not the echo of the tool call
-      // The tool call is already in history from the model's previous response
-      // The echo is only needed for legacy Gemini API
-      const provider = this.getActiveProvider();
-      if (provider && this.providerSupportsIContent(provider)) {
-        userContent = createUserContent([messageArray[1]]);
-      } else {
-        // Legacy path: include both tool call and response (matching llxprt-code)
-        userContent = [
-          {
-            role: 'model' as const,
-            parts: [messageArray[0] as Part],
-          },
-          {
-            role: 'user' as const,
-            parts: [messageArray[1] as Part],
-          },
-        ];
-      }
+      // This is a paired tool call/response from executor
+      // Keep as array for now, will handle in request building
+      userContent = [
+        {
+          role: 'model' as const,
+          parts: [messageArray[0] as Part],
+        },
+        {
+          role: 'user' as const,
+          parts: [messageArray[1] as Part],
+        },
+      ];
     } else {
       userContent = createUserContent(params.message);
     }
 
     // Record user input - capture complete message with all parts (text, files, images, etc.)
     // but skip recording function responses (tool call results) as they should be stored in tool call records
-    // Skip recording if it's a paired tool response (array) or a function response
     const shouldSkipRecording =
       Array.isArray(userContent) || isFunctionResponse(userContent);
     if (!shouldSkipRecording) {
@@ -289,42 +276,22 @@ export class AlfredChat {
     // Build request with history + new user content (but don't commit to history yet)
     let requestContents: Content[];
     if (Array.isArray(userContent)) {
-      // This is a tool call/response pair
-      // For providers, we only need the response part since the tool call is already in history
-      const provider = this.getActiveProvider();
-      if (provider && this.providerSupportsIContent(provider)) {
-        // Only include the tool response (second element), not the echo
-        requestContents = [...currentHistory, userContent[1]];
-      } else {
-        // Legacy Gemini API needs both the echo and response
-        requestContents = [...currentHistory, ...userContent];
-      }
+      // This is a paired tool call/response
+      // Include both for Gemini API compatibility
+      requestContents = [...currentHistory, ...userContent];
     } else if (!Array.isArray(userContent) && userContent.parts) {
-      // Check if this is tool responses (multiple tools called in parallel)
-      const provider = this.getActiveProvider();
-      if (provider && this.providerSupportsIContent(provider)) {
-        // For providers like Anthropic, we need to split multiple tool responses into separate messages
-        const toolResponseParts = userContent.parts.filter(
-          (part) =>
-            part && typeof part === 'object' && 'functionResponse' in part,
-        );
+      // Check if this is multiple tool responses (parallel tools)
+      const toolResponseParts = userContent.parts.filter(
+        (part) =>
+          part && typeof part === 'object' && 'functionResponse' in part,
+      );
 
-        if (toolResponseParts.length > 0) {
-          // Create separate messages for each tool response
-          const toolResponseMessages: Content[] = toolResponseParts.map(
-            (part) => ({
-              role: 'user' as const,
-              parts: [part],
-            }),
-          );
-
-          requestContents = [...currentHistory, ...toolResponseMessages];
-        } else {
-          // Not tool responses, treat as regular user message
-          requestContents = [...currentHistory, userContent];
-        }
+      if (toolResponseParts.length > 1) {
+        // Multiple tool responses need to be split for some providers
+        // But for now, keep them together for Gemini compatibility
+        requestContents = [...currentHistory, userContent];
       } else {
-        // Legacy API or non-tool-response message
+        // Single response or regular message
         requestContents = [...currentHistory, userContent];
       }
     } else {
@@ -419,18 +386,6 @@ export class AlfredChat {
     prompt_id: string,
     userInput: Content | Content[],
   ): Promise<AsyncGenerator<GenerateContentResponse>> {
-    // Try to use provider if available
-    const provider = this.getActiveProvider();
-    if (provider && this.providerSupportsIContent(provider)) {
-      const providerStream = await this.makeProviderApiCall(
-        requestContents,
-        params,
-        userInput,
-      );
-      return this.processStreamResponse(model, providerStream, userInput);
-    }
-
-    // Fallback to legacy ContentGenerator
     const apiCall = () => {
       const modelToUse = getEffectiveModel(
         this.config.isInFallbackMode(),
@@ -476,56 +431,6 @@ export class AlfredChat {
     });
 
     return this.processStreamResponse(model, streamResponse, userInput);
-  }
-
-  /**
-   * Make API call using the provider (Anthropic, Gemini via provider, etc.)
-   */
-  private async makeProviderApiCall(
-    requestContents: Content[],
-    _params: SendMessageParameters,
-    _userInput: Content | Content[],
-  ): Promise<AsyncGenerator<GenerateContentResponse>> {
-    const provider = this.getActiveProvider();
-    if (!provider) {
-      throw new Error('No active provider configured');
-    }
-
-    // Convert Gemini Content[] to IContent[]
-    const idGen = this.historyService.getIdGeneratorCallback();
-    const matcher = this.makePositionMatcher();
-    const iContents: IContent[] = requestContents.map((content) =>
-      ContentConverters.toIContent(content, idGen, matcher),
-    );
-
-    // Get tools in the format the provider expects
-    const tools = this.generationConfig.tools;
-
-    // Call the provider directly with IContent
-    const streamResponse = provider.generateChatCompletion!(
-      iContents,
-      tools as
-        | Array<{
-            functionDeclarations: Array<{
-              name: string;
-              description?: string;
-              parametersJsonSchema?: unknown;
-            }>;
-          }>
-        | undefined,
-    );
-
-    // Convert IContent stream to GenerateContentResponse stream
-    // Return the converted stream WITHOUT calling processStreamResponse here
-    // The caller will call processStreamResponse to ensure history is recorded only once
-    const convertStream = async function* (
-      this: AlfredChat,
-    ): AsyncGenerator<GenerateContentResponse> {
-      for await (const iContent of streamResponse) {
-        yield this.convertIContentToResponse(iContent);
-      }
-    };
-    return convertStream.call(this);
   }
 
   /**
@@ -881,131 +786,6 @@ export class AlfredChat {
   }
 
   /**
-   * Get the active provider from the ProviderManager via Config
-   */
-  private getActiveProvider(): IProvider | undefined {
-    const providerManager = this.config.getProviderManager();
-    if (!providerManager) {
-      return undefined;
-    }
-
-    try {
-      return providerManager.getActiveProvider();
-    } catch {
-      // No active provider set
-      return undefined;
-    }
-  }
-
-  /**
-   * Check if a provider supports the IContent interface
-   */
-  private providerSupportsIContent(provider: IProvider | undefined): boolean {
-    if (!provider) {
-      return false;
-    }
-
-    // Check if the provider has the IContent method
-    return (
-      typeof (provider as { generateChatCompletion?: unknown })
-        .generateChatCompletion === 'function'
-    );
-  }
-
-  /**
-   * Convert IContent (from provider) to GenerateContentResponse for SDK compatibility
-   */
-  private convertIContentToResponse(input: IContent): GenerateContentResponse {
-    // Convert IContent blocks to Gemini Parts
-    const parts: Part[] = [];
-
-    for (const block of input.blocks) {
-      switch (block.type) {
-        case 'text':
-          parts.push({ text: block.text });
-          break;
-        case 'tool_call': {
-          const toolCall = block as ToolCallBlock;
-          parts.push({
-            functionCall: {
-              id: toolCall.id,
-              name: toolCall.name,
-              args: toolCall.parameters as Record<string, unknown>,
-            },
-          });
-          break;
-        }
-        case 'tool_response': {
-          const toolResponse = block as ToolResponseBlock;
-          parts.push({
-            functionResponse: {
-              id: toolResponse.callId,
-              name: toolResponse.toolName,
-              response: toolResponse.result as Record<string, unknown>,
-            },
-          });
-          break;
-        }
-        case 'thinking':
-          // Include thinking blocks as thought parts
-          parts.push({
-            thought: true,
-            text: block.thought,
-          });
-          break;
-        default:
-          // Skip unsupported block types
-          break;
-      }
-    }
-
-    // Build the response structure
-    const response = {
-      candidates: [
-        {
-          content: {
-            role: 'model',
-            parts,
-          },
-          // Add finishReason for stream validation
-          finishReason: 'STOP' as const,
-        },
-      ],
-      // These are required properties that must be present
-      get text() {
-        return parts.find((p) => 'text' in p)?.text || '';
-      },
-      functionCalls: parts
-        .filter((p) => 'functionCall' in p)
-        .map((p) => p.functionCall!),
-      executableCode: undefined,
-      codeExecutionResult: undefined,
-      // data property will be added below
-    } as GenerateContentResponse;
-
-    // Add data property that returns self-reference
-    // Make it non-enumerable to avoid circular reference in JSON.stringify
-    Object.defineProperty(response, 'data', {
-      get() {
-        return response;
-      },
-      enumerable: false,
-      configurable: true,
-    });
-
-    // Add usage metadata if present
-    if (input.metadata?.usage) {
-      response.usageMetadata = {
-        promptTokenCount: input.metadata.usage.promptTokens || 0,
-        candidatesTokenCount: input.metadata.usage.completionTokens || 0,
-        totalTokenCount: input.metadata.usage.totalTokens || 0,
-      };
-    }
-
-    return response;
-  }
-
-  /**
    * Records a conversation turn in the history service.
    * Handles user input, model output, and automatic function calling history.
    */
@@ -1024,72 +804,20 @@ export class AlfredChat {
     const idGen = this.historyService.getIdGeneratorCallback();
     const matcher = this.makePositionMatcher();
 
+    // Simple conversion - no provider branching
+    // Providers handle their own format complexity in generateChatCompletion
     if (Array.isArray(userInput)) {
       // This is a paired tool call/response from the executor
-      const provider = this.getActiveProvider();
-      if (provider && this.providerSupportsIContent(provider)) {
-        // For providers: only record the tool response (second element)
-        // The tool call is already in history from the model's previous response
-        const userIContent = ContentConverters.toIContent(
-          userInput[1],
-          idGen,
-          matcher,
-        );
-        newHistoryEntries.push(userIContent);
-      } else {
-        // Legacy Gemini API: record both the echo and response
-        for (const content of userInput) {
-          const userIContent = ContentConverters.toIContent(
-            content,
-            idGen,
-            matcher,
-          );
-          newHistoryEntries.push(userIContent);
-        }
-      }
-    } else if (!Array.isArray(userInput) && userInput.parts) {
-      // Check if this is multiple tool responses in a single message
-      const provider = this.getActiveProvider();
-      if (provider && this.providerSupportsIContent(provider)) {
-        const toolResponseParts = userInput.parts.filter(
-          (part) =>
-            part && typeof part === 'object' && 'functionResponse' in part,
-        );
-
-        if (toolResponseParts.length > 0) {
-          // Multiple tool responses - split into separate history entries
-          for (const responsePart of toolResponseParts) {
-            const responseContent: Content = {
-              role: 'user' as const,
-              parts: [responsePart],
-            };
-            const userIContent = ContentConverters.toIContent(
-              responseContent,
-              idGen,
-              matcher,
-            );
-            newHistoryEntries.push(userIContent);
-          }
-        } else {
-          // Regular user message
-          const userIContent = ContentConverters.toIContent(
-            userInput,
-            idGen,
-            matcher,
-          );
-          newHistoryEntries.push(userIContent);
-        }
-      } else {
-        // Legacy API or non-provider
-        const userIContent = ContentConverters.toIContent(
-          userInput,
-          idGen,
-          matcher,
-        );
-        newHistoryEntries.push(userIContent);
-      }
+      // The tool call is already in history from the model's previous response
+      // Only record the tool response (second element)
+      const userIContent = ContentConverters.toIContent(
+        userInput[1],
+        idGen,
+        matcher,
+      );
+      newHistoryEntries.push(userIContent);
     } else {
-      // Normal user message
+      // Single user message (regular message or tool responses)
       const userIContent = ContentConverters.toIContent(
         userInput,
         idGen,
