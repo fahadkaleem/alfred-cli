@@ -146,8 +146,9 @@ npm run generate
 ### Never Declare Done Without Full Verification
 
 - **NEVER** declare something done unless it has compiled, tested, and linted
-- **NEVER** push without: `npm run format` → `git add -A` → `npm run lint:ci` → `npm run typecheck` → `npm run build` → `npm run bundle` → `npm run test:ci` → commit
-- **CRITICAL**: After running `npm run format`, ALWAYS run `git add -A` to stage the formatted changes before committing
+- **NEVER** run `git add` or `git commit` without explicit user permission
+- **Verification workflow**: `npm run format` → `npm run lint:ci` → `npm run typecheck` → `npm run build` → `npm run bundle` → `npm run test:ci`
+- **ONLY when user requests a commit**: THEN run `git add -A` to stage changes before committing
 - **CRITICAL**: ALWAYS run build commands from the main project directory (`alfred-cli`), NOT from subdirectories like `packages/cli`
 - **ANY** code changes require restarting the entire verification cycle
 - If you compile, test, or lint and get an error, then change code, you MUST compile, test, lint again
@@ -199,8 +200,10 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 If the pre-commit hook fails, you MUST:
 
 1. Fix any lint/type errors reported
-2. Run `npm run format` and stage the changes with `git add -A`
-3. Only then try to commit again
+2. Run `npm run format` to fix formatting
+3. **ONLY if user explicitly requested a commit**: Run `git add -A` to stage the changes, then try to commit again
+
+**NEVER run `git add` without explicit user permission** - Staging changes is a git operation that should only happen when the user wants to commit.
 
 **NEVER USE `git commit --no-verify` or environment tricks to skip hooks** - This is for human emergencies only, not for bypassing quality checks. If the hooks are failing, FIX THE CODE, don't skip the checks.
 

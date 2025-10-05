@@ -7,7 +7,7 @@
 import { AyuDark } from './ayu.js';
 import { AyuLight } from './ayu-light.js';
 import { AtomOneDark } from './atom-one-dark.js';
-import { Charmtone } from './charmtone.js';
+import { Alfred } from './alfred.js';
 import { Dracula } from './dracula.js';
 import { GitHubDark } from './github-dark.js';
 import { GitHubLight } from './github-light.js';
@@ -33,7 +33,7 @@ export interface ThemeDisplay {
   isCustom?: boolean;
 }
 
-export const DEFAULT_THEME: Theme = DefaultDark;
+export const DEFAULT_THEME: Theme = Alfred;
 
 class ThemeManager {
   private readonly availableThemes: Theme[];
@@ -42,10 +42,10 @@ class ThemeManager {
 
   constructor() {
     this.availableThemes = [
+      Alfred,
       AyuDark,
       AyuLight,
       AtomOneDark,
-      Charmtone,
       Dracula,
       DefaultLight,
       DefaultDark,
