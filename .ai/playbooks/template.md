@@ -12,6 +12,12 @@ Create a new playbook in `.ai/playbooks/*.md` to document the `Topic` using the 
 - IMPORTANT: Replace every `<placeholder>` in the `Playbook Format` with actual, specific, actionable content from your research.
 - Use your reasoning model: THINK HARD about what an AI agent needs to successfully execute this task.
 - Follow the principle: **Zero Ambiguity, Maximum Actionability**.
+- **CRITICAL**: When researching, you MUST identify:
+  - All abstract methods (required implementation)
+  - All virtual methods (optional overrides)
+  - All lifecycle hooks (shouldX, beforeX, afterX, onX patterns)
+  - All state transitions and workflows
+  - All advanced patterns (confirmation, approval, streaming, caching, etc.)
 
 ### Key Principles for Playbooks
 
@@ -124,15 +130,33 @@ Before writing the playbook, conduct thorough research:
    - **For code tasks**: Read the TypeScript interface/type definitions
    - **For config tasks**: Read the parser/loader code
 
-2. **Trace integration points**
+2. **Identify ALL required methods and interfaces** (CRITICAL)
+   - Find abstract methods (MUST be implemented by subclasses)
+   - Find virtual/override methods (CAN be overridden)
+   - Document exact method signatures with parameter and return types
+   - Note which methods are lifecycle hooks (shouldX, beforeX, afterX, onX patterns)
+   - Identify state machine methods if applicable
+   - **Create a complete list** - don't assume, verify every method
+
+3. **Investigate base classes and abstract classes**
+   - List all abstract methods that subclasses MUST implement
+   - List all virtual methods available for override
+   - Document WHEN to override optional methods (not just that you can)
+   - Find patterns like confirmation, validation, lifecycle hooks
+   - Check for interfaces that define contracts
+   - Look for default implementations that can be overridden
+
+4. **Trace integration points**
    - How do pieces hook together?
    - What contexts/state management is used?
    - What are the entry points?
    - Where are components/commands/features registered/initialized?
+   - What lifecycle stages exist? (validation → confirmation → execution → completion)
+   - Where are lifecycle hooks called?
    - **For code tasks**: Find the registration/loader files
    - **For config tasks**: Find where config files are parsed and applied
 
-3. **Check for documentation**
+5. **Check for documentation**
    - Review `CLAUDE.md` for project-specific rules
    - Check `docs/` for relevant context
    - Look for inline comments explaining patterns
@@ -406,6 +430,53 @@ Full interface at \`path/to/ContextFile.tsx:line_number\`
 ### 2. <Another Pattern>
 
 <Repeat for all common patterns>
+
+## Advanced Patterns
+
+<If the system has advanced workflows like confirmation, approval, streaming, caching, allowlisting, etc., document them here>
+
+### 1. <Advanced Pattern Name> (e.g., Confirmation/Approval Workflows)
+
+**When needed**: <Describe scenarios requiring this pattern>
+**Location**: \`path/to/file.ts:lines\`
+
+<Complete explanation of the pattern>
+
+\`\`\`typescript
+<Full code example showing the pattern>
+<Include all types, interfaces, enums>
+<Show all possible variations>
+\`\`\`
+
+### 2. <Another Advanced Pattern>
+
+<Repeat for each advanced pattern found in research>
+
+## Method Reference
+
+<Document ALL methods available in the system - this is CRITICAL for completeness>
+
+### Required Methods (Abstract/Must Implement)
+
+| Method        | Signature                        | Purpose     | Notes       |
+| ------------- | -------------------------------- | ----------- | ----------- |
+| \`method1()\` | \`(params: Type) => ReturnType\` | Description | When to use |
+
+### Optional Methods (Virtual/Can Override)
+
+| Method               | Signature                        | Purpose     | When to Override |
+| -------------------- | -------------------------------- | ----------- | ---------------- |
+| \`virtualMethod1()\` | \`(params: Type) => ReturnType\` | Description | Override when X  |
+
+**Lifecycle Hooks** (if applicable):
+
+| Hook          | When Called      | Return Type                | Effect                      |
+| ------------- | ---------------- | -------------------------- | --------------------------- |
+| \`shouldX()\` | Before X happens | \`boolean\` or \`Details\` | Controls whether X proceeds |
+| \`beforeX()\` | Before X         | \`void\`                   | Pre-processing              |
+| \`afterX()\`  | After X          | \`void\`                   | Post-processing             |
+
+**CRITICAL**: Identify all methods that MUST be implemented vs CAN be overridden.
 
 ## Important Rules
 
