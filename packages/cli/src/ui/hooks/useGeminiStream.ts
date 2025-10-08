@@ -34,6 +34,7 @@ import {
   ToolConfirmationOutcome,
   promptIdContext,
 } from '@alfred/alfred-cli-core';
+import { traceable, getCurrentRunTree } from 'langsmith/traceable';
 import { type Part, type PartListUnion, FinishReason } from '@google/genai';
 import type {
   HistoryItem,
@@ -793,7 +794,16 @@ export const useGeminiStream = (
         setIsResponding(true);
         setInitError(null);
 
-        try {
+        // Core logic for processing the conversation
+        const processCore = async () => {
+          // Only capture RunTree for new conversations, not continuations
+          if (!options?.isContinuation) {
+            const runTree = getCurrentRunTree();
+            if (runTree) {
+              config.setParentRunTree(runTree);
+            }
+          }
+
           const stream = alfredClient.sendMessageStream(
             queryToSend,
             abortSignal,
@@ -806,7 +816,7 @@ export const useGeminiStream = (
           );
 
           if (processingStatus === StreamProcessingStatus.UserCancelled) {
-            return;
+            return { cancelled: true };
           }
 
           if (pendingHistoryItemRef.current) {
@@ -816,6 +826,33 @@ export const useGeminiStream = (
           if (loopDetectedRef.current) {
             loopDetectedRef.current = false;
             handleLoopDetectedEvent();
+          }
+          return { cancelled: false };
+        };
+
+        // Only wrap with traceable for new conversations, not continuations
+        let result;
+        try {
+          if (!options?.isContinuation) {
+            // New conversation - wrap with traceable
+            const processConversationTurn = traceable(processCore, {
+              name: 'conversation_turn',
+              metadata: {
+                prompt_id,
+                user_input:
+                  typeof queryToSend === 'string'
+                    ? queryToSend
+                    : 'new_conversation',
+              },
+            });
+            result = await processConversationTurn();
+          } else {
+            // Continuation - execute directly without creating a new trace
+            result = await processCore();
+          }
+
+          if (result?.cancelled) {
+            return;
           }
         } catch (error: unknown) {
           if (error instanceof UnauthorizedError) {
@@ -837,6 +874,10 @@ export const useGeminiStream = (
           }
         } finally {
           setIsResponding(false);
+          // Clear parent RunTree when conversation ends to prevent context leakage
+          if (!options?.isContinuation) {
+            config.setParentRunTree(undefined);
+          }
         }
       });
     },

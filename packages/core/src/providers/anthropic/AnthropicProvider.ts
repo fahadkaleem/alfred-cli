@@ -6,6 +6,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import type { ClientOptions } from '@anthropic-ai/sdk';
+import { wrapSDK } from 'langsmith/wrappers';
 import { DebugLogger } from '../../debug/index.js';
 import type { IModel } from '../IModel.js';
 import { ToolFormatter } from '../../tools/ToolFormatter.js';
@@ -78,11 +79,12 @@ export class AnthropicProvider implements IProvider {
 
     this.logger = new DebugLogger('alfred:anthropic:provider');
 
-    this.anthropic = new Anthropic({
+    const client = new Anthropic({
       apiKey: apiKey || '', // Empty string if OAuth will be used
       baseURL: config?.baseUrl || baseURL,
       dangerouslyAllowBrowser: true,
     });
+    this.anthropic = wrapSDK(client);
 
     this.toolFormatter = new ToolFormatter();
   }
@@ -120,14 +122,16 @@ export class AnthropicProvider implements IProvider {
           },
         };
 
-        this.anthropic = new Anthropic(oauthConfig as ClientOptions);
+        const client = new Anthropic(oauthConfig as ClientOptions);
+        this.anthropic = wrapSDK(client);
       } else {
         // Regular API key auth
-        this.anthropic = new Anthropic({
+        const client = new Anthropic({
           apiKey: resolvedToken,
           baseURL,
           dangerouslyAllowBrowser: true,
         });
+        this.anthropic = wrapSDK(client);
       }
 
       // Track the key to avoid unnecessary client recreation

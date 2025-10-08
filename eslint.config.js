@@ -116,6 +116,8 @@ export default tseslint.config(
             'memfs/lib/volume.js',
             'yargs/**',
             'msw/node',
+            'langsmith/traceable',
+            'langsmith/wrappers',
           ],
         },
       ],

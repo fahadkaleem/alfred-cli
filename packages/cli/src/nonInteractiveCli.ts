@@ -18,7 +18,7 @@ import {
   JsonFormatter,
   uiTelemetryService,
 } from '@alfred/alfred-cli-core';
-
+import { traceable, getCurrentRunTree } from 'langsmith/traceable';
 import type { Content, Part } from '@google/genai';
 
 import { handleSlashCommand } from './nonInteractiveCliCommands.js';
@@ -105,65 +105,89 @@ export async function runNonInteractive(
         ) {
           handleMaxTurnsExceededError(config);
         }
-        const toolCallRequests: ToolCallRequestInfo[] = [];
 
-        const responseStream = alfredClient.sendMessageStream(
-          currentMessages[0]?.parts || [],
-          abortController.signal,
-          prompt_id,
-        );
-
-        let responseText = '';
-        for await (const event of responseStream) {
-          if (abortController.signal.aborted) {
-            handleCancellationError(config);
-          }
-
-          if (event.type === AlfredEventType.Content) {
-            if (config.getOutputFormat() === OutputFormat.JSON) {
-              responseText += event.value;
-            } else {
-              process.stdout.write(event.value);
+        // Wrap each conversation turn with traceable
+        const processConversationTurn = traceable(
+          async (messages: Content[]) => {
+            // Capture the current RunTree for passing to async tool executions
+            const runTree = getCurrentRunTree();
+            if (runTree) {
+              config.setParentRunTree(runTree);
             }
-          } else if (event.type === AlfredEventType.ToolCallRequest) {
-            toolCallRequests.push(event.value);
-          }
-        }
 
-        if (toolCallRequests.length > 0) {
-          const toolResponseParts: Part[] = [];
-          for (const requestInfo of toolCallRequests) {
-            const toolResponse = await executeToolCall(
-              config,
-              requestInfo,
+            const toolCallRequests: ToolCallRequestInfo[] = [];
+
+            const responseStream = alfredClient.sendMessageStream(
+              messages[0]?.parts || [],
               abortController.signal,
+              prompt_id,
             );
 
-            if (toolResponse.error) {
-              handleToolError(
-                requestInfo.name,
-                toolResponse.error,
-                config,
-                toolResponse.errorType || 'TOOL_EXECUTION_ERROR',
-                typeof toolResponse.resultDisplay === 'string'
-                  ? toolResponse.resultDisplay
-                  : undefined,
-              );
+            let responseText = '';
+            for await (const event of responseStream) {
+              if (abortController.signal.aborted) {
+                handleCancellationError(config);
+              }
+
+              if (event.type === AlfredEventType.Content) {
+                if (config.getOutputFormat() === OutputFormat.JSON) {
+                  responseText += event.value;
+                } else {
+                  process.stdout.write(event.value);
+                }
+              } else if (event.type === AlfredEventType.ToolCallRequest) {
+                toolCallRequests.push(event.value);
+              }
             }
 
-            if (toolResponse.responseParts) {
-              toolResponseParts.push(...toolResponse.responseParts);
+            if (toolCallRequests.length > 0) {
+              const toolResponseParts: Part[] = [];
+              for (const requestInfo of toolCallRequests) {
+                const toolResponse = await executeToolCall(
+                  config,
+                  requestInfo,
+                  abortController.signal,
+                );
+
+                if (toolResponse.error) {
+                  handleToolError(
+                    requestInfo.name,
+                    toolResponse.error,
+                    config,
+                    toolResponse.errorType || 'TOOL_EXECUTION_ERROR',
+                    typeof toolResponse.resultDisplay === 'string'
+                      ? toolResponse.resultDisplay
+                      : undefined,
+                  );
+                }
+
+                if (toolResponse.responseParts) {
+                  toolResponseParts.push(...toolResponse.responseParts);
+                }
+              }
+
+              return { toolResponseParts, responseText };
+            } else {
+              if (config.getOutputFormat() === OutputFormat.JSON) {
+                const formatter = new JsonFormatter();
+                const stats = uiTelemetryService.getMetrics();
+                process.stdout.write(formatter.format(responseText, stats));
+              } else {
+                process.stdout.write('\n'); // Ensure a final newline
+              }
+              return null;
             }
-          }
-          currentMessages = [{ role: 'user', parts: toolResponseParts }];
+          },
+          {
+            name: 'conversation_turn',
+            metadata: { prompt_id, turn: turnCount },
+          },
+        );
+
+        const result = await processConversationTurn(currentMessages);
+        if (result && result.toolResponseParts) {
+          currentMessages = [{ role: 'user', parts: result.toolResponseParts }];
         } else {
-          if (config.getOutputFormat() === OutputFormat.JSON) {
-            const formatter = new JsonFormatter();
-            const stats = uiTelemetryService.getMetrics();
-            process.stdout.write(formatter.format(responseText, stats));
-          } else {
-            process.stdout.write('\n'); // Ensure a final newline
-          }
           return;
         }
       }

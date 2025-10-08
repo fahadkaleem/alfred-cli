@@ -35,6 +35,7 @@ import * as path from 'node:path';
 import { doesToolInvocationMatch } from '../utils/tool-utils.js';
 import levenshtein from 'fast-levenshtein';
 import { ShellToolInvocation } from '../tools/shell.js';
+import { traceable, withRunTree } from 'langsmith/traceable';
 
 export type ValidatingToolCall = {
   status: 'validating';
@@ -878,29 +879,52 @@ export class CoreToolScheduler {
         // Introduce a generic callbacks object for the execute method to handle
         // things like `onPid` and `onLiveOutput`. This will make the scheduler
         // agnostic to the invocation type.
-        let promise: Promise<ToolResult>;
-        if (invocation instanceof ShellToolInvocation) {
-          const setPidCallback = (pid: number) => {
-            this.toolCalls = this.toolCalls.map((tc) =>
-              tc.request.callId === callId && tc.status === 'executing'
-                ? { ...tc, pid }
-                : tc,
+
+        // Get parent RunTree if available
+        const parentRunTree = this.config.getParentRunTree();
+
+        // Core execution function
+        const executeToolCall = async () => {
+          if (invocation instanceof ShellToolInvocation) {
+            const setPidCallback = (pid: number) => {
+              this.toolCalls = this.toolCalls.map((tc) =>
+                tc.request.callId === callId && tc.status === 'executing'
+                  ? { ...tc, pid }
+                  : tc,
+              );
+              this.notifyToolCallsUpdate();
+            };
+            return await invocation.execute(
+              signal,
+              liveOutputCallback,
+              shellExecutionConfig,
+              setPidCallback,
             );
-            this.notifyToolCallsUpdate();
-          };
-          promise = invocation.execute(
-            signal,
-            liveOutputCallback,
-            shellExecutionConfig,
-            setPidCallback,
-          );
-        } else {
-          promise = invocation.execute(
-            signal,
-            liveOutputCallback,
-            shellExecutionConfig,
-          );
-        }
+          } else {
+            return await invocation.execute(
+              signal,
+              liveOutputCallback,
+              shellExecutionConfig,
+            );
+          }
+        };
+
+        // Wrap with traceable for LangSmith
+        const tracedExecution = traceable(executeToolCall, {
+          name: `tool:${toolName}`,
+          run_type: 'tool',
+          metadata: {
+            tool_name: toolName,
+            call_id: callId,
+            session_id: this.config.getSessionId(),
+          },
+          tags: ['tool_execution', toolName],
+        });
+
+        // If we have a parent RunTree, use withRunTree to nest properly
+        const promise = parentRunTree
+          ? withRunTree(parentRunTree, tracedExecution)
+          : tracedExecution();
 
         promise
           .then(async (toolResult: ToolResult) => {

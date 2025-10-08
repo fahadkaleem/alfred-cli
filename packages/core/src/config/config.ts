@@ -56,6 +56,7 @@ import type { FileSystemService } from '../services/fileSystemService.js';
 import { StandardFileSystemService } from '../services/fileSystemService.js';
 import { getSettingsService } from '../settings/settingsServiceInstance.js';
 import type { SettingsService } from '../settings/settingsServiceInstance.js';
+import type { RunTree } from 'langsmith';
 import {
   logCliConfiguration,
   logRipgrepFallback,
@@ -1130,6 +1131,17 @@ export class Config {
 
   getProviderManager(): ProviderManager {
     return this.providerManager;
+  }
+
+  // Store parent RunTree for LangSmith trace nesting
+  private parentRunTree: RunTree | undefined;
+
+  setParentRunTree(runTree: RunTree | undefined): void {
+    this.parentRunTree = runTree;
+  }
+
+  getParentRunTree(): RunTree | undefined {
+    return this.parentRunTree;
   }
 }
 

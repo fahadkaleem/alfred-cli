@@ -18,6 +18,7 @@ import { resourceFromAttributes } from '@opentelemetry/resources';
 import {
   BatchSpanProcessor,
   ConsoleSpanExporter,
+  type SpanProcessor,
 } from '@opentelemetry/sdk-trace-node';
 import {
   BatchLogRecordProcessor,
@@ -93,13 +94,15 @@ export function initializeTelemetry(config: Config): void {
     | OTLPTraceExporter
     | OTLPTraceExporterHttp
     | FileSpanExporter
-    | ConsoleSpanExporter;
+    | ConsoleSpanExporter
+    | undefined;
   let logExporter:
     | OTLPLogExporter
     | OTLPLogExporterHttp
     | FileLogExporter
-    | ConsoleLogRecordExporter;
-  let metricReader: PeriodicExportingMetricReader;
+    | ConsoleLogRecordExporter
+    | undefined;
+  let metricReader: PeriodicExportingMetricReader | undefined;
 
   if (useOtlp) {
     if (otlpProtocol === 'http') {
@@ -149,10 +152,18 @@ export function initializeTelemetry(config: Config): void {
     });
   }
 
+  // Build span processors array
+  const spanProcessors: SpanProcessor[] = [];
+  if (spanExporter) {
+    spanProcessors.push(new BatchSpanProcessor(spanExporter));
+  }
+
   sdk = new NodeSDK({
     resource,
-    spanProcessors: [new BatchSpanProcessor(spanExporter)],
-    logRecordProcessors: [new BatchLogRecordProcessor(logExporter)],
+    spanProcessors,
+    logRecordProcessors: logExporter
+      ? [new BatchLogRecordProcessor(logExporter)]
+      : [],
     metricReader,
     instrumentations: [new HttpInstrumentation()],
   });
